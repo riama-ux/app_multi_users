@@ -1,0 +1,14 @@
+1 ETAPE 
+CONFIGUREZ LE FICHIER env.
+
+2 ETAPE
+CREEZ LA BASE DE DONNEES
+
+3 ETAPE
+php artisan migrate 
+
+4 ETAPE
+php artisan db:seed --class=UserSeeder
+
+5 ETAPE
+php artisan serve

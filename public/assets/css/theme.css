@@ -1,0 +1,143 @@
+/*!
+ * Theme Name: Default
+ * Package : DashLite
+ * Author: Softnio
+ * Author URI: http://themeforest.net/user/softnio
+ * Version	 :	1.0.0
+ * Updated	 :	07.23.2020
+**/
+
+
+body{
+    background-color: #EEF5F8;
+}
+.custom-right{
+    background-color: #EEF5F8;
+}
+
+.logo-text {
+    font-size: 28px; /* taille du texte, ajustable */
+    font-weight: bold;
+    font-family: 'Segoe UI', sans-serif; /* ou celle de ton thème */
+    display: inline-block;
+}
+
+.logo-ika {
+    color: #6c757d; /* gris (Bootstrap gray-600) */
+}
+
+.logo-stock {
+    color: #6f42c1; /* violet (Bootstrap purple) */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .logo-text {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-text {
+        font-size: 18px;
+    }
+}
+
+
+
+.custom-text {
+    color: #000000;
+    
+}
+
+.custom-card-height {
+    min-height: 200px; /* Ajuste ici selon le rendu souhaité */
+    /*background-color: #ffffff;*/
+    border: 2px solid #D0E1E9;
+    background-color: #D0E1E9;
+}
+.custom-card-full-height {
+    height: 100%;
+    /*background-color: #ffffff;*/
+    border: 2px solid #D0E1E9;
+    background-color: #D0E1E9;
+}
+@media (max-width: 991.98px) {
+  .custom-card-full-height {
+    min-height: 200px; /* Même hauteur minimale que les autres */
+    height: auto; /* Laisse la hauteur s'adapter */
+  }
+}
+
+.custom-card-height2 {
+    min-height: 180px; /* Ajuste ici selon le rendu souhaité */
+}
+.couleur-active{
+    color: #8E61EE;
+}
+.fs-big-icon{
+    font-size: clamp(30px, 10vw, 60px);
+}
+.couleur_icone{
+    color: #FDAD55;
+}
+.couleur_icone2{
+    color: #67B9FD;
+}
+.couleur_icone3{
+    color: #A57FF1;
+}
+.card-couleur{
+    color: #E0EBF0;
+    /*color: #94BFD0;*/
+}
+
+.responsive-text {
+    font-size: 1.8rem; /* taille par défaut */
+  }
+
+  @media (max-width: 768px) {
+    .responsive-text {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .responsive-text {
+      font-size: 1rem;
+    }
+  }
+
+
+  .responsive-text2 {
+    font-size: 1.5rem; /* taille par défaut */
+  }
+
+  @media (max-width: 768px) {
+    .responsive-text2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .responsive-text2 {
+      font-size: 1rem;
+    }
+  }
+
+
+  .responsive-text3 {
+    font-size: 3rem; /* taille par défaut */
+  }
+
+  @media (max-width: 768px) {
+    .responsive-text2 {
+      font-size: 2.5rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .responsive-text2 {
+      font-size: 2rem;
+    }
+  }
