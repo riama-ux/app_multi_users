@@ -14,7 +14,7 @@ class CompteController extends Controller
         return view('pages/admin/users/index', [
             'users' => User::WhereNotIn('email', ['admin@app.local', 'manager@app.local', 'supervisor@app.local', 'johndoe@app.local'])->orderbyDesc('id')->paginate(20),
             'rows' =>  User::count() - 4,
-            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'], ['Admin', 'Supervisor', 'Manager', 'User', '--- Note---'],
+            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
         ]);
     }
 
