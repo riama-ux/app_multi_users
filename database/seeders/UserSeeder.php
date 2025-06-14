@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Magasin;
+
 
 class UserSeeder extends Seeder
 {
@@ -14,6 +16,18 @@ class UserSeeder extends Seeder
      */
     public function run(): void
     {
+        
+        // Création de quelques magasins si besoin
+        $magasins = [
+            ['nom' => 'Boutique A'],
+            ['nom' => 'Boutique B'],
+            ['nom' => 'Boutique C'],
+        ];
+
+        foreach ($magasins as $data) {
+            Magasin::firstOrCreate($data);
+        }
+        
         $users = [
             [
                 'name' => 'ADMINISTRATEUR',
@@ -41,8 +55,13 @@ class UserSeeder extends Seeder
             ],
         ];
 
-        foreach ($users as $key => $user) {
-            User::create($user);
+        foreach ($users as $data) {
+            $user = User::create($data);
+
+            // Associer un ou plusieurs magasins à chaque utilisateur
+            $magasinsIds = Magasin::inRandomOrder()->take(2)->pluck('id');
+            $user->magasins()->attach($magasinsIds);
         }
+        
     }
 }

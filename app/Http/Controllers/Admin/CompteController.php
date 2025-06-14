@@ -6,15 +6,25 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Magasin;
+
 
 class CompteController extends Controller
 {
     public function index()
     {
         return view('pages/admin/users/index', [
-            'users' => User::WhereNotIn('email', ['admin@app.local', 'manager@app.local', 'supervisor@app.local', 'johndoe@app.local'])->orderbyDesc('id')->paginate(20),
-            'rows' =>  User::count() - 4,
-            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
+        'users' => User::with('magasins') // ✅ charge la relation magasins
+                    ->whereNotIn('email', [
+                        'admin@app.local',
+                        'manager@app.local',
+                        'supervisor@app.local',
+                        'johndoe@app.local'
+                    ])
+                    ->orderByDesc('id')
+                    ->paginate(20),
+        'rows' => User::count() - 4,
+        'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
         ]);
     }
 
@@ -59,7 +69,8 @@ class CompteController extends Controller
         ]);
         return view('pages/admin/users/form', [
             'user' => $user,
-            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'], ['Admin', 'Supervisor', 'Manager', 'User'],
+            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
+            'magasins' => Magasin::all(), // ✅ Liste des magasins pour le formulaire
         ]);
     }
 
@@ -73,6 +84,7 @@ class CompteController extends Controller
                 'email' => 'unique:users',
                 'password' => 'required',
                 'password' => 'min:4',
+                'magasins' => 'required|array|min:1',
             ],
             [
                 'name.required' => 'Champ obligatoire !',
@@ -81,15 +93,19 @@ class CompteController extends Controller
                 'email.unique' => 'Cet Email existe déjà !',
                 'password.required' => 'Champ obligatoire !',
                 'password.min' => 'Le champ doit contenir au moins 4 caractères !',
+                'magasins.required' => 'Champ obligatoire !',
             ]
         );
 
-        User::create([
+        $user = User::create([
             'name' => strtoupper($request->get('name')),
             'email' => $request->get('email'),
-            'password' => $request->get('password'),
+            'password' => Hash::make($request->get('password')), // 🔐 ne pas oublier de hasher le mot de passe !
             'role' => $request->get('role'),
         ]);
+
+        $user->magasins()->attach($request->magasins); // ✅ maintenant $user existe bien
+
 
         return to_route('admin.compte.create')->with('success', "Vous avez créé un compte !");
     }
@@ -99,50 +115,63 @@ class CompteController extends Controller
         return view('pages/admin/users/form', [
             'user' => User::find(decrypt($id)),
             'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'], ['Admin', 'Supervisor', 'Manager', 'User'],
+            'magasins' => Magasin::all(), // ✅ Liste des magasins pour le formulaire
         ]);
     }
 
     public function update(Request $request, $id)
     {
-        $user = User::find($id);
-        $request->validate(
-            [
-                'name' => 'required',
-                'email' => 'required',
-                'email' => 'string',
-                'password' => 'required',
-                'password' => 'min:4',
-            ],
-            [
-                'name.required' => 'Champ obligatoire !',
-                'email.required' => 'Champ obligatoire !',
-                'email.string' => 'Le champ doit contenir des chaînes de caractères !',
-                'password.required' => 'Champ obligatoire !',
-                'password.min' => 'Le champ doit contenir au moins 4 caractères !',
-            ]
-        );
+        $user = User::findOrFail($id); // 🔐 plus sûr que find()
 
-        if ($user->password != $request->password) {
-            $user->update([
-                'name' => strtoupper($request->get('name')),
-                'email' => $request->get('email'),
-                'password' => Hash::make($request->get('password')),
-                'role' => $request->get('role'),
-            ]);
-        } else {
-            $user->update([
-                'name' => strtoupper($request->get('name')),
-                'email' => $request->get('email'),
-                'role' => $request->get('role'),
-            ]);
+        $request->validate([
+            'name' => 'required|string',
+            'email' => 'required|email',
+            'magasins' => 'required|array|min:1',
+            'role' => 'required|in:Admin,Manager,Supervisor,User,Non Actif',
+            'password' => 'nullable|min:4', // ✅ le mot de passe est facultatif
+        ], [
+            'name.required' => 'Champ obligatoire !',
+            'email.required' => 'Champ obligatoire !',
+            'email.email' => 'Format d’email invalide.',
+            'magasins.required' => 'Attribuez au moins un magasin.',
+            'role.required' => 'Le rôle est requis.',
+            'password.min' => 'Le mot de passe doit contenir au moins 4 caractères.',
+        ]);
+
+        $updateData = [
+            'name' => strtoupper($request->name),
+            'email' => $request->email,
+            'role' => $request->role,
+        ];
+
+        // ✅ Mise à jour du mot de passe seulement s’il est rempli
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
         }
+
+        $user->update($updateData);
+
+        // ✅ Mise à jour des magasins liés
+        $user->magasins()->sync($request->magasins);
 
         return to_route('admin.compte.edit', encrypt($user->id))->with('success', "La modification a été effectuée !");
     }
 
+
     public function destroy($id)
     {
-        User::destroy($id);
+        $user = User::find($id);
+
+        if (!$user) {
+            return to_route('admin.compte.index')->with('error', "Utilisateur introuvable.");
+        }
+
+        // Supprimer les liens avec les magasins (table pivot)
+        $user->magasins()->detach();
+
+        $user->delete();
+
         return to_route('admin.compte.index')->with('success', "La suppression a été effectuée !");
     }
+
 }

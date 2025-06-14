@@ -14,6 +14,22 @@
     <form action="{{ route('auth.postLogup') }}" method="POST" class="form-validate is-alter" autocomplete="off">
         @csrf
 
+        {{-- Nom --}}
+        <div class="form-group">
+            <div class="form-label-group">
+                <label class="form-label" for="name">Nom complet</label>
+            </div>
+            <div class="form-control-wrap">
+                <input type="text" name="name" id="name"
+                    class="form-control form-control-lg @error('name') is-invalid @enderror"
+                    placeholder="Entrez votre nom complet"
+                    value="{{ old('name') }}" required autocomplete="name">
+                @error('name')
+                <span class="invalid-feedback" style="display:block;"><strong>{{ $message }}</strong></span>
+                @enderror
+            </div>
+        </div>
+
         {{-- Email --}}
         <div class="form-group">
             <div class="form-label-group">
