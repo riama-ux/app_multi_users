@@ -95,8 +95,11 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
     Route::resource('produits', App\Http\Controllers\Module\ProduitController::class);
 });
 
+// Accès lecture seule pour Manager
 Route::middleware(['auth', 'user-access:Manager'])
-    ->prefix('module')->name('module.')->group(function () {
+    ->prefix('module/manager') // <- chemin URL différent
+    ->name('manager.module.')  // <- nom de route différent
+    ->group(function () {
         Route::resource('produits', App\Http\Controllers\Module\ProduitController::class)
             ->only(['index', 'show']);
     });

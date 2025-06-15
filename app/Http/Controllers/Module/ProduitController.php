@@ -13,14 +13,18 @@ class ProduitController extends Controller
 {
     public function index()
     {
-        return view('admin.produits.index', [
+        return view('module.produits.index', [
             'produits' => Produit::with('categorie')->orderBy('id', 'desc')->paginate(20),
         ]);
     }
 
     public function create()
     {
-        return view('admin.produits.create', [
+        if (auth()->user()->role === 'Manager') {
+            abort(403, 'Accès interdit.');
+        }
+
+        return view('module.produits.create', [
             'categories' => Categorie::all(),
             'magasins' => Magasin::all(),
         ]);
@@ -28,11 +32,16 @@ class ProduitController extends Controller
 
     public function store(Request $request)
     {
+        if (auth()->user()->role === 'Manager') {
+            abort(403, 'Accès interdit.');
+        }
+
         $request->validate([
             'nom' => 'required',
             'code' => 'required|unique:produits',
             'categorie_id' => 'required|exists:categories,id',
             'prix_achat' => 'required|integer',
+            'cout_achat' => 'required|integer',
             'prix_vente' => 'required|integer',
             'magasins' => 'required|array|min:1',
         ]);
@@ -42,11 +51,11 @@ class ProduitController extends Controller
             'code' => $request->code,
             'categorie_id' => $request->categorie_id,
             'prix_achat' => $request->prix_achat,
+            'cout_achat' => $request->cout_achat,
             'prix_vente' => $request->prix_vente,
             'description' => $request->description,
         ]);
 
-        // Créer un stock initial de 0 pour chaque magasin sélectionné
         foreach ($request->magasins as $magasinId) {
             Stock::create([
                 'produit_id' => $produit->id,
@@ -55,12 +64,16 @@ class ProduitController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.produits.index')->with('success', 'Produit créé avec succès.');
+        return redirect()->route('module.produits.index')->with('success', 'Produit créé avec succès.');
     }
 
     public function edit(Produit $produit)
     {
-        return view('admin.produits.edit', [
+        if (auth()->user()->role === 'Manager') {
+            abort(403, 'Accès interdit.');
+        }
+
+        return view('module.produits.edit', [
             'produit' => $produit,
             'categories' => Categorie::all(),
             'magasins' => Magasin::all(),
@@ -69,11 +82,14 @@ class ProduitController extends Controller
 
     public function update(Request $request, Produit $produit)
     {
+        if (auth()->user()->role === 'Manager') {
+            abort(403, 'Accès interdit.');
+        }
+
         $request->validate([
             'nom' => 'required',
             'code' => 'required|unique:produits,code,' . $produit->id,
             'categorie_id' => 'required|exists:categories,id',
-            'prix_achat' => 'required|integer',
             'prix_achat' => 'required|integer',
             'cout_achat' => 'required|integer',
             'prix_vente' => 'required|integer',
@@ -94,7 +110,11 @@ class ProduitController extends Controller
 
     public function destroy(Produit $produit)
     {
-        $produit->stocks()->delete(); // supprimer les stocks associés
+        if (auth()->user()->role === 'Manager') {
+            abort(403, 'Accès interdit.');
+        }
+
+        $produit->stocks()->delete();
         $produit->delete();
 
         return redirect()->route('module.produits.index')->with('success', 'Produit supprimé.');

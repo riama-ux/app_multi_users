@@ -1,6 +1,13 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
+@php
+    // Bloquer l'accès au Manager
+    if (auth()->user()->role === 'Manager') {
+        abort(403, 'Accès interdit');
+    }
+@endphp
+
 <div class="card card-preview">
     <div class="card-inner">
         <h4 class="mb-4">Ajouter un produit</h4>
@@ -18,7 +25,7 @@
                     @error('nom') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Code (ex : code-barres) --}}
+                {{-- Code --}}
                 <div class="col-md-6">
                     <label class="form-label">Code</label>
                     <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" required>
@@ -46,10 +53,10 @@
                     @error('prix_achat') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- cout d'achat --}}
+                {{-- Coût d'achat --}}
                 <div class="col-md-3">
                     <label class="form-label">Coût d'achat (CFA)</label>
-                    <input type="number" name="prix_achat" class="form-control @error('cout_achat') is-invalid @enderror" value="{{ old('cout_achat') }}" required>
+                    <input type="number" name="cout_achat" class="form-control @error('cout_achat') is-invalid @enderror" value="{{ old('cout_achat') }}" required>
                     @error('cout_achat') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
 
@@ -60,7 +67,7 @@
                     @error('prix_vente') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Description (facultative) --}}
+                {{-- Description --}}
                 <div class="col-md-12">
                     <label class="form-label">Description</label>
                     <textarea name="description" class="form-control">{{ old('description') }}</textarea>
@@ -79,7 +86,7 @@
                     @error('magasins') <div class="text-danger">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Bouton --}}
+                {{-- Boutons --}}
                 <div class="col-12 d-flex justify-content-center mt-3">
                     <button type="submit" class="btn btn-primary">Enregistrer</button>
                     <a href="{{ route('module.produits.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>

@@ -1,6 +1,12 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
+@php
+    if (auth()->user()->role === 'Manager') {
+        abort(403, 'Accès interdit');
+    }
+@endphp
+
 <div class="card card-preview">
     <div class="card-inner">
         <h4 class="mb-4">Modifier un produit</h4>
