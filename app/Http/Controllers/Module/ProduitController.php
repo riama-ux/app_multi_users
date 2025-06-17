@@ -119,4 +119,4 @@ class ProduitController extends Controller
 
         return redirect()->route('module.produits.index')->with('success', 'Produit supprimé.');
     }
-}
+}                                

@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('fournisseur_id')->constrained()->onDelete('cascade');
             $table->foreignId('produit_id')->constrained()->onDelete('cascade');
+            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
             $table->integer('quantite');
             $table->integer('prix_total');
             $table->enum('statut', ['en attente', 'reçue', 'annulée'])->default('en attente');

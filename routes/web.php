@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MagasinSelectionController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +18,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('auth.login');
 })->name('app.home');
+
+
+Route::post('/choisir-magasin', [MagasinSelectionController::class, 'store'])
+    ->name('store.magasin.selection');
 
 /*
 |--------------------------------------------------------------------------
@@ -185,4 +191,17 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('transferts', App\Http\Controllers\Module\TransfertController::class)->only(['index', 'create', 'store', 'destroy']);
+});
+
+
+
+
+
+/*
+|--------------------------------------------------------------------------
+| New routes
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('admin')->name('admin.')->group(function () {
+    Route::resource('categories', App\Http\Controllers\Admin\CategorieController::class);
 });

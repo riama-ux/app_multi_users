@@ -11,7 +11,7 @@ class Produit extends Model
 
     protected $fillable = [
         'nom', 'categorie_id', 'code',
-        'prix_achat', 'cout_achat', 'prix_vente', 'description'
+        'prix_achat', 'cout_achat', 'prix_vente', 'description', 'magasin_id'
     ];
 
     public function categorie()
@@ -43,4 +43,5 @@ class Produit extends Model
     {
         return $this->hasMany(Commande::class);
     }
+
 }

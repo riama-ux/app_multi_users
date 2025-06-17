@@ -11,19 +11,6 @@
             @csrf
 
             <div class="row g-4">
-                {{-- Magasin --}}
-                <div class="col-md-6">
-                    <label class="form-label">Magasin</label>
-                    <select name="magasin_id" class="form-control @error('magasin_id') is-invalid @enderror" required>
-                        <option value="">-- Sélectionner un magasin --</option>
-                        @foreach($magasins as $magasin)
-                            <option value="{{ $magasin->id }}" {{ old('magasin_id') == $magasin->id ? 'selected' : '' }}>
-                                {{ $magasin->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('magasin_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
 
                 {{-- Produit --}}
                 <div class="col-md-6">

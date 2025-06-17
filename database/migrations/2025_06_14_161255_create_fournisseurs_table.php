@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('telephone')->nullable();
             $table->text('adresse')->nullable();
+            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

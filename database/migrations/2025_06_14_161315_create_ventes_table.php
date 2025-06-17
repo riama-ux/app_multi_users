@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantite');
             $table->integer('prix_unitaire');
+            $table->integer('remise')->default(0); // remise en FCFA
             $table->integer('total');
             $table->enum('mode_paiement', ['cash', 'credit']);
             $table->timestamps();

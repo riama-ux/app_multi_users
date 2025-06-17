@@ -43,4 +43,4 @@ class StockController extends Controller
     public function show(Stock $stock) { abort(404); }
     public function destroy(Stock $stock) { abort(404); }
 }
-
+                                      

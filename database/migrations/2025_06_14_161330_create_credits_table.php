@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('vente_id')->constrained()->onDelete('cascade');
             $table->integer('montant_restant');
             $table->date('date_echeance')->nullable();
+            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

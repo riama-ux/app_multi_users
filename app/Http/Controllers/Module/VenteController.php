@@ -37,7 +37,7 @@ class VenteController extends Controller
             'magasin_id' => 'required|exists:magasins,id',
             'quantite' => 'required|integer|min:1',
             'prix_unitaire' => 'required|integer|min:0',
-            'mode_paiement' => 'required|in:espece,credit',
+            'mode_paiement' => 'required|in:cash,credit',
         ]);
 
         $total = $request->quantite * $request->prix_unitaire;

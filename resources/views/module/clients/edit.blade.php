@@ -44,7 +44,7 @@
                     @error('adresse') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
             </div>
-
+            
             <div class="d-flex justify-content-center mt-4">
                 <button type="submit" class="btn btn-primary">Modifier</button>
                 <a href="{{ route('module.clients.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>

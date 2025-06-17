@@ -74,7 +74,7 @@
                     <label class="form-label">Mode de paiement</label>
                     <select name="mode_paiement" class="form-control @error('mode_paiement') is-invalid @enderror" required>
                         <option value="">-- Choisir un mode --</option>
-                        <option value="espece" {{ old('mode_paiement') == 'espece' ? 'selected' : '' }}>Espèce</option>
+                        <option value="cash" {{ old('mode_paiement') == 'cash' ? 'selected' : '' }}>Cash</option>
                         <option value="credit" {{ old('mode_paiement') == 'credit' ? 'selected' : '' }}>Crédit</option>
                     </select>
                     @error('mode_paiement') <span class="text-danger">{{ $message }}</span> @enderror
