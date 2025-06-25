@@ -1,47 +1,43 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Rembourser un crédit</h4>
+    <h3>Modifier un crédit</h3>
 
-        @include('flash-message')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </div>
+    @endif
 
-        <form action="{{ route('module.credits.update', $credit->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+    <form action="{{ route('credits.update', $credit->id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-            {{-- Client --}}
-            <div class="form-group">
-                <label class="form-label">Client</label>
-                <input type="text" class="form-control" value="{{ $credit->vente->client->nom ?? '-' }}" disabled>
-            </div>
+        <div class="mb-3">
+            <label>Client</label>
+            <input type="text" class="form-control" value="{{ $credit->client->nom ?? 'N/A' }}" disabled>
+        </div>
 
-            {{-- Montant restant --}}
-            <div class="form-group">
-                <label class="form-label">Montant restant</label>
-                <input type="text" class="form-control text-danger fw-bold" value="{{ number_format($credit->montant_restant) }} F" disabled>
-            </div>
+        <div class="mb-3">
+            <label>Montant dû</label>
+            <input type="text" class="form-control" value="{{ number_format($credit->montant) }} FCFA" disabled>
+        </div>
 
-            {{-- Date d'échéance --}}
-            <div class="form-group">
-                <label class="form-label">Date d'échéance</label>
-                <input type="text" class="form-control" value="{{ \Carbon\Carbon::parse($credit->date_echeance)->format('d/m/Y') }}" disabled>
-            </div>
+        <div class="mb-3">
+            <label for="statut">Statut</label>
+            <select name="statut" class="form-select" required>
+                <option value="non payé" {{ $credit->statut === 'non payé' ? 'selected' : '' }}>Non payé</option>
+                <option value="payé" {{ $credit->statut === 'payé' ? 'selected' : '' }}>Payé</option>
+            </select>
+        </div>
 
-            {{-- Montant remboursé --}}
-            <div class="form-group">
-                <label class="form-label">Montant à rembourser</label>
-                <input type="number" name="montant_rembourse" class="form-control @error('montant_rembourse') is-invalid @enderror"
-                       value="{{ old('montant_rembourse') }}" required min="1" max="{{ $credit->montant_restant }}">
-                @error('montant_rembourse') <span class="text-danger">{{ $message }}</span> @enderror
-            </div>
+        <div class="mb-3">
+            <label for="echeance">Date d’échéance (facultative)</label>
+            <input type="date" name="echeance" class="form-control" value="{{ old('echeance', $credit->echeance) }}">
+        </div>
 
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Valider le remboursement</button>
-                <a href="{{ route('module.credits.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
-    </div>
-</div>
+        <button class="btn btn-success">Mettre à jour</button>
+        <a href="{{ route('credits.index') }}" class="btn btn-secondary">Annuler</a>
+    </form>
 @endsection
+

@@ -1,58 +1,81 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Nouvelle commande de produit</h4>
+    <h3>Nouvelle commande fournisseur</h3>
 
-        @include('flash-message')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </div>
+    @endif
 
-        <form action="{{ route('module.commandes.store') }}" method="POST">
-            @csrf
+    <form action="{{ route('module.commandes.store') }}" method="POST">
+        @csrf
 
-            <div class="row g-4">
-                {{-- Magasin --}}
-                <div class="col-md-6">
-                    <label class="form-label">Magasin</label>
-                    <select name="magasin_id" class="form-control @error('magasin_id') is-invalid @enderror" required>
-                        <option value="">-- Sélectionner un magasin --</option>
-                        @foreach($magasins as $magasin)
-                            <option value="{{ $magasin->id }}" {{ old('magasin_id') == $magasin->id ? 'selected' : '' }}>
-                                {{ $magasin->nom }}
-                            </option>
+        <div class="mb-3">
+            <label>Fournisseur</label>
+            <select name="fournisseur_id" class="form-select" required>
+                <option value="">-- Sélectionnez --</option>
+                @foreach ($fournisseurs as $f)
+                    <option value="{{ $f->id }}">{{ $f->nom }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Date commande</label>
+            <input type="date" name="date_commande" class="form-control" required value="{{ date('Y-m-d') }}">
+        </div>
+
+        <h5 class="mt-4">Produits</h5>
+        <div id="ligne-produits">
+            <div class="row mb-2">
+                <div class="col-md-5">
+                    <select name="produits[]" class="form-select" required>
+                        <option value="">-- Produit --</option>
+                        @foreach ($produits as $p)
+                            <option value="{{ $p->id }}">{{ $p->nom }}</option>
                         @endforeach
                     </select>
-                    @error('magasin_id') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
-
-                {{-- Produit --}}
-                <div class="col-md-6">
-                    <label class="form-label">Produit</label>
-                    <select name="produit_id" class="form-control @error('produit_id') is-invalid @enderror" required>
-                        <option value="">-- Sélectionner un produit --</option>
-                        @foreach($produits as $produit)
-                            <option value="{{ $produit->id }}" {{ old('produit_id') == $produit->id ? 'selected' : '' }}>
-                                {{ $produit->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('produit_id') <span class="text-danger">{{ $message }}</span> @enderror
+                <div class="col-md-3">
+                    <input type="number" name="quantites[]" class="form-control" placeholder="Qté" required min="1">
                 </div>
-
-                {{-- Quantité --}}
-                <div class="col-md-6">
-                    <label class="form-label">Quantité demandée</label>
-                    <input type="number" name="quantite" class="form-control @error('quantite') is-invalid @enderror"
-                           value="{{ old('quantite') }}" required min="1">
-                    @error('quantite') <span class="text-danger">{{ $message }}</span> @enderror
+                <div class="col-md-3">
+                    <input type="number" name="prix_unitaires[]" class="form-control" placeholder="Prix U." required>
                 </div>
             </div>
+        </div>
 
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Valider la commande</button>
-                <a href="{{ route('module.commandes.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
-    </div>
-</div>
+        <button type="button" class="btn btn-sm btn-secondary mb-3" onclick="ajouterLigne()">+ Ajouter un produit</button>
+
+        <button class="btn btn-success">Enregistrer</button>
+        <a href="{{ route('module.commandes.index') }}" class="btn btn-secondary">Annuler</a>
+    </form>
 @endsection
+
+@push('scripts')
+<script>
+    function ajouterLigne() {
+        const div = document.createElement('div');
+        div.className = 'row mb-2';
+        div.innerHTML = `
+            <div class="col-md-5">
+                <select name="produits[]" class="form-select" required>
+                    <option value="">-- Produit --</option>
+                    @foreach ($produits as $p)
+                        <option value="{{ $p->id }}">{{ $p->nom }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="quantites[]" class="form-control" placeholder="Qté" required min="1">
+            </div>
+            <div class="col-md-3">
+                <input type="number" name="prix_unitaires[]" class="form-control" placeholder="Prix U." required>
+            </div>
+        `;
+        document.getElementById('ligne-produits').appendChild(div);
+    }
+</script>
+@endpush

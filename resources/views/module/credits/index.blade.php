@@ -1,58 +1,50 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Liste des crédits en attente</h4>
+    <h3>Liste des crédits (magasin actif)</h3>
 
-        @include('flash-message')
+    @if (session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
 
-        <div class="table-responsive">
-            <table class="table table-bordered">
-                <thead class="thead-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Client</th>
-                        <th>Montant restant</th>
-                        <th>Échéance</th>
-                        <th>Statut</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($credits as $credit)
-                        <tr>
-                            <td>{{ $loop->iteration }}</td>
-                            <td>{{ $credit->vente->client->nom ?? '—' }}</td>
-                            <td class="fw-bold text-danger">{{ number_format($credit->montant_restant) }} F</td>
-                            <td>{{ \Carbon\Carbon::parse($credit->date_echeance)->format('d/m/Y') }}</td>
-                            <td>
-                                <span class="badge bg-{{ $credit->statut == 'payé' ? 'success' : 'warning' }}">
-                                    {{ ucfirst($credit->statut) }}
-                                </span>
-                            </td>
-                            <td>
-                                @if($credit->montant_restant > 0)
-                                    <a href="{{ route('module.credits.edit', $credit->id) }}" class="btn btn-sm btn-outline-primary">
-                                        <em class="icon ni ni-cash"></em> Rembourser
-                                    </a>
-                                @else
-                                    <span class="text-success">Soldé</span>
-                                @endif
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-danger">Aucun crédit actif.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Montant</th>
+                <th>Statut</th>
+                <th>Échéance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($credits as $credit)
+                <tr>
+                    <td>{{ $credit->created_at->format('d/m/Y') }}</td>
+                    <td>{{ $credit->client->nom ?? '-' }}</td>
+                    <td>{{ number_format($credit->montant) }} FCFA</td>
+                    <td>
+                        <span class="badge bg-{{ $credit->statut === 'payé' ? 'success' : 'warning' }}">
+                            {{ ucfirst($credit->statut) }}
+                        </span>
+                    </td>
+                    <td>{{ $credit->echeance ? \Carbon\Carbon::parse($credit->echeance)->format('d/m/Y') : '-' }}</td>
+                    <td>
+                        <a href="{{ route('credits.edit', $credit->id) }}" class="btn btn-sm btn-primary">Modifier</a>
+                        <form action="{{ route('credits.destroy', $credit->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce crédit ?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="6">Aucun crédit trouvé.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
 
-        <div class="d-flex justify-content-center mt-3">
-            {{ $credits->links() }}
-        </div>
-    </div>
-</div>
+    {{ $credits->links() }}
 @endsection
+

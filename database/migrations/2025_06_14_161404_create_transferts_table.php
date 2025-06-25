@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('transferts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
             $table->foreignId('magasin_source_id')->constrained('magasins')->onDelete('cascade');
             $table->foreignId('magasin_destination_id')->constrained('magasins')->onDelete('cascade');
-            $table->integer('quantite');
-            $table->string('etat')->default('en transit'); // ou reçu
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->date('date_transfert');
+            $table->enum('statut', ['en attente', 'validé', 'refusé'])->default('en attente');
             $table->timestamps();
         });
     }

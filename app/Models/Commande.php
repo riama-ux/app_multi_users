@@ -10,7 +10,7 @@ class Commande extends Model
     use HasFactory;
 
     protected $fillable = [
-        'fournisseur_id', 'produit_id', 'quantite', 'prix_total', 'statut'
+        'fournisseur_id', 'user_id', 'magasin_id', 'date_commande', 'statut'
     ];
 
     public function fournisseur()
@@ -18,8 +18,18 @@ class Commande extends Model
         return $this->belongsTo(Fournisseur::class);
     }
 
-    public function produit()
+    public function user()
     {
-        return $this->belongsTo(Produit::class);
+        return $this->belongsTo(User::class);
+    }
+
+    public function magasin()
+    {
+        return $this->belongsTo(Magasin::class);
+    }
+
+    public function lignes()
+    {
+        return $this->hasMany(LigneCommande::class);
     }
 }

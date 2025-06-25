@@ -1,38 +1,30 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Modifier la quantité en stock</h4>
+    <h3>Modifier le stock</h3>
 
-        @include('flash-message')
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </div>
+    @endif
 
-        <form action="{{ route('module.stocks.update', $stock->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+    <form action="{{ route('module.stocks.update', $stock->id) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-            <div class="form-group">
-                <label class="form-label">Produit</label>
-                <input type="text" class="form-control" value="{{ $stock->produit->nom }}" disabled>
-            </div>
+        <div class="mb-3">
+            <label>Produit</label>
+            <input type="text" value="{{ $stock->produit->nom }}" class="form-control" disabled>
+        </div>
 
-            <div class="form-group">
-                <label class="form-label">Magasin</label>
-                <input type="text" class="form-control" value="{{ $stock->magasin->nom }}" disabled>
-            </div>
+        <div class="mb-3">
+            <label for="quantite">Quantité</label>
+            <input type="number" name="quantite" value="{{ old('quantite', $stock->quantite) }}" class="form-control" required>
+        </div>
 
-            <div class="form-group">
-                <label class="form-label">Quantité actuelle</label>
-                <input type="number" name="quantite" class="form-control @error('quantite') is-invalid @enderror"
-                       value="{{ old('quantite', $stock->quantite) }}" required min="0">
-                @error('quantite') <span class="text-danger">{{ $message }}</span> @enderror
-            </div>
-
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Mettre à jour</button>
-                <a href="{{ route('module.stocks.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
-    </div>
-</div>
+        <button class="btn btn-primary">Modifier</button>
+        <a href="{{ route('module.stocks.index') }}" class="btn btn-secondary">Retour</a>
+    </form>
 @endsection
+

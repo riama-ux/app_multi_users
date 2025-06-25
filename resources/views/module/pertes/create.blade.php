@@ -1,66 +1,46 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Déclarer une perte de stock</h4>
+<div class="container">
+    <h1>Ajouter une perte</h1>
 
-        @include('flash-message')
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+            </ul>
+        </div>
+    @endif
 
-        <form action="{{ route('module.pertes.store') }}" method="POST">
-            @csrf
+    <form action="{{ route('module.pertes.store') }}" method="POST">
+        @csrf
 
-            <div class="row g-4">
-                {{-- Magasin --}}
-                <div class="col-md-6">
-                    <label class="form-label">Magasin concerné</label>
-                    <select name="magasin_id" class="form-control @error('magasin_id') is-invalid @enderror" required>
-                        <option value="">-- Choisir un magasin --</option>
-                        @foreach($magasins as $magasin)
-                            <option value="{{ $magasin->id }}" {{ old('magasin_id') == $magasin->id ? 'selected' : '' }}>
-                                {{ $magasin->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('magasin_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
+        <div class="mb-3">
+            <label for="produit_id" class="form-label">Produit</label>
+            <select name="produit_id" id="produit_id" class="form-control" required>
+                <option value="">-- Choisir un produit --</option>
+                @foreach($produits as $produit)
+                    <option value="{{ $produit->id }}" {{ old('produit_id') == $produit->id ? 'selected' : '' }}>
+                        {{ $produit->nom }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-                {{-- Produit --}}
-                <div class="col-md-6">
-                    <label class="form-label">Produit concerné</label>
-                    <select name="produit_id" class="form-control @error('produit_id') is-invalid @enderror" required>
-                        <option value="">-- Choisir un produit --</option>
-                        @foreach($produits as $produit)
-                            <option value="{{ $produit->id }}" {{ old('produit_id') == $produit->id ? 'selected' : '' }}>
-                                {{ $produit->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('produit_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
+        <div class="mb-3">
+            <label for="quantite" class="form-label">Quantité</label>
+            <input type="number" name="quantite" id="quantite" min="1" class="form-control" value="{{ old('quantite') }}" required>
+        </div>
 
-                {{-- Quantité --}}
-                <div class="col-md-6">
-                    <label class="form-label">Quantité perdue</label>
-                    <input type="number" name="quantite" class="form-control @error('quantite') is-invalid @enderror"
-                           value="{{ old('quantite') }}" required min="1">
-                    @error('quantite') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
+        <div class="mb-3">
+            <label for="motif" class="form-label">Motif (optionnel)</label>
+            <input type="text" name="motif" id="motif" class="form-control" value="{{ old('motif') }}">
+        </div>
 
-                {{-- Motif --}}
-                <div class="col-md-6">
-                    <label class="form-label">Motif (facultatif)</label>
-                    <input type="text" name="motif" class="form-control @error('motif') is-invalid @enderror"
-                           value="{{ old('motif') }}" placeholder="ex: produit expiré, vol, erreur...">
-                    @error('motif') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Enregistrer la perte</button>
-                <a href="{{ route('module.pertes.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
-    </div>
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <a href="{{ route('module.pertes.index') }}" class="btn btn-secondary">Retour</a>
+    </form>
 </div>
 @endsection

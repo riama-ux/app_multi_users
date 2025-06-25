@@ -1,80 +1,95 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Effectuer un transfert de stock</h4>
+<h3>Créer un nouveau transfert</h3>
 
-        @include('flash-message')
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
 
-        <form action="{{ route('module.transferts.store') }}" method="POST">
-            @csrf
+<form action="{{ route('module.transferts.store') }}" method="POST">
+    @csrf
 
-            <div class="row g-4">
-                {{-- Produit --}}
-                <div class="col-md-6">
-                    <label class="form-label">Produit à transférer</label>
-                    <select name="produit_id" class="form-control @error('produit_id') is-invalid @enderror" required>
-                        <option value="">-- Choisir un produit --</option>
-                        @foreach($produits as $produit)
-                            <option value="{{ $produit->id }}" {{ old('produit_id') == $produit->id ? 'selected' : '' }}>
-                                {{ $produit->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('produit_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Magasin source --}}
-                <div class="col-md-6">
-                    <label class="form-label">Magasin source</label>
-                    <select name="source_id" class="form-control @error('source_id') is-invalid @enderror" required>
-                        <option value="">-- Sélectionner --</option>
-                        @foreach($magasins as $magasin)
-                            <option value="{{ $magasin->id }}" {{ old('source_id') == $magasin->id ? 'selected' : '' }}>
-                                {{ $magasin->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('source_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Magasin destination --}}
-                <div class="col-md-6">
-                    <label class="form-label">Magasin de destination</label>
-                    <select name="destination_id" class="form-control @error('destination_id') is-invalid @enderror" required>
-                        <option value="">-- Sélectionner --</option>
-                        @foreach($magasins as $magasin)
-                            <option value="{{ $magasin->id }}" {{ old('destination_id') == $magasin->id ? 'selected' : '' }}>
-                                {{ $magasin->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('destination_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Quantité --}}
-                <div class="col-md-6">
-                    <label class="form-label">Quantité à transférer</label>
-                    <input type="number" name="quantite" class="form-control @error('quantite') is-invalid @enderror"
-                           value="{{ old('quantite') }}" required min="1">
-                    @error('quantite') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Commentaire --}}
-                <div class="col-md-12">
-                    <label class="form-label">Commentaire (facultatif)</label>
-                    <input type="text" name="commentaire" class="form-control @error('commentaire') is-invalid @enderror"
-                           value="{{ old('commentaire') }}" placeholder="Ex : réapprovisionnement, transfert urgent...">
-                    @error('commentaire') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Valider le transfert</button>
-                <a href="{{ route('module.transferts.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
+    <div class="mb-3">
+        <label>Magasin source :</label>
+        <input type="text" class="form-control" value="{{ \App\Models\Magasin::find(session('magasin_actif_id'))->nom ?? '-' }}" disabled>
     </div>
-</div>
+
+    <div class="mb-3">
+        <label for="magasin_destination_id">Magasin destination :</label>
+        <select name="magasin_destination_id" id="magasin_destination_id" class="form-control" required>
+            <option value="">-- Choisir --</option>
+            @foreach($magasins as $magasin)
+                <option value="{{ $magasin->id }}" {{ old('magasin_destination_id') == $magasin->id ? 'selected' : '' }}>
+                    {{ $magasin->nom }}
+                </option>
+            @endforeach
+        </select>
+        @error('magasin_destination_id')<small class="text-danger">{{ $message }}</small>@enderror
+    </div>
+
+    <div class="mb-3">
+        <label for="date_transfert">Date de transfert :</label>
+        <input type="date" name="date_transfert" id="date_transfert" class="form-control" value="{{ old('date_transfert', date('Y-m-d')) }}" required>
+        @error('date_transfert')<small class="text-danger">{{ $message }}</small>@enderror
+    </div>
+
+    <hr>
+
+    <h5>Produits à transférer</h5>
+
+    <table class="table table-bordered" id="table-produits">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th><button type="button" class="btn btn-sm btn-primary" id="ajouter-produit">+</button></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <select name="produits[]" class="form-control" required>
+                        <option value="">-- Choisir --</option>
+                        @foreach($produits as $produit)
+                            <option value="{{ $produit->id }}">{{ $produit->nom }}</option>
+                        @endforeach
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="quantites[]" class="form-control" min="1" required>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger supprimer-ligne">-</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+    <a href="{{ route('module.transferts.index') }}" class="btn btn-secondary">Annuler</a>
+</form>
+
+<script>
+    document.getElementById('ajouter-produit').addEventListener('click', function () {
+        let tableBody = document.querySelector('#table-produits tbody');
+        let newRow = tableBody.rows[0].cloneNode(true);
+
+        newRow.querySelector('select').value = '';
+        newRow.querySelector('input').value = '';
+
+        tableBody.appendChild(newRow);
+    });
+
+    document.querySelector('#table-produits').addEventListener('click', function(e) {
+        if(e.target.classList.contains('supprimer-ligne')) {
+            let rows = document.querySelectorAll('#table-produits tbody tr');
+            if (rows.length > 1) {
+                e.target.closest('tr').remove();
+            } else {
+                alert('Il doit y avoir au moins un produit.');
+            }
+        }
+    });
+</script>
 @endsection

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
             $table->integer('quantite')->default(0);
             $table->timestamps();
+            $table->unique(['produit_id', 'magasin_id']); // Un seul stock par produit-magasin
         });
     }
 

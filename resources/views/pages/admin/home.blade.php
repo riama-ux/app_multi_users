@@ -5,11 +5,34 @@
 <div class="toggle-expand-content" data-content="pageMenu">
     <ul class="nk-block-tools g-3">
         <li>
-            <a href="#" class="dropdown-toggle btn btn-white btn-dim btn-outline-light" data-bs-toggle="dropdown"><em class="icon ni ni-plus"></em><span><span class="d-md-none">Autres</span><span class="d-none d-md-block">Autres Magasins</span></span></a>
+            @php
+                $user = auth()->user();
+                $magasins = $user->role === 'Admin' ? \App\Models\Magasin::all() : $user->magasins;
+                $magasinActifId = session('magasin_actif_id') ?? ($magasins->first()->id ?? null);
+            @endphp
+
+            @if($magasins->count())
+                <form action="{{ route('switch.magasin') }}" method="POST" class="d-inline-block">
+                    @csrf
+                    <select name="magasin_id" onchange="this.form.submit()" class="form-select form-select-sm">
+                        @foreach($magasins as $magasin)
+                            <option value="{{ $magasin->id }}" {{ $magasin->id == $magasinActifId ? 'selected' : '' }}>
+                                {{ $magasin->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
         </li>
-        <li class="nk-block-tools-opt"><a href="#" class="btn btn-primary"><em class="icon ni ni-reports"></em><span>Rapport</span></a></li>
+
+        <li class="nk-block-tools-opt">
+            <a href="#" class="btn btn-primary">
+                <em class="icon ni ni-reports"></em><span>Rapport</span>
+            </a>
+        </li>
     </ul>
 </div>
+
 
 @endsection
 

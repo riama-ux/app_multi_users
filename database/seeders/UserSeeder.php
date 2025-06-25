@@ -19,9 +19,9 @@ class UserSeeder extends Seeder
         
         // Création de quelques magasins si besoin
         $magasins = [
-            ['nom' => 'Boutique A'],
-            ['nom' => 'Boutique B'],
-            ['nom' => 'Boutique C'],
+            ['nom' => 'Boutique A', 'adresse' => 'Quartier A'],
+            ['nom' => 'Boutique B', 'adresse' => 'Quartier A'],
+            ['nom' => 'Boutique C', 'adresse' => 'Quartier A'],
         ];
 
         foreach ($magasins as $data) {

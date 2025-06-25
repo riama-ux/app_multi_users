@@ -1,50 +1,32 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Ajouter un fournisseur</h4>
+<h3>Ajouter un fournisseur</h3>
 
-        @include('flash-message')
+<form action="{{ route('module.fournisseurs.store') }}" method="POST">
+    @csrf
 
-        <form action="{{ route('module.fournisseurs.store') }}" method="POST">
-            @csrf
-
-            <div class="row g-4">
-                {{-- Nom --}}
-                <div class="col-md-6">
-                    <label class="form-label">Nom du fournisseur</label>
-                    <input type="text" name="nom" class="form-control @error('nom') is-invalid @enderror" value="{{ old('nom') }}" required>
-                    @error('nom') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Email --}}
-                <div class="col-md-6">
-                    <label class="form-label">Email</label>
-                    <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}">
-                    @error('email') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Téléphone --}}
-                <div class="col-md-6">
-                    <label class="form-label">Téléphone</label>
-                    <input type="text" name="telephone" class="form-control @error('telephone') is-invalid @enderror" value="{{ old('telephone') }}">
-                    @error('telephone') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Adresse --}}
-                <div class="col-md-6">
-                    <label class="form-label">Adresse</label>
-                    <input type="text" name="adresse" class="form-control @error('adresse') is-invalid @enderror" value="{{ old('adresse') }}">
-                    @error('adresse') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-            </div>
-
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Enregistrer</button>
-                <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
+    <div class="mb-3">
+        <label for="nom">Nom *</label>
+        <input type="text" name="nom" class="form-control" required value="{{ old('nom') }}">
     </div>
-</div>
+
+    <div class="mb-3">
+        <label for="telephone">Téléphone</label>
+        <input type="text" name="telephone" class="form-control" value="{{ old('telephone') }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="adresse">Adresse</label>
+        <input type="text" name="adresse" class="form-control" value="{{ old('adresse') }}">
+    </div>
+
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+    <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-secondary">Annuler</a>
+</form>
 @endsection

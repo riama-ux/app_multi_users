@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Module;
 
-use App\Models\Fournisseur;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+
+use App\Models\Fournisseur;
+use App\Models\Magasin;
+use Illuminate\Http\Request;
 
 class FournisseurController extends Controller
 {
     public function index()
     {
-        return view('module.fournisseurs.index', [
-            'fournisseurs' => Fournisseur::orderByDesc('id')->paginate(20),
-        ]);
+        $fournisseurs = Fournisseur::where('magasin_id', session('magasin_actif_id'))->latest()->get();
+        return view('module.fournisseurs.index', compact('fournisseurs'));
     }
 
     public function create()
@@ -23,40 +24,69 @@ class FournisseurController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|string|unique:fournisseurs,nom',
-            'email' => 'nullable|email',
+            'nom' => 'required|string|max:255',
             'telephone' => 'nullable|string',
+            'email' => 'nullable|email',
             'adresse' => 'nullable|string',
         ]);
 
-        Fournisseur::create($request->all());
+        Fournisseur::create([
+            'nom' => $request->nom,
+            'telephone' => $request->telephone,
+            'email' => $request->email,
+            'adresse' => $request->adresse,
+            'magasin_id' => session('magasin_actif_id'),
+        ]);
 
         return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur ajouté avec succès.');
     }
 
     public function edit(Fournisseur $fournisseur)
     {
+        $this->authorizeFournisseur($fournisseur);
         return view('module.fournisseurs.edit', compact('fournisseur'));
     }
 
     public function update(Request $request, Fournisseur $fournisseur)
     {
+        $this->authorizeFournisseur($fournisseur);
+
         $request->validate([
-            'nom' => 'required|string|unique:fournisseurs,nom,' . $fournisseur->id,
-            'email' => 'nullable|email',
+            'nom' => 'required|string|max:255',
             'telephone' => 'nullable|string',
+            'email' => 'nullable|email',
             'adresse' => 'nullable|string',
         ]);
 
         $fournisseur->update($request->all());
 
-        return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur mis à jour avec succès.');
+        return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur mis à jour.');
+    }
+
+    public function show(Fournisseur $fournisseur)
+    {
+        if ($fournisseur->magasin_id !== session('magasin_actif_id')) {
+            abort(403);
+        }
+
+        // Charger les commandes liées à ce fournisseur
+        $fournisseur->load('commandes');
+
+        return view('module.fournisseurs.show', compact('fournisseur'));
     }
 
     public function destroy(Fournisseur $fournisseur)
     {
+        $this->authorizeFournisseur($fournisseur);
         $fournisseur->delete();
 
-        return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur supprimé.');
+        return back()->with('success', 'Fournisseur supprimé.');
+    }
+
+    private function authorizeFournisseur(Fournisseur $fournisseur)
+    {
+        if ($fournisseur->magasin_id !== session('magasin_actif_id')) {
+            abort(403);
+        }
     }
 }

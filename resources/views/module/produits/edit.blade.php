@@ -1,51 +1,56 @@
 @extends('pages.admin.shared.layout')
 
+
 @section('content')
-@php
-    if (auth()->user()->role === 'Manager') {
-        abort(403, 'Accès interdit');
-    }
-@endphp
+    <h3>Modifier le produit</h3>
 
-<div class="card card-preview">
-    <div class="card-inner">
-        <h4 class="mb-4">Modifier un produit</h4>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+        </div>
+    @endif
 
-        @include('flash-message')
+    <form action="{{ route('module.produits.update', $produit) }}" method="POST">
+        @csrf
+        @method('PUT')
 
-        <form action="{{ route('module.produits.update', $produit->id) }}" method="POST">
-            @csrf
-            @method('PUT')
+        <div class="mb-3">
+            <label for="nom">Nom</label>
+            <input type="text" name="nom" value="{{ old('nom', $produit->nom) }}" class="form-control" required>
+        </div>
 
-            <div class="row g-4">
-                {{-- Nom du produit --}}
-                <div class="col-md-6">
-                    <label class="form-label">Nom du produit</label>
-                    <input type="text" name="nom" class="form-control @error('nom') is-invalid @enderror"
-                           value="{{ old('nom', $produit->nom) }}" required>
-                    @error('nom') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
+        <div class="mb-3">
+            <label for="code">Code</label>
+            <input type="text" name="code" value="{{ old('code', $produit->code) }}" class="form-control" required>
+        </div>
 
-                {{-- Catégorie --}}
-                <div class="col-md-6">
-                    <label class="form-label">Catégorie</label>
-                    <select name="categorie_id" class="form-control @error('categorie_id') is-invalid @enderror" required>
-                        <option value="">-- Choisir une catégorie --</option>
-                        @foreach($categories as $categorie)
-                            <option value="{{ $categorie->id }}" {{ $produit->categorie_id == $categorie->id ? 'selected' : '' }}>
-                                {{ $categorie->nom }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('categorie_id') <span class="text-danger">{{ $message }}</span> @enderror
-                </div>
-            </div>
+        <div class="mb-3">
+            <label for="categorie_id">Catégorie</label>
+            <select name="categorie_id" class="form-select" required>
+                @foreach ($categories as $cat)
+                    <option value="{{ $cat->id }}" {{ $produit->categorie_id == $cat->id ? 'selected' : '' }}>
+                        {{ $cat->nom }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
 
-            <div class="d-flex justify-content-center mt-4">
-                <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
-                <a href="{{ route('module.produits.index') }}" class="btn btn-outline-secondary ms-2">Annuler</a>
-            </div>
-        </form>
-    </div>
-</div>
+        <div class="mb-3">
+            <label for="prix_achat">Prix d’achat</label>
+            <input type="number" name="prix_achat" value="{{ old('prix_achat', $produit->prix_achat) }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="prix_vente">Prix de vente</label>
+            <input type="number" name="prix_vente" value="{{ old('prix_vente', $produit->prix_vente) }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="description">Description</label>
+            <textarea name="description" class="form-control">{{ old('description', $produit->description) }}</textarea>
+        </div>
+
+        <button class="btn btn-primary">Modifier</button>
+        <a href="{{ route('module.produits.index') }}" class="btn btn-secondary">Retour</a>
+    </form>
 @endsection

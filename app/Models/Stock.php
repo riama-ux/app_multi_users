@@ -20,4 +20,9 @@ class Stock extends Model
     {
         return $this->belongsTo(Magasin::class);
     }
+
+    public function stock()
+    {
+        return $this->hasOne(Stock::class)->where('magasin_id', session('magasin_actif_id'));
+    }
 }

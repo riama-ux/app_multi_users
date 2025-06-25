@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('commandes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('fournisseur_id')->constrained()->onDelete('cascade');
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
-            $table->integer('quantite');
-            $table->integer('prix_total');
-            $table->enum('statut', ['en attente', 'reçue', 'annulée'])->default('en attente');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
+            $table->date('date_commande');
+            $table->enum('statut', ['en attente', 'livrée'])->default('en attente');
             $table->timestamps();
         });
     }

@@ -2,51 +2,69 @@
 
 namespace App\Http\Controllers\Module;
 
-use App\Models\Credit;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+
+use App\Models\Credit;
+use App\Models\Client;
+use Illuminate\Http\Request;
 
 class CreditController extends Controller
 {
     public function index()
     {
-        return view('module.credits.index', [
-            'credits' => Credit::with('vente.client')->orderBy('date_echeance')->paginate(20),
-        ]);
+        $credits = Credit::with(['client', 'vente'])
+            ->where('magasin_id', session('magasin_actif_id'))
+            ->orderByDesc('id')
+            ->paginate(20);
+
+        return view('module.credits.index', compact('credits'));
+    }
+
+    public function show(Credit $credit)
+    {
+        if ($credit->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
+        return view('module.credits.show', compact('credit'));
     }
 
     public function edit(Credit $credit)
     {
+        if ($credit->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
         return view('module.credits.edit', compact('credit'));
     }
 
     public function update(Request $request, Credit $credit)
     {
+        if ($credit->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
         $request->validate([
-            'montant_rembourse' => 'required|integer|min:1',
+            'statut' => 'required|in:payé,non payé',
+            'echeance' => 'nullable|date',
         ]);
 
-        $montant = (int) $request->montant_rembourse;
-
-        if ($montant > $credit->montant_restant) {
-            return back()->with('error', 'Le montant dépasse le crédit restant.');
-        }
-
-        $credit->montant_restant -= $montant;
-
-        if ($credit->montant_restant <= 0) {
-            $credit->montant_restant = 0;
-            $credit->statut = 'payé';
-        }
-
-        $credit->save();
+        $credit->update([
+            'statut' => $request->statut,
+            'echeance' => $request->echeance,
+        ]);
 
         return redirect()->route('module.credits.index')->with('success', 'Crédit mis à jour.');
     }
 
-    // Ces méthodes ne sont pas utilisées
-    public function create() { abort(404); }
-    public function store(Request $request) { abort(404); }
-    public function show(Credit $credit) { abort(404); }
-    public function destroy(Credit $credit) { abort(404); }
+    public function destroy(Credit $credit)
+    {
+        if ($credit->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
+        $credit->delete();
+
+        return back()->with('success', 'Crédit supprimé.');
+    }
 }

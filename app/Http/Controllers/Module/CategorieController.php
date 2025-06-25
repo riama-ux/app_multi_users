@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers\Module;
 
+use App\Http\Controllers\Controller;
+
 use App\Models\Categorie;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 
 class CategorieController extends Controller
 {
     public function index()
     {
-        return view('module.categories.index', [
-            'categories' => Categorie::orderBy('nom')->paginate(20),
-        ]);
+        $categories = Categorie::where('magasin_id', session('magasin_actif_id'))
+                               ->orderBy('nom')
+                               ->paginate(20);
+
+        return view('module.categories.index', compact('categories'));
     }
 
     public function create()
@@ -23,41 +26,51 @@ class CategorieController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nom' => 'required|unique:categories,nom',
+            'nom' => 'required|string|max:255',
         ]);
 
         Categorie::create([
             'nom' => $request->nom,
+            'magasin_id' => session('magasin_actif_id'),
         ]);
 
-        return redirect()->route('module.categories.index')->with('success', 'Catégorie créée.');
+        return redirect()->route('module.categories.index')->with('success', 'Catégorie ajoutée.');
     }
 
-    public function edit(Categorie $category)
+    public function edit(Categorie $categorie)
     {
-        return view('module.categories.edit', [
-            'category' => $category,
-        ]);
+        if ($categorie->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
+        return view('module.categories.edit', compact('categorie'));
     }
 
-    public function update(Request $request, Categorie $category)
+    public function update(Request $request, Categorie $categorie)
     {
+        if ($categorie->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
+
         $request->validate([
-            'nom' => 'required|unique:categories,nom,' . $category->id,
+            'nom' => 'required|string|max:255',
         ]);
 
-        $category->update([
+        $categorie->update([
             'nom' => $request->nom,
         ]);
 
-        return redirect()->route('module.categories.index')->with('success', 'Catégorie modifiée.');
+        return redirect()->route('module.categories.index')->with('success', 'Catégorie mise à jour.');
     }
 
-    public function destroy(Categorie $category)
+    public function destroy(Categorie $categorie)
     {
-        $category->delete();
+        if ($categorie->magasin_id != session('magasin_actif_id')) {
+            abort(403);
+        }
 
-        return redirect()->route('module.categories.index')->with('success', 'Catégorie supprimée.');
+        $categorie->delete();
+
+        return back()->with('success', 'Catégorie supprimée.');
     }
 }
-

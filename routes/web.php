@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SwitchMagasinController;
+use App\Http\Controllers\TransfertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,6 +18,14 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return redirect()->route('auth.login');
 })->name('app.home');
+
+
+
+
+Route::post('/switch-magasin', [SwitchMagasinController::class, 'set'])
+->name('switch.magasin')
+->middleware('auth');
+
 
 /*
 |--------------------------------------------------------------------------
@@ -43,6 +53,7 @@ Route::middleware(['auth', 'user-access:Admin'])->group(function () {
         Route::get('compte/search', [App\Http\Controllers\Admin\CompteController::class, 'search'])->name('compte.search');
         Route::get('admin/edit/{user}', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('user.edit');
         Route::post('admin/update/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('user.update');
+        Route::resource('magasins', App\Http\Controllers\Admin\MagasinController::class)->names('admin.magasins');
     });
 });
 /*
@@ -100,8 +111,7 @@ Route::middleware(['auth', 'user-access:Manager'])
     ->prefix('module/manager') // <- chemin URL différent
     ->name('manager.module.')  // <- nom de route différent
     ->group(function () {
-        Route::resource('produits', App\Http\Controllers\Module\ProduitController::class)
-            ->only(['index', 'show']);
+        Route::resource('produits', App\Http\Controllers\Module\ProduitController::class);
     });
 
 
@@ -139,7 +149,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('stocks', App\Http\Controllers\Module\StockController::class)->except(['create', 'store', 'show', 'destroy']);
+    Route::resource('stocks', App\Http\Controllers\Module\StockController::class);
 });
 
 /*
@@ -157,7 +167,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('credits', App\Http\Controllers\Module\CreditController::class)->only(['index', 'edit', 'update']);
+    Route::resource('credits', App\Http\Controllers\Module\CreditController::class);
 });
 
 /*
@@ -166,7 +176,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('pertes', App\Http\Controllers\Module\PerteController::class)->only(['index', 'create', 'store', 'destroy']);
+    Route::resource('pertes', App\Http\Controllers\Module\PerteController::class);
 });
 
 /*
@@ -176,6 +186,8 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('commandes', App\Http\Controllers\Module\CommandeController::class);
+
+    Route::post('commandes/{id}/recevoir', [CommandeController::class, 'recevoir'])->name('commandes.recevoir');
 });
 
 /*
@@ -184,5 +196,9 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('transferts', App\Http\Controllers\Module\TransfertController::class)->only(['index', 'create', 'store', 'destroy']);
+    Route::resource('transferts', App\Http\Controllers\Module\TransfertController::class);
+
+    // Transferts : réception (valider le transfert)
+    Route::post('transferts/{transfert}/valider', [TransfertController::class, 'valider'])
+        ->name('module.transferts.valider');
 });

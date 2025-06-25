@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('produit_id')->constrained()->onDelete('cascade');
             $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->integer('quantite');
             $table->string('motif')->nullable(); // Ex : expiré, cassé...
             $table->timestamps();

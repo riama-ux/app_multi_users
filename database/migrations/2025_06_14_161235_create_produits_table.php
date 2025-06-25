@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('nom');
             $table->foreignId('categorie_id')->constrained()->onDelete('cascade');
+            $table->foreignId('magasin_id')->constrained()->onDelete('cascade'); // ✅ Ajouté pour multi-magasin
             $table->string('code')->unique(); // ex : code-barres
             $table->integer('prix_achat');
             $table->integer('cout_achat')->nullable(); // facultatif si tu ne le gères pas toujours

@@ -10,9 +10,15 @@ class Produit extends Model
     use HasFactory;
 
     protected $fillable = [
-        'nom', 'categorie_id', 'code',
+        'nom', 'categorie_id', 'magasin_id', 'code', 
         'prix_achat', 'cout_achat', 'prix_vente', 'description'
     ];
+
+    public function magasin()
+    {
+        return $this->belongsTo(Magasin::class);
+    }
+
 
     public function categorie()
     {

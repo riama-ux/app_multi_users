@@ -10,13 +10,12 @@ class Transfert extends Model
     use HasFactory;
 
     protected $fillable = [
-        'produit_id', 'magasin_source_id', 'magasin_destination_id', 'quantite', 'etat'
+        'magasin_source_id',
+        'magasin_destination_id',
+        'user_id',
+        'date_transfert',
+        'statut',
     ];
-
-    public function produit()
-    {
-        return $this->belongsTo(Produit::class);
-    }
 
     public function magasinSource()
     {
@@ -26,5 +25,15 @@ class Transfert extends Model
     public function magasinDestination()
     {
         return $this->belongsTo(Magasin::class, 'magasin_destination_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function lignes()
+    {
+        return $this->hasMany(LigneTransfert::class);
     }
 }

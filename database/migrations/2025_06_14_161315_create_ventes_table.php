@@ -14,11 +14,13 @@ return new class extends Migration
         Schema::create('ventes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('produit_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // utilisateur ayant effectué la vente
             $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
             $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('quantite');
-            $table->integer('prix_unitaire');
-            $table->integer('total');
+            $table->decimal('prix_unitaire', 10, 0);
+            $table->decimal('total', 12, 0);
+            $table->decimal('remise', 12, 0)->default(0);
             $table->enum('mode_paiement', ['cash', 'credit']);
             $table->timestamps();
         });
