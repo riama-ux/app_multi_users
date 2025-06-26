@@ -89,9 +89,10 @@ class TransfertController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        if ($transfert->magasin_source_id !== $magasinId && $transfert->magasin_destination_id !== $magasinId) {
+        if (auth()->user()->role !== 'Admin' && $transfert->magasin_source_id !== $magasinId && $transfert->magasin_destination_id !== $magasinId) {
             abort(403);
         }
+
 
         $transfert->load('lignes.produit', 'magasinSource', 'magasinDestination', 'user');
 
@@ -194,7 +195,7 @@ class TransfertController extends Controller
         $magasinId = session('magasin_actif_id');
 
         // Seul le magasin DESTINATION peut valider
-        if ($transfert->magasin_destination_id !== $magasinId) {
+        if ($transfert->magasin_destination_id != $magasinId) {
             abort(403);
         }
 

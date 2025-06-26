@@ -15,8 +15,8 @@
 
 <hr>
 
-@if($transfert->statut === 'en attente' && $transfert->magasin_destination_id === session('magasin_actif_id'))
-    <form action="{{ route('module.transferts.valider', $transfert->id) }}" method="POST" style="margin-bottom: 1rem;">
+@if($transfert->statut === 'en attente' && $transfert->magasin_destination_id == session('magasin_actif_id'))
+    <form action="{{ route('module.transferts.valider', ['transfert' => $transfert->id]) }}" method="POST" style="margin-bottom: 1rem;">
         @csrf
         <button type="submit" class="btn btn-success" onclick="return confirm('Confirmer la réception de ce transfert ?')">
             Valider la réception

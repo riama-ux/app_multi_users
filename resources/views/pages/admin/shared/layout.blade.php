@@ -50,19 +50,19 @@
                                 <li class="nk-menu-heading {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
                                     <h6 class="overline-title text-primary-alt">Modules</h6>
                                 </li><!-- .nk-menu-heading -->
-                                <li class="nk-menu-item has-sub {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
+                                <li class="nk-menu-item has-sub {{ request()->routeIs('module.ventes.*') ? 'active' : '' }}">
                                     <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-tranx"></em></span>
-                                        <span class="nk-menu-text">Vente</span>
+                                        <span class="nk-menu-icon"><em class="icon ni ni-cart"></em></span>
+                                        <span class="nk-menu-text">Ventes</span>
                                     </a>
                                     <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
-                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
+                                        <li class="nk-menu-item {{ request()->routeIs('module.ventes.create') ? 'active' : '' }}">
+                                            <a href="{{ route('module.ventes.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
                                         </li>
-                                        <li class="nk-menu-item {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
-                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Afficher</span></a>
+                                        <li class="nk-menu-item {{ request()->routeIs('module.ventes.index') ? 'active' : '' }}">
+                                            <a href="{{ route('module.ventes.index') }}" class="nk-menu-link"><span class="nk-menu-text">Afficher</span></a>
                                         </li>
-                                    </ul><!-- .nk-menu-sub -->
+                                    </ul>
                                 </li><!-- .nk-menu-item -->
                                 <li class="nk-menu-item has-sub {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
                                     <a href="#" class="nk-menu-link nk-menu-toggle">

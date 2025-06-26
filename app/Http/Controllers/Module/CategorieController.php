@@ -39,6 +39,8 @@ class CategorieController extends Controller
 
     public function edit(Categorie $categorie)
     {
+        
+        // Vérification de sécurité
         if ($categorie->magasin_id != session('magasin_actif_id')) {
             abort(403);
         }
@@ -48,6 +50,8 @@ class CategorieController extends Controller
 
     public function update(Request $request, Categorie $categorie)
     {
+        
+
         if ($categorie->magasin_id != session('magasin_actif_id')) {
             abort(403);
         }

@@ -32,11 +32,11 @@
                 <td>{{ $transfert->date_transfert }}</td>
                 <td>{{ ucfirst($transfert->statut) }}</td>
                 <td>
-                    <a href="{{ route('module.transferts.show', $transfert->id) }}" class="btn btn-info btn-sm">Voir</a>
+                    <a href="{{ route('module.transferts.show', ['transfert' => $transfert->id]) }}" class="btn btn-info btn-sm">Voir</a>
                     @if($transfert->magasin_source_id == session('magasin_actif_id') && $transfert->statut == 'en attente')
-                        <a href="{{ route('module.transferts.edit', $transfert->id) }}" class="btn btn-warning btn-sm">Modifier</a>
+                        <a href="{{ route('module.transferts.edit', ['transfert' => $transfert->id]) }}" class="btn btn-warning btn-sm">Modifier</a>
 
-                        <form action="{{ route('module.transferts.destroy', $transfert->id) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Confirmer suppression ?')">
+                        <form action="{{ route('module.transferts.destroy', ['transfert' => $transfert->id]) }}" method="POST" style="display:inline-block" onsubmit="return confirm('Confirmer suppression ?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>

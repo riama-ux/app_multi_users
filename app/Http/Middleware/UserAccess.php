@@ -13,9 +13,14 @@ class UserAccess
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, $userRole)
+    public function handle(Request $request, Closure $next, $userRoles)
     {
-        if(auth()->user()->role == $userRole){
+        
+        // transforme "Admin,Supervisor" en tableau ['Admin', 'Supervisor']
+        $roles = explode(',', $userRoles);
+
+        // si le rôle de l'utilisateur est dans la liste des rôles autorisés
+        if (in_array(auth()->user()->role, $roles)) {
             return $next($request);
         }
            

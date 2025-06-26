@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SwitchMagasinController;
-use App\Http\Controllers\TransfertController;
+use App\Http\Controllers\Module\TransfertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -102,12 +102,12 @@ Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
 | Module Produit
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('produits', App\Http\Controllers\Module\ProduitController::class);
 });
 
 // Accès lecture seule pour Manager
-Route::middleware(['auth', 'user-access:Manager'])
+Route::middleware(['auth', 'check-magasin','user-access:Manager'])
     ->prefix('module/manager') // <- chemin URL différent
     ->name('manager.module.')  // <- nom de route différent
     ->group(function () {
@@ -120,8 +120,8 @@ Route::middleware(['auth', 'user-access:Manager'])
 | Module Catégorie
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('categories', App\Http\Controllers\Module\CategorieController::class);
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+    Route::resource('categories', App\Http\Controllers\Module\CategorieController::class) ->parameters(['categories' => 'categorie']);
 });
 
 
@@ -130,7 +130,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 | Module Fournisseur
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('fournisseurs', App\Http\Controllers\Module\FournisseurController::class);
 });
 
@@ -139,7 +139,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 | Module Client
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
     Route::resource('clients', App\Http\Controllers\Module\ClientController::class);
 });
 
@@ -148,7 +148,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 | Module Stock
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('stocks', App\Http\Controllers\Module\StockController::class);
 });
 
@@ -157,7 +157,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 | Module Vente
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
     Route::resource('ventes', App\Http\Controllers\Module\VenteController::class);
 });
 
@@ -166,7 +166,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 | Module Crédit
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
     Route::resource('credits', App\Http\Controllers\Module\CreditController::class);
 });
 
@@ -175,7 +175,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor,Manager'])->prefix('mod
 | Module Pertes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('pertes', App\Http\Controllers\Module\PerteController::class);
 });
 
@@ -184,7 +184,7 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 | Module Commande
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('commandes', App\Http\Controllers\Module\CommandeController::class);
 
     Route::post('commandes/{id}/recevoir', [CommandeController::class, 'recevoir'])->name('commandes.recevoir');
@@ -195,10 +195,10 @@ Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->n
 | Module Transfert
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('transferts', App\Http\Controllers\Module\TransfertController::class);
+Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+    Route::resource('transferts', App\Http\Controllers\Module\TransfertController::class)->parameters(['transferts' => 'transfert']);
 
     // Transferts : réception (valider le transfert)
     Route::post('transferts/{transfert}/valider', [TransfertController::class, 'valider'])
-        ->name('module.transferts.valider');
+        ->name('transferts.valider');
 });

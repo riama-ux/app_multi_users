@@ -63,7 +63,7 @@ class StockController extends Controller
             abort(403);
         }
 
-        return view('stocks.edit', compact('stock'));
+        return view('module.stocks.edit', compact('stock'));
     }
 
     public function update(Request $request, Stock $stock)

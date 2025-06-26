@@ -21,9 +21,10 @@
                 <tr>
                     <td>{{ $categorie->nom }}</td>
                     <td>
-                        <a href="{{ route('module.categories.edit', $categorie->id) }}" class="btn btn-sm btn-info">Modifier</a>
+                        <a href="{{ route('module.categories.edit', ['categorie' => $categorie->id]) }}" class="btn btn-sm btn-info">Modifier</a>
 
-                        <form action="{{ route('module.categories.destroy', $categorie->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
+
+                        <form action="{{ route('module.categories.destroy', ['categorie' => $categorie->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger">Supprimer</button>

@@ -33,4 +33,10 @@ class Vente extends Model
     {
         return $this->hasOne(Credit::class);
     }
+
+    public function user()
+    {
+        // Suppose que la colonne qui stocke l'id de l'utilisateur est 'user_id'
+        return $this->belongsTo(User::class);
+    }
 }
