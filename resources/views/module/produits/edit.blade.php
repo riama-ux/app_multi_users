@@ -20,11 +20,6 @@
         </div>
 
         <div class="mb-3">
-            <label for="code">Code</label>
-            <input type="text" name="code" value="{{ old('code', $produit->code) }}" class="form-control" required>
-        </div>
-
-        <div class="mb-3">
             <label for="categorie_id">Catégorie</label>
             <select name="categorie_id" class="form-select" required>
                 @foreach ($categories as $cat)
@@ -38,6 +33,13 @@
         <div class="mb-3">
             <label for="prix_achat">Prix d’achat</label>
             <input type="number" name="prix_achat" value="{{ old('prix_achat', $produit->prix_achat) }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="cout_achat">Coût d'achat</label>
+            <input type="number" name="cout_achat" class="form-control @error('cout_achat') is-invalid @enderror"
+                value="{{ old('cout_achat', $produit->cout_achat) }}" required>
+            @error('cout_achat') <div class="text-danger">{{ $message }}</div> @enderror
         </div>
 
         <div class="mb-3">

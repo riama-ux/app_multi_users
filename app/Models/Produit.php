@@ -14,6 +14,15 @@ class Produit extends Model
         'prix_achat', 'cout_achat', 'prix_vente', 'description'
     ];
 
+    protected static function booted()
+    {
+        static::creating(function ($produit) {
+            if (empty($produit->code)) {
+                $produit->code = strtoupper(uniqid('PRD'));
+            }
+        });
+    }
+
     public function magasin()
     {
         return $this->belongsTo(Magasin::class);

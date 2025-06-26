@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\Magasin;
 
 class HomeController extends Controller
 {
     public function adminHome(){
-        return view('pages/admin/home');
+        $magasinActif = Magasin::find(session('magasin_actif_id'));
+        return view('pages/admin/home', compact('magasinActif'));
     }
 
     public function managerHome(){

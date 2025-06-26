@@ -33,8 +33,8 @@ class ProduitController extends Controller
     {
         $request->validate([
             'nom' => 'required|string',
-            'code' => 'required|string|unique:produits,code',
             'prix_achat' => 'required|numeric|min:0',
+            'cout_achat' => 'required|numeric|min:0',
             'prix_vente' => 'required|numeric|min:0',
             'categorie_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
@@ -42,8 +42,8 @@ class ProduitController extends Controller
 
         Produit::create([
             'nom' => $request->nom,
-            'code' => $request->code,
             'prix_achat' => $request->prix_achat,
+            'cout_achat' => $request->cout_achat,
             'prix_vente' => $request->prix_vente,
             'categorie_id' => $request->categorie_id,
             'description' => $request->description,
@@ -66,8 +66,8 @@ class ProduitController extends Controller
     {
         $request->validate([
             'nom' => 'required|string',
-            'code' => 'required|string|unique:produits,code,' . $produit->id,
             'prix_achat' => 'required|numeric|min:0',
+            'cout_achat' => 'required|numeric|min:0', // ✅ Ajouté
             'prix_vente' => 'required|numeric|min:0',
             'categorie_id' => 'required|exists:categories,id',
             'description' => 'nullable|string',
@@ -75,8 +75,8 @@ class ProduitController extends Controller
 
         $produit->update([
             'nom' => $request->nom,
-            'code' => $request->code,
             'prix_achat' => $request->prix_achat,
+            'cout_achat' => $request->cout_achat, // ✅ Ajouté
             'prix_vente' => $request->prix_vente,
             'categorie_id' => $request->categorie_id,
             'description' => $request->description,

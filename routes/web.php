@@ -53,7 +53,7 @@ Route::middleware(['auth', 'user-access:Admin'])->group(function () {
         Route::get('compte/search', [App\Http\Controllers\Admin\CompteController::class, 'search'])->name('compte.search');
         Route::get('admin/edit/{user}', [App\Http\Controllers\Admin\UserController::class, 'edit'])->name('user.edit');
         Route::post('admin/update/{user}', [App\Http\Controllers\Admin\UserController::class, 'update'])->name('user.update');
-        Route::resource('magasins', App\Http\Controllers\Admin\MagasinController::class)->names('admin.magasins');
+        Route::resource('magasins', App\Http\Controllers\Admin\MagasinController::class)->names('magasins');
     });
 });
 /*

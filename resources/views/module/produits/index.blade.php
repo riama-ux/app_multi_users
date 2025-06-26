@@ -17,6 +17,7 @@
                 <th>Catégorie</th>
                 <th>Code</th>
                 <th>Prix achat</th>
+                <th>Coût d’achat</th>
                 <th>Prix vente</th>
                 <th>Actions</th>
             </tr>
@@ -26,8 +27,9 @@
                 <tr>
                     <td>{{ $produit->nom }}</td>
                     <td>{{ $produit->categorie->nom ?? '-' }}</td>
-                    <td>{{ $produit->code }}</td>
+                    <td><span class="badge bg-secondary">{{ $produit->code }}</span></td>
                     <td>{{ number_format($produit->prix_achat) }} FCFA</td>
+                    <td>{{ number_format($produit->cout_achat) }} FCFA</td>
                     <td>{{ number_format($produit->prix_vente) }} FCFA</td>
                     <td>
                         <a href="{{ route('module.produits.edit', $produit) }}" class="btn btn-sm btn-info">Modifier</a>

@@ -4,55 +4,63 @@
     <h3>Ventes du magasin actif</h3>
 
     @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <div class="alert alert-success">{{ session('success') }}</div>
+@endif
+@if (session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
 
-    <a href="{{ route('module.ventes.create') }}" class="btn btn-primary mb-3">Nouvelle vente</a>
+<a href="{{ route('module.ventes.create') }}" class="btn btn-primary mb-3">Nouvelle vente</a>
 
-    <table class="table table-bordered">
-        <thead>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Produits</th>
+            <th>Remise</th>
+            <th>Total</th>
+            <th>Paiement</th>
+            <th>Client</th>
+            <th>Vendeur</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse ($ventes as $vente)
             <tr>
-                <th>Date</th>
-                <th>Produit</th>
-                <th>Qté</th>
-                <th>PU</th>
-                <th>Remise</th>
-                <th>Total</th>
-                <th>Paiement</th>
-                <th>Vendeur</th>
-                <th>Actions</th>
+                <td>{{ $vente->created_at->format('d/m/Y H:i') }}</td>
+                <td>
+                    <ul class="list-unstyled">
+                        @foreach ($vente->lignes as $ligne)
+                            <li>
+                                {{ $ligne->produit->nom }} :
+                                {{ $ligne->quantite }} × {{ number_format($ligne->prix_unitaire) }} FCFA
+                                = <strong>{{ number_format($ligne->quantite * $ligne->prix_unitaire) }} FCFA</strong>
+                            </li>
+                        @endforeach
+                    </ul>
+                </td>
+                <td>{{ number_format($vente->remise) }} FCFA</td>
+                <td><strong>{{ number_format($vente->total) }} FCFA</strong></td>
+                <td>{{ ucfirst($vente->mode_paiement) }}</td>
+                <td>{{ $vente->client?->nom ?? '-' }}</td>
+                <td>{{ $vente->user->name }}</td>
+                <td>
+                    <a href="{{ route('module.ventes.edit', $vente) }}" class="btn btn-sm btn-info">Modifier</a>
+                    <form action="{{ route('module.ventes.destroy', $vente) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette vente ?')">
+                        @csrf
+                        @method('DELETE')
+                        <button class="btn btn-sm btn-danger">Supprimer</button>
+                    </form>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @forelse ($ventes as $vente)
-                <tr>
-                    <td>{{ $vente->created_at->format('d/m/Y H:i') }}</td>
-                    <td>{{ $vente->produit->nom }}</td>
-                    <td>{{ $vente->quantite }}</td>
-                    <td>{{ number_format($vente->prix_unitaire) }} FCFA</td>
-                    <td>{{ number_format($vente->remise) }} FCFA</td>
-                    <td>{{ number_format($vente->total) }} FCFA</td>
-                    <td>{{ ucfirst($vente->mode_paiement) }}</td>
-                    <td>{{ $vente->user->name }}</td>
-                    <td>
-                        <a href="{{ route('module.ventes.edit', $vente) }}" class="btn btn-sm btn-info">Modifier</a>
-                        <form action="{{ route('module.ventes.destroy', $vente) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette vente ?')">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Supprimer</button>
-                        </form>
-                    </td>
+        @empty
+            <tr><td colspan="8">Aucune vente enregistrée pour ce magasin.</td></tr>
+        @endforelse
+    </tbody>
+</table>
 
-                </tr>
-            @empty
-                <tr><td colspan="8">Aucune vente enregistrée pour ce magasin.</td></tr>
-            @endforelse
-        </tbody>
-    </table>
+{{ $ventes->links() }}
 
-    {{ $ventes->links() }}
 @endsection
 

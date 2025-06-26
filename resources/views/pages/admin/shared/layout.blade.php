@@ -172,7 +172,7 @@
                                     </a>
                                     <ul class="nk-menu-sub">
                                         <li class="nk-menu-item {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
-                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
+                                            <a href="{{ route('admin.compte.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
                                         </li>
                                         <li class="nk-menu-item {{ request()->is('admin') ? 'sidebar-item active' : 'sidebar-item' }}">
                                             <a href="{{ route('admin.compte.index') }}" class="nk-menu-link"><span class="nk-menu-text">Afficher</span></a>
@@ -296,7 +296,7 @@
                             <div class="nk-block-head nk-block-head-sm">
                                 <div class="nk-block-between">
                                     <div class="nk-block-head-content">
-                                        <h3 class="nk-block-title page-title">Magasin 1</h3>
+                                        <h3 class="nk-block-title page-title">{{ $magasinActif?->nom ?? 'Aucun magasin sélectionné' }}</h3>
                                         <div class="nk-block-des text-soft">
                                             <p>Bienvenue {{ Auth::user()->name }}.</p>
                                         </div>

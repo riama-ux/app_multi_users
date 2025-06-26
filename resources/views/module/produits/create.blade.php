@@ -18,10 +18,6 @@
             <input type="text" name="nom" value="{{ old('nom') }}" class="form-control" required>
         </div>
 
-        <div class="mb-3">
-            <label for="code">Code</label>
-            <input type="text" name="code" value="{{ old('code') }}" class="form-control" required>
-        </div>
 
         <div class="mb-3">
             <label for="categorie_id">Catégorie</label>
@@ -38,6 +34,11 @@
         <div class="mb-3">
             <label for="prix_achat">Prix d’achat</label>
             <input type="number" name="prix_achat" value="{{ old('prix_achat') }}" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="cout_achat">Coût d'achat</label>
+            <input type="number" name="cout_achat" class="form-control" required min="0" value="{{ old('cout_achat') }}">
         </div>
 
         <div class="mb-3">

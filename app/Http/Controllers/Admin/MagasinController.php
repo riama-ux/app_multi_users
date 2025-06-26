@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Magasin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -10,12 +11,12 @@ class MagasinController extends Controller
     public function index()
     {
         $magasins = Magasin::all();
-        return view('admin.magasins.index', compact('magasins'));
+        return view('pages.admin.magasins.index', compact('magasins'));
     }
 
     public function create()
     {
-        return view('admin.magasins.create');
+        return view('pages.admin.magasins.create');
     }
 
     public function store(Request $request)
@@ -27,7 +28,7 @@ class MagasinController extends Controller
 
     public function edit(Magasin $magasin)
     {
-        return view('admin.magasins.edit', compact('magasin'));
+        return view('pages.admin.magasins.edit', compact('magasin'));
     }
 
     public function update(Request $request, Magasin $magasin)

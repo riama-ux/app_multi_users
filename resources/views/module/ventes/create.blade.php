@@ -1,64 +1,82 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-    <h3>Nouvelle vente</h3>
+<div class="container"> <h2>Nouvelle vente</h2>
+@include('flash-message')
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+<form action="{{ route('module.ventes.store') }}" method="POST">
+    @csrf
 
-    <form action="{{ route('module.ventes.store') }}" method="POST">
-        @csrf
+    <div class="mb-3">
+        <label for="client_id" class="form-label">Client (optionnel)</label>
+        <select name="client_id" class="form-select">
+            <option value="">-- Aucun --</option>
+            @foreach($clients as $client)
+                <option value="{{ $client->id }}">{{ $client->nom }}</option>
+            @endforeach
+        </select>
+    </div>
 
-        <div class="mb-3">
-            <label for="produit_id">Produit</label>
-            <select name="produit_id" class="form-select" required>
-                <option value="">-- Choisir un produit --</option>
-                @foreach ($produits as $produit)
-                    <option value="{{ $produit->id }}" {{ old('produit_id') == $produit->id ? 'selected' : '' }}>
-                        {{ $produit->nom }} ({{ number_format($produit->prix_vente) }} FCFA)
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    <div class="mb-3">
+        <label>Mode de paiement</label>
+        <select name="mode_paiement" class="form-select" required>
+            <option value="cash">Cash</option>
+            <option value="credit">Crédit</option>
+        </select>
+    </div>
 
-        <div class="mb-3">
-            <label for="client_id">Client (optionnel)</label>
-            <select name="client_id" class="form-select">
-                <option value="">-- Aucun --</option>
-                @foreach ($clients as $client)
-                    <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>
-                        {{ $client->nom }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
+    <div class="mb-3">
+        <label>Remise globale (facultatif)</label>
+        <input type="number" name="remise" class="form-control" min="0" value="0">
+    </div>
 
-        <div class="mb-3">
-            <label for="quantite">Quantité</label>
-            <input type="number" name="quantite" class="form-control" min="1" value="{{ old('quantite') }}" required>
-        </div>
+    <hr>
 
-        <div class="mb-3">
-            <label for="remise">Remise (FCFA)</label>
-            <input type="number" name="remise" class="form-control" value="{{ old('remise', 0) }}">
-        </div>
+    <h5>Produits</h5>
+    <table class="table" id="vente-produits">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Sous-total</th>
+                <th><button type="button" class="btn btn-sm btn-success" id="add-ligne">+</button></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <select name="produits[]" class="form-select produit-select" required>
+                        <option value="">-- Sélectionner --</option>
+                        @foreach($produits as $produit)
+                            <option value="{{ $produit->id }}" data-prix="{{ $produit->prix_vente }}">
+                                {{ $produit->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                </td>
+                <td><input type="number" name="quantites[]" class="form-control quantite-input" min="1" value="1" required></td>
+                <td><input type="number" name="prix_unitaires[]" class="form-control prix-input" readonly></td>
+                <td><input type="text" class="form-control subtotal" readonly></td>
+                <td><button type="button" class="btn btn-sm btn-danger remove-ligne">-</button></td>
+            </tr>
+        </tbody>
+    </table>
 
-        <div class="mb-3">
-            <label for="mode_paiement">Mode de paiement</label>
-            <select name="mode_paiement" class="form-select" required>
-                <option value="cash" {{ old('mode_paiement') == 'cash' ? 'selected' : '' }}>Cash</option>
-                <option value="credit" {{ old('mode_paiement') == 'credit' ? 'selected' : '' }}>Crédit</option>
-            </select>
-        </div>
+    <div class="text-end">
+        <label>Total :</label>
+        <input type="text" id="total-general" class="form-control" readonly>
+    </div>
 
-        <button class="btn btn-success">Enregistrer</button>
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary">Valider la vente</button>
         <a href="{{ route('module.ventes.index') }}" class="btn btn-secondary">Annuler</a>
-    </form>
+    </div>
+</form>
+</div>
 @endsection
 
+@section('scripts')
+
+<script> document.addEventListener('DOMContentLoaded', function () { const tbody = document.querySelector('#vente-produits tbody'); function updateSubtotal(tr) { const qty = parseFloat(tr.querySelector('.quantite-input').value) || 0; const prix = parseFloat(tr.querySelector('.prix-input').value) || 0; const subtotal = qty * prix; tr.querySelector('.subtotal').value = subtotal.toFixed(0); return subtotal; } function updateTotal() { let total = 0; tbody.querySelectorAll('tr').forEach(tr => { total += updateSubtotal(tr); }); document.getElementById('total-general').value = total.toFixed(0); } function bindRowEvents(tr) { tr.querySelector('.produit-select').addEventListener('change', function () { const prix = this.options[this.selectedIndex].dataset.prix || 0; tr.querySelector('.prix-input').value = prix; updateSubtotal(tr); updateTotal(); }); tr.querySelector('.quantite-input').addEventListener('input', function () { updateSubtotal(tr); updateTotal(); }); tr.querySelector('.remove-ligne').addEventListener('click', function () { tr.remove(); updateTotal(); }); } tbody.querySelectorAll('tr').forEach(bindRowEvents); document.getElementById('add-ligne').addEventListener('click', function () { const tr = tbody.querySelector('tr').cloneNode(true); tr.querySelectorAll('input').forEach(input => input.value = ''); tr.querySelector('.quantite-input').value = 1; tr.querySelector('.prix-input').value = ''; tr.querySelector('.subtotal').value = ''; tr.querySelector('select').selectedIndex = 0; tbody.appendChild(tr); bindRowEvents(tr); }); }); </script>
+@endsection

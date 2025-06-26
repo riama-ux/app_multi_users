@@ -10,13 +10,13 @@ class Vente extends Model
     use HasFactory;
 
     protected $fillable = [
-        'produit_id', 'magasin_id', 'client_id',
-        'quantite', 'prix_unitaire', 'total', 'mode_paiement'
+        'user_id', 'magasin_id', 'client_id',
+        'remise', 'total', 'mode_paiement'
     ];
 
-    public function produit()
+    public function lignes()
     {
-        return $this->belongsTo(Produit::class);
+        return $this->hasMany(LigneVente::class);
     }
 
     public function client()
