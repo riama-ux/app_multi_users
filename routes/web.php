@@ -159,6 +159,8 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->pre
 */
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
     Route::resource('ventes', App\Http\Controllers\Module\VenteController::class);
+
+    Route::get('ventes/{vente}/recu', [App\Http\Controllers\Module\VenteController::class, 'imprimer'])->name('ventes.recu');
 });
 
 /*

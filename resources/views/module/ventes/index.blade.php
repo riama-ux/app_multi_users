@@ -1,18 +1,13 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-    <h3>Ventes du magasin actif</h3>
+<h3>Ventes du magasin actif</h3>
 
-    @if (session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-@if (session('error'))
-    <div class="alert alert-danger">{{ session('error') }}</div>
-@endif
+@include('flash-message')
 
 <a href="{{ route('module.ventes.create') }}" class="btn btn-primary mb-3">Nouvelle vente</a>
 
-<table class="table table-bordered">
+<table class="table table-bordered table-striped">
     <thead>
         <tr>
             <th>Date</th>
@@ -30,15 +25,8 @@
             <tr>
                 <td>{{ $vente->created_at->format('d/m/Y H:i') }}</td>
                 <td>
-                    <ul class="list-unstyled">
-                        @foreach ($vente->lignes as $ligne)
-                            <li>
-                                {{ $ligne->produit->nom }} :
-                                {{ $ligne->quantite }} × {{ number_format($ligne->prix_unitaire) }} FCFA
-                                = <strong>{{ number_format($ligne->quantite * $ligne->prix_unitaire) }} FCFA</strong>
-                            </li>
-                        @endforeach
-                    </ul>
+                    {{ $vente->lignes->count() }} produit{{ $vente->lignes->count() > 1 ? 's' : '' }} <br>
+                    <a href="{{ route('module.ventes.show', $vente) }}" class="btn btn-sm btn-outline-secondary mt-1">Voir détails</a>
                 </td>
                 <td>{{ number_format($vente->remise) }} FCFA</td>
                 <td><strong>{{ number_format($vente->total) }} FCFA</strong></td>
@@ -47,6 +35,7 @@
                 <td>{{ $vente->user->name }}</td>
                 <td>
                     <a href="{{ route('module.ventes.edit', $vente) }}" class="btn btn-sm btn-info">Modifier</a>
+                    <a href="{{ route('module.ventes.recu', $vente) }}" target="_blank" class="btn btn-sm btn-warning">Imprimer reçu</a>
                     <form action="{{ route('module.ventes.destroy', $vente) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette vente ?')">
                         @csrf
                         @method('DELETE')
@@ -63,4 +52,3 @@
 {{ $ventes->links() }}
 
 @endsection
-

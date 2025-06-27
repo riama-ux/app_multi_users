@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Module;
 
 use App\Http\Controllers\Controller;
 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\LigneVente;
 use App\Models\Vente;
 use App\Models\Produit;
 use App\Models\Client;
 use App\Models\Stock;
+use App\Models\Credit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +28,12 @@ class VenteController extends Controller
         return view('module.ventes.index', compact('ventes'));
     }
 
+    public function show(Vente $vente)
+    {
+        return view('module.ventes.show', compact('vente'));
+    }
+
+
     public function create()
     {
         $produits = Produit::where('magasin_id', session('magasin_actif_id'))->get();
@@ -40,8 +48,9 @@ class VenteController extends Controller
         $request->validate([
             'produits' => 'required|array|min:1',
             'quantites' => 'required|array',
-            
-            'client_id' => 'nullable|exists:clients,id',
+            'client_id' => $request->mode_paiement === 'credit'
+                     ? 'required|exists:clients,id'
+                     : 'nullable',
             'remise' => 'nullable|numeric|min:0',
             'mode_paiement' => 'required|in:cash,credit',
         ]);
@@ -187,5 +196,10 @@ class VenteController extends Controller
         return back()->with('success', 'Vente supprimée et stock rétabli.');
     }
 
+    public function imprimer(Vente $vente)
+    {
+        $pdf = Pdf::loadView('module.ventes.recu', compact('vente'));
+        return $pdf->stream('recu_vente_' . $vente->id . '.pdf');
+    }
 
 }

@@ -9,7 +9,7 @@
         </div>
     @endif
 
-    <form action="{{ route('credits.update', $credit->id) }}" method="POST">
+    <form action="{{ route('module.credits.update', $credit->id) }}" method="POST">
         @csrf
         @method('PUT')
 
@@ -37,7 +37,7 @@
         </div>
 
         <button class="btn btn-success">Mettre à jour</button>
-        <a href="{{ route('credits.index') }}" class="btn btn-secondary">Annuler</a>
+        <a href="{{ route('module.credits.index') }}" class="btn btn-secondary">Annuler</a>
     </form>
 @endsection
 

@@ -52,9 +52,7 @@
         <button class="btn btn-success">Enregistrer</button>
         <a href="{{ route('module.commandes.index') }}" class="btn btn-secondary">Annuler</a>
     </form>
-@endsection
 
-@push('scripts')
 <script>
     function ajouterLigne() {
         const div = document.createElement('div');
@@ -78,4 +76,4 @@
         document.getElementById('ligne-produits').appendChild(div);
     }
 </script>
-@endpush
+@endsection

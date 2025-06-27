@@ -17,19 +17,6 @@
         </select>
     </div>
 
-    <div class="mb-3">
-        <label>Mode de paiement</label>
-        <select name="mode_paiement" class="form-select" required>
-            <option value="cash">Cash</option>
-            <option value="credit">Crédit</option>
-        </select>
-    </div>
-
-    <div class="mb-3">
-        <label>Remise globale (facultatif)</label>
-        <input type="number" name="remise" class="form-control" min="0" value="0">
-    </div>
-
     <hr>
 
     <h5>Produits</h5>
@@ -62,6 +49,20 @@
             </tr>
         </tbody>
     </table>
+    <hr>
+    <div class="mb-3">
+        <label>Mode de paiement</label>
+        <select name="mode_paiement" class="form-select" required>
+            <option value="cash">Cash</option>
+            <option value="credit">Crédit</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label>Remise globale (facultatif)</label>
+        <input type="number" name="remise" class="form-control" min="0" value="0">
+    </div>
+
 
     <div class="text-end">
         <label>Total :</label>
@@ -74,9 +75,65 @@
     </div>
 </form>
 </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const tbody = document.querySelector('#vente-produits tbody');
+
+            function updateSubtotal(tr) {
+                const qty = parseFloat(tr.querySelector('.quantite-input').value) || 0;
+                const prix = parseFloat(tr.querySelector('.prix-input').value) || 0;
+                const subtotal = qty * prix;
+                tr.querySelector('.subtotal').value = subtotal.toFixed(0);
+                return subtotal;
+            }
+
+            function updateTotal() {
+                let total = 0;
+                tbody.querySelectorAll('tr').forEach(tr => {
+                    total += updateSubtotal(tr);
+                });
+                document.getElementById('total-general').value = total.toFixed(0);
+            }
+
+            function bindRowEvents(tr) {
+                tr.querySelector('.produit-select').addEventListener('change', function () {
+                    const prix = this.options[this.selectedIndex].dataset.prix || 0;
+                    tr.querySelector('.prix-input').value = prix;
+                    updateSubtotal(tr);
+                    updateTotal();
+                });
+
+                tr.querySelector('.quantite-input').addEventListener('input', function () {
+                    updateSubtotal(tr);
+                    updateTotal();
+                });
+
+                tr.querySelector('.remove-ligne').addEventListener('click', function () {
+                    const lignes = tbody.querySelectorAll('tr');
+                    if (lignes.length > 1) {
+                        tr.remove();
+                        updateTotal();
+                    } else {
+                        alert('Il doit rester au moins un produit.');
+                    }
+                });
+            }
+
+            tbody.querySelectorAll('tr').forEach(bindRowEvents);
+
+            document.getElementById('add-ligne').addEventListener('click', function () {
+                const tr = tbody.querySelector('tr').cloneNode(true);
+                tr.querySelectorAll('input').forEach(input => input.value = '');
+                tr.querySelector('.quantite-input').value = 1;
+                tr.querySelector('.prix-input').value = '';
+                tr.querySelector('.subtotal').value = '';
+                tr.querySelector('select').selectedIndex = 0;
+                tbody.appendChild(tr);
+                bindRowEvents(tr);
+            });
+        });
+    </script>
 @endsection
 
-@section('scripts')
 
-<script> document.addEventListener('DOMContentLoaded', function () { const tbody = document.querySelector('#vente-produits tbody'); function updateSubtotal(tr) { const qty = parseFloat(tr.querySelector('.quantite-input').value) || 0; const prix = parseFloat(tr.querySelector('.prix-input').value) || 0; const subtotal = qty * prix; tr.querySelector('.subtotal').value = subtotal.toFixed(0); return subtotal; } function updateTotal() { let total = 0; tbody.querySelectorAll('tr').forEach(tr => { total += updateSubtotal(tr); }); document.getElementById('total-general').value = total.toFixed(0); } function bindRowEvents(tr) { tr.querySelector('.produit-select').addEventListener('change', function () { const prix = this.options[this.selectedIndex].dataset.prix || 0; tr.querySelector('.prix-input').value = prix; updateSubtotal(tr); updateTotal(); }); tr.querySelector('.quantite-input').addEventListener('input', function () { updateSubtotal(tr); updateTotal(); }); tr.querySelector('.remove-ligne').addEventListener('click', function () { tr.remove(); updateTotal(); }); } tbody.querySelectorAll('tr').forEach(bindRowEvents); document.getElementById('add-ligne').addEventListener('click', function () { const tr = tbody.querySelector('tr').cloneNode(true); tr.querySelectorAll('input').forEach(input => input.value = ''); tr.querySelector('.quantite-input').value = 1; tr.querySelector('.prix-input').value = ''; tr.querySelector('.subtotal').value = ''; tr.querySelector('select').selectedIndex = 0; tbody.appendChild(tr); bindRowEvents(tr); }); }); </script>
-@endsection

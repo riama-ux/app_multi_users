@@ -31,8 +31,8 @@
                     </td>
                     <td>{{ $credit->echeance ? \Carbon\Carbon::parse($credit->echeance)->format('d/m/Y') : '-' }}</td>
                     <td>
-                        <a href="{{ route('credits.edit', $credit->id) }}" class="btn btn-sm btn-primary">Modifier</a>
-                        <form action="{{ route('credits.destroy', $credit->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce crédit ?')">
+                        <a href="{{ route('module.credits.edit', $credit->id) }}" class="btn btn-sm btn-primary">Modifier</a>
+                        <form action="{{ route('module.credits.destroy', $credit->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce crédit ?')">
                             @csrf
                             @method('DELETE')
                             <button class="btn btn-sm btn-danger">Supprimer</button>
