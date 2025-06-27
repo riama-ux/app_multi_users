@@ -16,7 +16,7 @@ class ProduitController extends Controller
 
         $produits = Produit::with('categorie')
             ->where('magasin_id', $magasinId)
-            ->latest()
+            ->orderBy('nom')
             ->paginate(20);
 
         return view('module.produits.index', compact('produits'));

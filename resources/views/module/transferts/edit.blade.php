@@ -7,7 +7,7 @@
     <div class="alert alert-danger">{{ session('error') }}</div>
 @endif
 
-<form action="{{ route('module.transferts.update', $transfert->id) }}" method="POST">
+<form action="{{ route('module.transferts.update', ['transfert' => $transfert->id]) }}" method="POST">
     @csrf
     @method('PUT')
 

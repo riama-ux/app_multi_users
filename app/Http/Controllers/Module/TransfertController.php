@@ -103,7 +103,7 @@ class TransfertController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        if ($transfert->magasin_source_id !== $magasinId) {
+        if ($transfert->magasin_source_id != $magasinId) {
             abort(403); // Seul magasin source peut éditer
         }
 
@@ -125,7 +125,7 @@ class TransfertController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        if ($transfert->magasin_source_id !== $magasinId) {
+        if ($transfert->magasin_source_id != $magasinId) {
             abort(403);
         }
 
@@ -176,7 +176,7 @@ class TransfertController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        if ($transfert->magasin_source_id !== $magasinId) {
+        if ($transfert->magasin_source_id != $magasinId) {
             abort(403);
         }
 
@@ -189,6 +189,7 @@ class TransfertController extends Controller
 
         return back()->with('success', 'Transfert supprimé avec succès.');
     }
+
 
     public function valider(Request $request, Transfert $transfert)
     {
@@ -204,14 +205,141 @@ class TransfertController extends Controller
         }
 
         DB::transaction(function () use ($transfert, $magasinId) {
-            // Mise à jour du stock pour chaque produit transféré
+            $sourceMagasinId = $transfert->magasin_source_id;
+
             foreach ($transfert->lignes as $ligne) {
-                $stock = \App\Models\Stock::firstOrCreate(
-                    ['produit_id' => $ligne->produit_id, 'magasin_id' => $magasinId],
+                $produitSource = \App\Models\Produit::where('id', $ligne->produit_id)
+                    ->where('magasin_id', $sourceMagasinId)
+                    ->first();
+
+                if (!$produitSource) {
+                    continue; // au cas où le produit n'existe plus
+                }
+
+                // 🔁 Chercher la catégorie source
+                $categorieSource = \App\Models\Categorie::where('id', $produitSource->categorie_id)
+                    ->where('magasin_id', $sourceMagasinId)
+                    ->first();
+
+                if (!$categorieSource) {
+                    continue; // on saute si la catégorie source est introuvable
+                }
+
+                // 🔁 Créer ou récupérer la catégorie dans le magasin destination
+                $categorieDestination = \App\Models\Categorie::firstOrCreate(
+                    ['nom' => $categorieSource->nom, 'magasin_id' => $magasinId],
+                    ['created_at' => now(), 'updated_at' => now()]
+                );
+
+                // ✅ Vérifier si le produit existe déjà dans le magasin destination
+                $produitDestination = \App\Models\Produit::where('code', $produitSource->code)
+                    ->where('magasin_id', $magasinId)
+                    ->first();
+
+                // ✅ S'il n'existe pas, on le crée
+                if (!$produitDestination) {
+                    $produitDestination = \App\Models\Produit::create([
+                        'nom' => $produitSource->nom,
+                        'categorie_id' => $categorieDestination->id, // ✅ nouvelle catégorie
+                        'magasin_id' => $magasinId,
+                        'code' => $produitSource->code,
+                        'prix_achat' => $produitSource->prix_achat,
+                        'cout_achat' => $produitSource->cout_achat,
+                        'prix_vente' => $produitSource->prix_vente,
+                        'description' => $produitSource->description,
+                    ]);
+                }
+
+                // ✅ Décrémenter le stock dans le magasin source
+                $stockSource = \App\Models\Stock::where([
+                    'produit_id' => $ligne->produit_id,
+                    'magasin_id' => $sourceMagasinId
+                ])->first();
+
+                if ($stockSource) {
+                    $stockSource->decrement('quantite', $ligne->quantite);
+                }
+
+                // ✅ Incrémenter le stock dans le magasin destination
+                $stockDestination = \App\Models\Stock::firstOrCreate(
+                    ['produit_id' => $produitDestination->id, 'magasin_id' => $magasinId],
                     ['quantite' => 0]
                 );
 
-                $stock->increment('quantite', $ligne->quantite);
+                $stockDestination->increment('quantite', $ligne->quantite);
+            }
+
+            // ✅ Marquer comme validé
+            $transfert->update(['statut' => 'valide']);
+        });
+
+        return redirect()->route('module.transferts.show', $transfert->id)
+            ->with('success', 'Transfert reçu, produit copié avec sa catégorie et stock mis à jour.');
+    }
+
+
+    /*
+    public function valider(Request $request, Transfert $transfert)
+    {
+        $magasinId = session('magasin_actif_id');
+
+        // Seul le magasin DESTINATION peut valider
+        if ($transfert->magasin_destination_id != $magasinId) {
+            abort(403);
+        }
+
+        if ($transfert->statut !== 'en attente') {
+            return back()->with('error', 'Ce transfert a déjà été traité.');
+        }
+
+        DB::transaction(function () use ($transfert, $magasinId) {
+            $sourceMagasinId = $transfert->magasin_source_id;
+
+            foreach ($transfert->lignes as $ligne) {
+                $produitSource = \App\Models\Produit::where('id', $ligne->produit_id)
+                    ->where('magasin_id', $sourceMagasinId)
+                    ->first();
+
+                if (!$produitSource) {
+                    continue; // au cas où le produit n'existe plus
+                }
+
+                // ✅ Vérifier si le produit existe déjà dans le magasin destination
+                $produitDestination = \App\Models\Produit::where('code', $produitSource->code)
+                    ->where('magasin_id', $magasinId)
+                    ->first();
+
+                // ✅ S'il n'existe pas, on le crée
+                if (!$produitDestination) {
+                    $produitDestination = \App\Models\Produit::create([
+                        'nom' => $produitSource->nom,
+                        'categorie_id' => $produitSource->categorie_id,
+                        'magasin_id' => $magasinId,
+                        'code' => $produitSource->code,
+                        'prix_achat' => $produitSource->prix_achat,
+                        'cout_achat' => $produitSource->cout_achat,
+                        'prix_vente' => $produitSource->prix_vente,
+                        'description' => $produitSource->description,
+                    ]);
+                }
+
+                // ✅ Décrémenter le stock dans le magasin source
+                $stockSource = \App\Models\Stock::where([
+                    'produit_id' => $ligne->produit_id,
+                    'magasin_id' => $sourceMagasinId
+                ])->first();
+
+                if ($stockSource) {
+                    $stockSource->decrement('quantite', $ligne->quantite);
+                }
+
+                // ✅ Incrémenter le stock dans le magasin destination
+                $stockDestination = \App\Models\Stock::firstOrCreate(
+                    ['produit_id' => $produitDestination->id, 'magasin_id' => $magasinId],
+                    ['quantite' => 0]
+                );
+
+                $stockDestination->increment('quantite', $ligne->quantite);
             }
 
             // Marquer comme validé
@@ -219,7 +347,7 @@ class TransfertController extends Controller
         });
 
         return redirect()->route('module.transferts.show', $transfert->id)
-            ->with('success', 'Transfert reçu et stock mis à jour.');
+            ->with('success', 'Transfert reçu, produit copié et stock mis à jour.');
     }
-
+    */
 }
