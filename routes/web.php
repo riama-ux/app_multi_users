@@ -131,7 +131,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->pre
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
-    Route::resource('fournisseurs', App\Http\Controllers\Module\FournisseurController::class);
+    Route::resource('fournisseurs', App\Http\Controllers\Module\FournisseurController::class)->parameters(['fournisseurs' => 'fournisseur']);
 });
 
 /*

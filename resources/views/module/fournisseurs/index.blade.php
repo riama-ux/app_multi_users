@@ -27,10 +27,10 @@
                 <td>{{ $fournisseur->email }}</td>
                 <td>{{ $fournisseur->adresse }}</td>
                 <td>
-                    <a href="{{ route('module.fournisseurs.edit', $fournisseur->id) }}" class="btn btn-sm btn-warning">Modifier</a>
-                    <a href="{{ route('module.fournisseurs.show', $fournisseur->id) }}" class="btn btn-sm btn-info">Voir</a>
+                    <a href="{{ route('module.fournisseurs.edit', ['fournisseur' => $fournisseur->id]) }}" class="btn btn-sm btn-warning">Modifier</a>
+                    <a href="{{ route('module.fournisseurs.show', ['fournisseur' => $fournisseur->id]) }}" class="btn btn-sm btn-info">Voir</a>
 
-                    <form action="{{ route('module.fournisseurs.destroy', $fournisseur->id) }}" method="POST" style="display:inline-block"
+                    <form action="{{ route('module.fournisseurs.destroy', ['fournisseur' => $fournisseur->id]) }}" method="POST" style="display:inline-block"
                         onsubmit="return confirm('Supprimer ce fournisseur ?')">
                         @csrf
                         @method('DELETE')

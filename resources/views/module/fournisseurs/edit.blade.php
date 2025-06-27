@@ -3,7 +3,7 @@
 @section('content')
 <h3>Modifier le fournisseur</h3>
 
-<form action="{{ route('module.fournisseurs.update', $fournisseur->id) }}" method="POST">
+<form action="{{ route('module.fournisseurs.update', ['fournisseur' => $fournisseur->id]) }}" method="POST">
     @csrf
     @method('PUT')
 
