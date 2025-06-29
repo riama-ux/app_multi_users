@@ -23,7 +23,7 @@
         <tbody>
             @forelse ($stocks as $stock)
                 <tr>
-                    <td>{{ $stock->produit->nom }}</td>
+                    <td>{{ $stock->produit ? $stock->produit->nom : 'Produit supprimé' }}</td>
                     <td>{{ $stock->quantite }}</td>
                     <td>
                         <a href="{{ route('module.stocks.edit', $stock->id) }}" class="btn btn-sm btn-info">Modifier</a>

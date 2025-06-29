@@ -7,8 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Commande;
 use App\Models\Fournisseur;
 use App\Models\Produit;
+use App\Models\Stock;
 use App\Models\LigneCommande;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CommandeController extends Controller
 {

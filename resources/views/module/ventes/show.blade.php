@@ -28,7 +28,7 @@
             <tbody>
                 @foreach ($vente->lignes as $ligne)
                 <tr>
-                    <td>{{ $ligne->produit->nom }}</td>
+                    <td>{{ $ligne->produit->nom ?? 'Produit supprimé' }}</td>
                     <td>{{ $ligne->quantite }}</td>
                     <td>{{ number_format($ligne->prix_unitaire) }} FCFA</td>
                     <td>{{ number_format($ligne->quantite * $ligne->prix_unitaire) }} FCFA</td>

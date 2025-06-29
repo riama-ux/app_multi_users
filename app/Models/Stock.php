@@ -2,18 +2,19 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Stock extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = ['produit_id', 'magasin_id', 'quantite'];
 
     public function produit()
     {
-        return $this->belongsTo(Produit::class);
+        return $this->belongsTo(Produit::class)->withTrashed();
     }
 
     public function magasin()
@@ -21,8 +22,5 @@ class Stock extends Model
         return $this->belongsTo(Magasin::class);
     }
 
-    public function stock()
-    {
-        return $this->hasOne(Stock::class)->where('magasin_id', session('magasin_actif_id'));
-    }
+    
 }

@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SwitchMagasinController;
 use App\Http\Controllers\Module\TransfertController;
+use App\Http\Controllers\Module\CommandeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,6 +105,8 @@ Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
 */
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('produits', App\Http\Controllers\Module\ProduitController::class);
+
+    Route::post('/produits/{id}/restore', [App\Http\Controllers\Module\ProduitController::class, 'restore'])->name('produits.restore');
 });
 
 // Accès lecture seule pour Manager
@@ -111,7 +114,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Manager'])
     ->prefix('module/manager') // <- chemin URL différent
     ->name('manager.module.')  // <- nom de route différent
     ->group(function () {
-        Route::resource('produits', App\Http\Controllers\Module\ProduitController::class);
+        Route::resource('produits', App\Http\Controllers\Module\ProduitController::class)->only(['index', 'show']);
     });
 
 

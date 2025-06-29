@@ -1,7 +1,7 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-    @extends('pages.admin.shared.layout')
+    
 
 @section('content')
 

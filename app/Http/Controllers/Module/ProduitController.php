@@ -10,14 +10,22 @@ use Illuminate\Http\Request;
 
 class ProduitController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $magasinId = session('magasin_actif_id');
 
-        $produits = Produit::with('categorie')
+        if ($request->has('deleted')) {
+        $produits = Produit::onlyTrashed()
+            ->with('categorie')
             ->where('magasin_id', $magasinId)
             ->orderBy('nom')
             ->paginate(20);
+        } else {
+            $produits = Produit::with('categorie')
+                ->where('magasin_id', $magasinId)
+                ->orderBy('nom')
+                ->paginate(20);
+        }
 
         return view('module.produits.index', compact('produits'));
     }
@@ -55,7 +63,15 @@ class ProduitController extends Controller
 
     public function edit(Produit $produit)
     {
+        if ($produit->magasin_id != session('magasin_actif_id')) {
+            abort(403, 'Accès interdit');
+        }
+
         $this->authorize('view', $produit); // à créer si besoin
+
+        if ($produit->trashed()) {
+            return redirect()->route('module.produits.index')->with('error', 'Ce produit est supprimé.');
+        }
 
         $categories = Categorie::where('magasin_id', session('magasin_actif_id'))->get();
 
@@ -64,6 +80,10 @@ class ProduitController extends Controller
 
     public function update(Request $request, Produit $produit)
     {
+        if ($produit->magasin_id != session('magasin_actif_id')) {
+            abort(403, 'Accès interdit');
+        }
+
         $request->validate([
             'nom' => 'required|string',
             'prix_achat' => 'required|numeric|min:0',
@@ -91,4 +111,19 @@ class ProduitController extends Controller
 
         return redirect()->route('module.produits.index')->with('success', 'Produit supprimé.');
     }
+
+    public function restore($id)
+    {
+        $magasinActif = session('magasin_actif_id'); // ou auth()->user()->magasin_actif_id selon ton cas
+
+        $produit = Produit::onlyTrashed()
+            ->where('magasin_id', $magasinActif)
+            ->findOrFail($id);
+
+        $produit->restore();
+
+        return redirect()->route('module.produits.index')->with('success', 'Produit restauré.');
+    }
+
+
 }
