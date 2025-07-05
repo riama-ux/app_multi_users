@@ -10,7 +10,7 @@ class LigneVente extends Model
     use HasFactory;
 
     protected $fillable = [
-        'vente_id', 'produit_id', 'quantite', 'prix_unitaire'
+        'vente_id', 'produit_id', 'quantite', 'prix_unitaire', 'prix_total', 'lot_id',
     ];
 
     public function vente()
@@ -21,5 +21,10 @@ class LigneVente extends Model
     public function produit()
     {
         return $this->belongsTo(Produit::class)->withTrashed();
+    }
+
+    public function lot()
+    {
+        return $this->belongsTo(StockLot::class, 'lot_id');
     }
 }

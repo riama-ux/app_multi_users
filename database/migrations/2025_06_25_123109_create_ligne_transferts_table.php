@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('ligne_transferts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transfert_id')->constrained()->onDelete('cascade');
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
-            $table->integer('quantite');
+            $table->unsignedBigInteger('transfert_id');
+            $table->unsignedBigInteger('produit_id');
+            $table->decimal('quantite', 10, 2);
             $table->timestamps();
+
+            $table->foreign('transfert_id')->references('id')->on('transferts')->onDelete('cascade');
+            $table->foreign('produit_id')->references('id')->on('produits');
         });
     }
 

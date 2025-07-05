@@ -10,8 +10,19 @@ class Commande extends Model
     use HasFactory;
 
     protected $fillable = [
-        'fournisseur_id', 'user_id', 'magasin_id', 'date_commande', 'statut'
+        'fournisseur_id', 'user_id', 'magasin_id',
+        'statut',
+        'date_commande',
+        'date_reception',
+        'cout_transport',
+        'frais_suppl',
+        'cout_total'
     ];
+
+    protected $casts = [
+        'date_commande' => 'date',
+    ];
+
 
     public function fournisseur()
     {
@@ -28,7 +39,7 @@ class Commande extends Model
         return $this->belongsTo(Magasin::class);
     }
 
-    public function lignes()
+    public function lignesCommande()
     {
         return $this->hasMany(LigneCommande::class);
     }

@@ -13,11 +13,14 @@ return new class extends Migration
     {
         Schema::create('ligne_commandes', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('commande_id')->constrained()->onDelete('cascade');
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
-            $table->integer('quantite');
-            $table->decimal('prix_unitaire', 10, 0); // facultatif : prix au moment de la commande
+            $table->unsignedBigInteger('commande_id');
+            $table->unsignedBigInteger('produit_id');
+            $table->decimal('quantite', 10, 2);
+            $table->decimal('prix_unitaire', 10, 2);
             $table->timestamps();
+
+            $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade');
+            $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
         });
     }
 

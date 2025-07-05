@@ -11,18 +11,23 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ligne_ventes', function (Blueprint $table) {
+        Schema::create('mouvement_stocks', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('vente_id');
             $table->unsignedBigInteger('produit_id');
+            $table->unsignedBigInteger('magasin_id');
+            $table->enum('type', ['entree', 'sortie']);
             $table->decimal('quantite', 10, 2);
-            $table->decimal('prix_unitaire', 10, 2);
-            $table->decimal('prix_total', 10, 2);
+            $table->string('source_type');
+            $table->unsignedBigInteger('source_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->text('motif')->nullable();
+            $table->datetime('date');
             $table->foreignId('lot_id')->nullable()->constrained('stock_lots')->onDelete('set null');
             $table->timestamps();
 
-            $table->foreign('vente_id')->references('id')->on('ventes')->onDelete('cascade');
             $table->foreign('produit_id')->references('id')->on('produits');
+            $table->foreign('magasin_id')->references('id')->on('magasins');
+            $table->foreign('user_id')->references('id')->on('users');
         });
     }
 
@@ -31,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ligne_ventes');
+        Schema::dropIfExists('mouvement_stocks');
     }
 };

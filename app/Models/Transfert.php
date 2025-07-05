@@ -11,10 +11,9 @@ class Transfert extends Model
 
     protected $fillable = [
         'magasin_source_id',
-        'magasin_destination_id',
+        'magasin_dest_id',
         'user_id',
-        'date_transfert',
-        'statut',
+        'date_transfert'
     ];
 
     public function magasinSource()
@@ -22,9 +21,9 @@ class Transfert extends Model
         return $this->belongsTo(Magasin::class, 'magasin_source_id');
     }
 
-    public function magasinDestination()
+    public function magasinDest()
     {
-        return $this->belongsTo(Magasin::class, 'magasin_destination_id');
+        return $this->belongsTo(Magasin::class, 'magasin_dest_id');
     }
 
     public function user()
@@ -32,7 +31,7 @@ class Transfert extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function lignes()
+    public function ligneTransferts()
     {
         return $this->hasMany(LigneTransfert::class);
     }

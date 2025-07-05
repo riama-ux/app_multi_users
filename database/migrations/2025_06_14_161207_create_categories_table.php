@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('nom');
-            $table->foreignId('magasin_id')->constrained()->onDelete('cascade'); // ✅ Ajouté pour multi-magasin
+            $table->unsignedBigInteger('magasin_id');
+            $table->foreign('magasin_id')->references('id')->on('magasins')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -13,10 +13,13 @@ return new class extends Migration
     {
         Schema::create('stocks', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produit_id')->constrained()->onDelete('cascade');
-            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
-            $table->integer('quantite')->default(0);
+            $table->unsignedBigInteger('produit_id');
+            $table->unsignedBigInteger('magasin_id');
+            $table->decimal('quantite', 10, 2)->default(0);
             $table->timestamps();
+            $table->softDeletes(); // ajoute la colonne deleted_at nullable
+            $table->foreign('produit_id')->references('id')->on('produits')->onDelete('cascade');
+            $table->foreign('magasin_id')->references('id')->on('magasins')->onDelete('cascade');
             $table->unique(['produit_id', 'magasin_id']); // Un seul stock par produit-magasin
         });
     }

@@ -1,0 +1,94 @@
+@extends('pages.admin.shared.layout')
+
+@section('content')
+    <h1>Historique des mouvements de stock</h1>
+
+    <form method="GET" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <select name="type" class="form-select">
+                <option value="">-- Type de mouvement --</option>
+                <option value="entrée" {{ request('type') === 'entree' ? 'selected' : '' }}>Entrée</option>
+                <option value="sortie" {{ request('type') === 'sortie' ? 'selected' : '' }}>Sortie</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <input type="text" name="produit" class="form-control" placeholder="Nom produit" value="{{ request('produit') }}">
+        </div>
+
+        <div class="col-md-3">
+            <input type="date" name="date" class="form-control" value="{{ request('date') }}">
+        </div>
+
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+        </div>
+    </form>
+
+    <table class="table table-striped table-bordered">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Produit</th>
+                <th>Type</th>
+                <th>Quantité</th>
+                <th>Lot</th>
+                <th>Motif</th>
+                <th>Source</th>
+                <th>Utilisateur</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($mouvements as $mouvement)
+                <tr>
+                    <td>{{ $mouvement->date->format('d/m/Y H:i') }}</td>
+                    <td>{{ $mouvement->produit->nom }}</td>
+                    <td>
+                        <span class="badge {{ $mouvement->type === 'entrée' ? 'bg-success' : 'bg-danger' }}">
+                            {{ ucfirst($mouvement->type) }}
+                        </span>
+                    </td>
+                    <td>{{ $mouvement->quantite }}</td>
+                    <td>
+                        @if($mouvement->lot)
+                            Lot #{{ $mouvement->lot->id }}
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
+                    <td>{{ $mouvement->motif ?? '-' }}</td>
+                    <td>
+                        @if($mouvement->source_type && $mouvement->source_id)
+                            @php
+                                $route = match($mouvement->source_type) {
+                                    'commande' => route('commandes.show', $mouvement->source_id),
+                                    'vente' => route('ventes.show', $mouvement->source_id),
+                                    'transfert' => route('transferts.show', $mouvement->source_id),
+                                    'ajustement' => route('ajustements.show', $mouvement->source_id),
+                                    default => null
+                                };
+                            @endphp
+
+                            @if($route)
+                                <a href="{{ $route }}" target="_blank">
+                                    {{ ucfirst($mouvement->source_type) }} #{{ $mouvement->source_id }}
+                                </a>
+                            @else
+                                {{ ucfirst($mouvement->source_type) }} #{{ $mouvement->source_id }}
+                            @endif
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td>{{ $mouvement->user->name ?? '-' }}</td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="8" class="text-center">Aucun mouvement trouvé</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{ $mouvements->withQueryString()->links() }}
+@endsection

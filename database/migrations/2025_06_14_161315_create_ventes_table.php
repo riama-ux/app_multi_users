@@ -14,12 +14,20 @@ return new class extends Migration
         Schema::create('ventes', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // utilisateur ayant effectué la vente
-            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
-            $table->foreignId('client_id')->nullable()->constrained()->onDelete('set null');
-            $table->decimal('total', 12, 0);
-            $table->decimal('remise', 12, 0)->default(0);
-            $table->enum('mode_paiement', ['cash', 'credit']);
+            $table->unsignedBigInteger('client_id');
+            $table->unsignedBigInteger('magasin_id');
+            $table->decimal('total_ht', 10, 2);
+            $table->decimal('remise', 10, 2)->default(0);
+            $table->decimal('total_ttc', 10, 2);
+            $table->decimal('montant_paye', 10, 2);
+            $table->decimal('reste_a_payer', 10, 2);
+            $table->enum('statut', ['payee', 'partielle', 'credit'])->default('payee');
+            $table->enum('mode_paiement', ['especes', 'mobile_money', 'virement', 'cheque', 'autre'])->default('especes');
+            $table->datetime('date_vente');
             $table->timestamps();
+
+            $table->foreign('client_id')->references('id')->on('clients');
+            $table->foreign('magasin_id')->references('id')->on('magasins');
         });
     }
 

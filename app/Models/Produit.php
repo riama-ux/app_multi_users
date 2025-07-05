@@ -11,16 +11,21 @@ class Produit extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'nom', 'categorie_id', 'magasin_id', 'code', 
-        'prix_achat', 'cout_achat', 'prix_vente', 'description'
+        'nom', 'reference',
+        'categorie_id',
+        'magasin_id',
+        'cout_achat',
+        'prix_vente',
+        'marge',
+        'seuil_alerte'
     ];
 
     // Générer le code si vide
     protected static function booted()
     {
         static::creating(function ($produit) {
-            if (empty($produit->code)) {
-                $produit->code = strtoupper(uniqid('PRD'));
+            if (empty($produit->reference)) {
+                $produit->reference = strtoupper(uniqid('PRD'));
             }
         });
 
@@ -52,12 +57,22 @@ class Produit extends Model
 
     public function stocks()
     {
-        return $this->hasMany(Stock::class);
+        return $this->hasOne(Stock::class);
     }
 
-    public function ventes()
+    public function lignesCommande()
     {
-        return $this->hasMany(Vente::class);
+        return $this->hasMany(LigneCommande::class);
+    }
+
+    public function lignesVente()
+    {
+        return $this->hasMany(LigneVente::class);
+    }
+
+    public function mouvementsStock()
+    {
+        return $this->hasMany(MouvementStock::class);
     }
 
     public function pertes()
@@ -70,8 +85,4 @@ class Produit extends Model
         return $this->hasMany(Transfert::class);
     }
 
-    public function commandes()
-    {
-        return $this->hasMany(Commande::class);
-    }
 }

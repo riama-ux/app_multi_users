@@ -10,14 +10,24 @@ class Vente extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'magasin_id', 'client_id',
-        'remise', 'total', 'mode_paiement'
+        'user_id', 'client_id',
+        'magasin_id',
+        //'total_ht',
+        'remise',
+        'total_ttc',
+        'montant_paye',
+        'reste_a_payer',
+        'statut',
+        'mode_paiement',
+        'date_vente'
     ];
 
-    public function lignes()
-    {
-        return $this->hasMany(LigneVente::class);
-    }
+    protected $dates = ['date_vente'];
+
+    protected $casts = [
+        'date_vente' => 'datetime',
+    ];
+
 
     public function client()
     {
@@ -38,5 +48,15 @@ class Vente extends Model
     {
         // Suppose que la colonne qui stocke l'id de l'utilisateur est 'user_id'
         return $this->belongsTo(User::class);
+    }
+
+    public function ligneVentes()
+    {
+        return $this->hasMany(LigneVente::class);
+    }
+
+    public function paiements()
+    {
+        return $this->hasMany(Paiement::class);
     }
 }

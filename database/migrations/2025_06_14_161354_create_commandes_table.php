@@ -15,10 +15,17 @@ return new class extends Migration
             $table->id();
             $table->foreignId('fournisseur_id')->constrained()->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('magasin_id')->constrained()->onDelete('cascade');
-            $table->date('date_commande');
-            $table->enum('statut', ['en attente', 'livrée'])->default('en attente');
+            $table->unsignedBigInteger('magasin_id');
+            $table->enum('statut', ['en_attente', 'livree', 'annulee'])->default('en_attente');
+            $table->datetime('date_commande');
+            $table->datetime('date_reception')->nullable();
+            $table->decimal('cout_transport', 10, 2)->nullable();
+            $table->decimal('frais_suppl', 10, 2)->nullable();
+            $table->decimal('cout_total', 10, 2)->nullable();
             $table->timestamps();
+
+            $table->foreign('fournisseur_id')->references('id')->on('fournisseurs');
+            $table->foreign('magasin_id')->references('id')->on('magasins');
         });
     }
 

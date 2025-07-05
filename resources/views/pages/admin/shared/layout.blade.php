@@ -57,10 +57,10 @@
                                     </a>
                                     <ul class="nk-menu-sub">
                                         <li class="nk-menu-item {{ request()->routeIs('module.ventes.create') ? 'active' : '' }}">
-                                            <a href="{{ route('module.ventes.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
+                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Ajouter</span></a>
                                         </li>
                                         <li class="nk-menu-item {{ request()->routeIs('module.ventes.index') ? 'active' : '' }}">
-                                            <a href="{{ route('module.ventes.index') }}" class="nk-menu-link"><span class="nk-menu-text">Afficher</span></a>
+                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Afficher</span></a>
                                         </li>
                                     </ul>
                                 </li><!-- .nk-menu-item -->
