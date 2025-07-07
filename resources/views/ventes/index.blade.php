@@ -7,6 +7,19 @@
   <div class="alert alert-success">{{ session('success') }}</div>
 @endif
 
+<form method="GET" action="{{ route('ventes.index') }}" class="row g-2 mb-3">
+    <div class="col-md-3">
+        <select name="statut" class="form-select" onchange="this.form.submit()">
+            <option value="">-- Tous les statuts --</option>
+            <option value="payee" {{ request('statut') == 'payee' ? 'selected' : '' }}>Payée</option>
+            <option value="partielle" {{ request('statut') == 'partielle' ? 'selected' : '' }}>Partielle</option>
+            <option value="credit" {{ request('statut') == 'credit' ? 'selected' : '' }}>Crédit</option>
+            <option value="retournee" {{ request('statut') == 'retournee' ? 'selected' : '' }}>Retournée</option>
+        </select>
+    </div>
+</form>
+
+
 <table class="table table-striped">
   <thead>
     <tr>
@@ -51,4 +64,6 @@
     @endforeach
   </tbody>
 </table>
+{{ $ventes->appends(request()->query())->links() }}
+
 @endsection

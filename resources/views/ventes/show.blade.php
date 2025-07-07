@@ -54,16 +54,27 @@
       <th>Mode</th>
       <th>Date</th>
       <th>Encaisseur</th>
+      <th></th>
     </tr>
   </thead>
   <tbody>
     @if($vente->paiements->count())
         @foreach($vente->paiements as $paiement)
-        <tr>
+        <tr @if($paiement->annule) class="table-secondary" @endif>
         <td>{{ number_format($paiement->montant, 2, ',', ' ') }} FCFA</td>
         <td>{{ ucfirst(str_replace('_', ' ', $paiement->mode_paiement)) }}</td>
         <td>{{ $paiement->date_paiement->format('d/m/Y H:i') }}</td>
         <td>{{ $paiement->user->name ?? 'N/A' }}</td>
+        <td>
+            @if(!$paiement->annule)
+            <form action="{{ route('paiements.annuler', $paiement) }}" method="POST" onsubmit="return confirm('Confirmer l\'annulation de ce paiement ?');">
+                @csrf
+                <button type="submit" class="btn btn-sm btn-danger">Annuler</button>
+            </form>
+            @else
+            <span class="text-muted">Annulé</span>
+            @endif
+        </td>
         </tr>
         @endforeach
     @else
@@ -73,6 +84,32 @@
     @endif
   </tbody>
 </table>
+
+@if($vente->reste_a_payer > 0)
+<hr>
+<h4>Ajouter un paiement</h4>
+<form action="{{ route('paiements.store', $vente) }}" method="POST" class="row g-2 align-items-end">
+    @csrf
+    <div class="col-md-3">
+        <label for="montant" class="form-label">Montant</label>
+        <input type="number" name="montant" id="montant" class="form-control" max="{{ $vente->reste_a_payer }}" min="1" required>
+    </div>
+    <div class="col-md-3">
+        <label for="mode_paiement" class="form-label">Mode de paiement</label>
+        <select name="mode_paiement" class="form-select" required>
+            <option value="especes">Espèces</option>
+            <option value="mobile_money">Mobile Money</option>
+            <option value="virement">Virement</option>
+            <option value="cheque">Chèque</option>
+            <option value="autre">Autre</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-success">Valider le paiement</button>
+    </div>
+</form>
+@endif
+
 
 <a href="{{ route('ventes.index') }}" class="btn btn-secondary">Retour à la liste</a>
 <a href="{{ route('ventes.edit', $vente) }}" class="btn btn-warning">Modifier</a>

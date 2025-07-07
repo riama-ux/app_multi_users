@@ -14,7 +14,8 @@ class Paiement extends Model
         'montant',
         'mode_paiement',
         'date_paiement',
-        'user_id'
+        'user_id',
+        'annule',
     ];
 
     protected $casts = [

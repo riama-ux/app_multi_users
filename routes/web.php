@@ -2,13 +2,14 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SwitchMagasinController;
-use App\Http\Controllers\Module\TransfertController;
 use App\Http\Controllers\Gestion\ProduitController;
 use App\Http\Controllers\Gestion\CommandeController;
 use App\Http\Controllers\Gestion\MouvementStockController;
 use App\Http\Controllers\Gestion\StockController;
 use App\Http\Controllers\Gestion\VenteController;
+use App\Http\Controllers\Gestion\PaiementController;
 use App\Http\Controllers\Gestion\StockLotController;
+use App\Http\Controllers\Gestion\TransfertController;
 
 /*
 |--------------------------------------------------------------------------
@@ -156,6 +157,27 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager
     Route::resource('clients', App\Http\Controllers\Module\ClientController::class);
 });
 
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->group(function() {
+    Route::post('/ventes/{vente}/paiements', [PaiementController::class, 'store'])->name('paiements.store');
+    Route::post('/paiements/{paiement}/annuler', [PaiementController::class, 'annulerPaiement'])->name('paiements.annuler');
+
+});
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('transferts')->name('transferts.')->group(function() {
+    Route::get('/', [TransfertController::class, 'index'])->name('index');
+    Route::get('/create', [TransfertController::class, 'create'])->name('create');
+    Route::post('/', [TransfertController::class, 'store'])->name('store');
+    Route::get('/{transfert}', [TransfertController::class, 'show'])->name('show');
+    Route::get('/{transfert}/edit', [TransfertController::class, 'edit'])->name('edit');
+    Route::put('/{transfert}', [TransfertController::class, 'update'])->name('update');
+    Route::delete('/{transfert}', [TransfertController::class, 'destroy'])->name('destroy');
+
+    // Validation
+    Route::post('/{transfert}/valider', [TransfertController::class, 'valider'])->name('valider');
+});
 
 
 /*

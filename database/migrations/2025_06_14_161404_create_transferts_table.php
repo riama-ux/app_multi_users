@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('transferts', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('magasin_source_id');
-            $table->unsignedBigInteger('magasin_dest_id');
+            $table->unsignedBigInteger('magasin_destination_id');
             $table->unsignedBigInteger('user_id');
             $table->datetime('date_transfert');
             $table->timestamps();
 
             $table->foreign('magasin_source_id')->references('id')->on('magasins');
-            $table->foreign('magasin_dest_id')->references('id')->on('magasins');
+            $table->foreign('magasin_destination_id')->references('id')->on('magasins');
             $table->foreign('user_id')->references('id')->on('users');
         });
     }

@@ -13,6 +13,7 @@ class LigneTransfert extends Model
         'transfert_id',
         'produit_id',
         'quantite',
+        'lot_id',
     ];
 
     public function transfert()

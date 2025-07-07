@@ -47,4 +47,9 @@ class MouvementStock extends Model
         return $this->belongsTo(StockLot::class, 'lot_id');
     }
 
+    public function source()
+    {
+        return $this->morphTo();
+    }
+
 }

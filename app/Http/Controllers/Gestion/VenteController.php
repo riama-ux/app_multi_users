@@ -16,14 +16,18 @@ use Illuminate\Support\Facades\DB;
 class VenteController extends Controller
 {
     // Liste des ventes du magasin actif
-    public function index()
+    public function index(Request $request)
     {
         $magasinId = session('magasin_actif_id');
 
-        $ventes = Vente::with('client')
-            ->where('magasin_id', $magasinId)
-            ->orderBy('date_vente', 'desc')
-            ->get();
+        $query = Vente::with('client')
+            ->where('magasin_id', $magasinId);
+
+        if ($request->filled('statut')) {
+            $query->where('statut', $request->statut);
+        }
+
+        $ventes = $query->orderBy('date_vente', 'desc')->paginate(15);     
 
         return view('ventes.index', compact('ventes'));
     }

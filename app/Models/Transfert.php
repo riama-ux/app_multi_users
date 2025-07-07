@@ -11,19 +11,25 @@ class Transfert extends Model
 
     protected $fillable = [
         'magasin_source_id',
-        'magasin_dest_id',
+        'magasin_destination_id',
         'user_id',
-        'date_transfert'
+        'date_transfert',
+        'statut',
     ];
+
+    protected $casts = [
+        'date_transfert' => 'datetime',
+    ];
+
 
     public function magasinSource()
     {
         return $this->belongsTo(Magasin::class, 'magasin_source_id');
     }
 
-    public function magasinDest()
+    public function magasinDestination()
     {
-        return $this->belongsTo(Magasin::class, 'magasin_dest_id');
+        return $this->belongsTo(Magasin::class, 'magasin_destination_id');
     }
 
     public function user()
@@ -35,4 +41,10 @@ class Transfert extends Model
     {
         return $this->hasMany(LigneTransfert::class);
     }
+
+    public function mouvements()
+    {
+        return $this->morphMany(MouvementStock::class, 'source');
+    }
+
 }
