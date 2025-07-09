@@ -17,6 +17,18 @@
         @csrf
 
         <div class="mb-3">
+            <label for="categorie_id" class="form-label">Catégorie *</label>
+            <select name="categorie_id" id="categorie_id" class="form-select" required>
+                <option value="">-- Choisir une catégorie --</option>
+                @foreach ($categories as $categorie)
+                    <option value="{{ $categorie->id }}" {{ old('categorie_id') == $categorie->id ? 'selected' : '' }}>
+                        {{ $categorie->nom }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mb-3">
             <label for="nom" class="form-label">Nom *</label>
             <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
         </div>
@@ -26,13 +38,28 @@
             <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference') }}">
         </div>
 
-        <div class="mb-3">
-            <label for="categorie_id" class="form-label">Catégorie *</label>
-            <select name="categorie_id" id="categorie_id" class="form-select" required>
-                <option value="">-- Choisir une catégorie --</option>
-                @foreach ($categories as $categorie)
-                    <option value="{{ $categorie->id }}" {{ old('categorie_id') == $categorie->id ? 'selected' : '' }}>
-                        {{ $categorie->nom }}
+        <div class="form-group mb-3">
+            <label for="code">Code (laisser vide pour générer automatiquement)</label>
+            <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="marque">Marque *</label>
+            <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="description">Description *</label>
+            <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="unite">Unité*</label>
+            <select name="unite" class="form-control" required>
+                <option value="">-- Sélectionner --</option>
+                @foreach(['pièce', 'kg', 'litre', 'mètre', 'paquet'] as $unit)
+                    <option value="{{ $unit }}" {{ old('unite', $produit->unite ?? '') == $unit ? 'selected' : '' }}>
+                        {{ ucfirst($unit) }}
                     </option>
                 @endforeach
             </select>
@@ -54,7 +81,7 @@
         </div>
 
         <div class="mb-3">
-            <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité)</label>
+            <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité) *</label>
             <input type="number" name="seuil_alerte" id="seuil_alerte" class="form-control" value="{{ old('seuil_alerte') }}">
         </div>
 

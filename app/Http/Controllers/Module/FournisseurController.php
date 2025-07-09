@@ -22,24 +22,35 @@ class FournisseurController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $request->validate([
-            'nom' => 'required|string|max:255',
-            'telephone' => 'nullable|string',
-            'email' => 'nullable|email',
-            'adresse' => 'nullable|string',
-        ]);
+{
+    $request->validate([
+        'nom' => 'required|string|max:255',
+        'telephone' => 'nullable|string',
+        'email' => 'nullable|email',
+        'adresse' => 'nullable|string',
+    ]);
 
-        Fournisseur::create([
-            'nom' => $request->nom,
-            'telephone' => $request->telephone,
-            'email' => $request->email,
-            'adresse' => $request->adresse,
-            'magasin_id' => session('magasin_actif_id'),
-        ]);
+    $fournisseur = Fournisseur::create([
+        'nom' => $request->nom,
+        'telephone' => $request->telephone,
+        'email' => $request->email,
+        'adresse' => $request->adresse,
+        'magasin_id' => session('magasin_actif_id'),
+    ]);
 
-        return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur ajouté avec succès.');
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'fournisseur' => [
+                'id' => $fournisseur->id,
+                'nom' => $fournisseur->nom,
+            ],
+        ]);
     }
+
+    return redirect()->route('module.fournisseurs.index')->with('success', 'Fournisseur ajouté avec succès.');
+}
+
 
     public function edit(Fournisseur $fournisseur)
     {

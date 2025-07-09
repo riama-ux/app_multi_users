@@ -27,6 +27,33 @@
             <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference', $produit->reference) }}" readonly>
         </div>
 
+        <div class="form-group mb-3">
+            <label for="code">Code</label>
+            <input type="text" name="code" class="form-control" value="{{ old('code', $produit->code ?? '') }}" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="marque">Marque</label>
+            <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="description">Description</label>
+            <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="unite">Unité</label>
+            <select name="unite" class="form-control" required>
+                <option value="">-- Sélectionner --</option>
+                @foreach(['pièce', 'kg', 'litre', 'mètre', 'paquet'] as $unit)
+                    <option value="{{ $unit }}" {{ old('unite', $produit->unite ?? '') == $unit ? 'selected' : '' }}>
+                        {{ ucfirst($unit) }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         <div class="mb-3">
             <label for="categorie_id" class="form-label">Catégorie *</label>
             <select name="categorie_id" id="categorie_id" class="form-select" required>

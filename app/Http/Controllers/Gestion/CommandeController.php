@@ -9,7 +9,8 @@ use App\Models\LigneCommande;
 use App\Models\Produit;
 use Illuminate\Http\Request;
 use App\Models\StockLot;
-use App\Models\Stock;
+use Carbon\Carbon;
+use App\Models\Categorie;
 use App\Models\MouvementStock;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -36,8 +37,9 @@ class CommandeController extends Controller
 
         $fournisseurs = Fournisseur::all(); // tu peux filtrer selon besoin
         $produits = Produit::where('magasin_id', $magasinId)->get();
+        $categories = Categorie::where('magasin_id', $magasinId)->get(); 
 
-        return view('commandes.create', compact('fournisseurs', 'produits'));
+        return view('commandes.create', compact('fournisseurs', 'produits', 'categories'));
     }
 
     public function store(Request $request)
@@ -47,6 +49,7 @@ class CommandeController extends Controller
         $validated = $request->validate([
             'fournisseur_id' => 'required|exists:fournisseurs,id',
             'date_commande' => 'required|date',
+            'date_prevue_livraison' => 'required|date|after_or_equal:date_commande',
             'lignes' => 'required|array|min:1',
             'lignes.*.produit_id' => 'required|exists:produits,id',
             'lignes.*.quantite' => 'required|integer|min:1',
@@ -59,6 +62,7 @@ class CommandeController extends Controller
             'statut' => 'en_attente',
             'user_id' => Auth::id(), // ✅ Ajoute l'utilisateur connecté
             'date_commande' => $validated['date_commande'],
+            'date_prevue_livraison' => $validated['date_prevue_livraison'],
         ]);
 
         foreach ($validated['lignes'] as $ligne) {
@@ -189,10 +193,31 @@ class CommandeController extends Controller
 
         try {
             DB::transaction(function () use ($commande, $validated, $magasinId) {
+
+                $dateReception = Carbon::now();
+
+                // Calcul du statut de retard et du nombre de jours de retard
+                $isLate = false;
+                $daysLate = 0;
+
+                if ($commande->date_prevue_livraison) {
+                    // Comparer les dates au début de la journée pour un calcul de jours complets
+                    $datePrevueStartOfDay = $commande->date_prevue_livraison->startOfDay();
+                    $dateReceptionStartOfDay = $dateReception->startOfDay();
+
+                    if ($dateReceptionStartOfDay->greaterThan($datePrevueStartOfDay)) {
+                        $isLate = true;
+                        $daysLate = $dateReceptionStartOfDay->diffInDays($datePrevueStartOfDay);
+                    }
+                }
+
                 $commande->update([
                     'cout_transport' => $validated['cout_transport'],
                     'frais_suppl' => $validated['frais_suppl'],
                     'statut' => 'livree',
+                    'date_reception' => now(),
+                    'is_late' => $isLate,              // Enregistre si la commande est en retard
+                    'days_late' => $daysLate,
                 ]);
 
                 // Calcul coût total
@@ -229,24 +254,9 @@ class CommandeController extends Controller
                             'date_reception' => now(),
                         ]);
 
-                        $stock = Stock::withTrashed()->firstOrCreate(
-                            [
-                                'produit_id' => $ligne->produit_id,
-                                'magasin_id' => $magasinId,
-                            ],
-                            ['quantite' => 0]
-                        );
-
-                        // Si la ligne était soft-deleted, on la restaure
-                        if ($stock->trashed()) {
-                            $stock->restore();
-                        }
-
-                        $stock->update([
-                            'quantite' => StockLot::where('produit_id', $ligne->produit_id)
-                                ->where('magasin_id', $magasinId)
-                                ->sum('quantite_restante')
-                        ]);
+                        // MISE À JOUR DE LA QUANTITÉ TOTALE DU PRODUIT
+                        $produit = $ligne->produit; // Récupère le modèle Produit lié à la ligne
+                        $produit->updateQuantiteFromLots();
 
                         // MOUVEMENT STOCK (entrée)
                         MouvementStock::create([
@@ -262,10 +272,20 @@ class CommandeController extends Controller
                             'date' => now(),
                         ]);
 
+                        // MISE À JOUR PRIX PAR DÉFAUT DU PRODUIT ET RECALCUL DE LA MARGE
+                        $produit = $ligne->produit;
+                        $ancienPrixVente = $produit->prix_vente; // Récupère le prix de vente actuel (fixe)
+
+                        $nouvelleMarge = 0;
+                        if ($lot->cout_achat > 0) {
+                            $nouvelleMarge = round((($ancienPrixVente - $lot->cout_achat) / $lot->cout_achat) * 100, 2);
+                        }
+
                         // MISE À JOUR PRIX PAR DÉFAUT DU PRODUIT
                         $produit = $ligne->produit;
                         $produit->update([
                             'cout_achat' => $lot->cout_achat,
+                            'marge' => $nouvelleMarge, // Met à jour la marge
                             /*'prix_vente' => round($lot->cout_achat * (1 + ($produit->marge / 100)), 2),*/
                         ]);
                         \Log::info("Produit ID {$ligne->produit_id} traité avec succès.");

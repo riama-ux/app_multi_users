@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Gestion;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\MouvementStock;
+use App\Models\Commande;
 
 
 class MouvementStockController extends Controller
@@ -13,7 +14,7 @@ class MouvementStockController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        $query = MouvementStock::with(['produit', 'user', 'lot'])
+        $query = MouvementStock::with(['produit', 'user', 'lot', 'source'])
             ->where('magasin_id', $magasinId)
             ->latest('date');
 

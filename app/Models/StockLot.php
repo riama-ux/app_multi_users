@@ -18,6 +18,13 @@ class StockLot extends Model
         'date_reception',
     ];
 
+    protected $casts = [
+        'quantite' => 'decimal:2',
+        'quantite_restante' => 'decimal:2',
+        'cout_achat' => 'decimal:2',
+        'date_reception' => 'datetime',
+    ];
+
     public function produit()
     {
         return $this->belongsTo(Produit::class);

@@ -33,29 +33,93 @@ class ProduitController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        $validated = $request->validate([
-            'nom' => 'required|string|max:255',
-            
-            'categorie_id' => 'required|exists:categories,id',
-            'cout_achat' => 'required|numeric|min:0',
-            'prix_vente' => 'required|numeric|min:0',
-            'marge' => 'required|numeric|min:0',
-            'seuil_alerte' => 'nullable|integer|min:0',
-        ]);
+        // --- GESTION DES ERREURS DE VALIDATION POUR AJAX ---
+        try {
+            $validated = $request->validate([
+                'nom' => 'required|string|max:255',
+                'categorie_id' => 'required|exists:categories,id',
+                'cout_achat' => 'required|numeric|min:0',
+                'prix_vente' => 'required|numeric|min:0',
+                'marge' => 'required|numeric|min:0',
+                'seuil_alerte' => 'nullable|integer|min:0',
+                'code' => 'nullable|string|max:255',
+                'reference' => 'nullable|string|max:255',
+                'description' => 'required|string|max:1000',
+                'marque' => 'required|string|max:255',
+                'unite' => 'required|in:pièce,kg,litre,mètre,paquet',
+            ]);
+        } catch (ValidationException $e) {
+            // Si la requête est AJAX et qu'il y a des erreurs de validation, on retourne du JSON
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erreurs de validation.',
+                    'errors' => $e->errors()
+                ], 422); // Le statut 422 est standard pour les erreurs de validation
+            }
+            // Sinon, Laravel gérera la redirection par défaut pour les requêtes non-AJAX
+            throw $e;
+        }
 
         $validated['magasin_id'] = $magasinId;
 
-        Produit::create($validated);
+        // ➤ Code simple automatique si vide
+        if (empty($validated['code'])) {
+            $validated['code'] = 'C' . strtoupper(substr(uniqid(), -6)); // ex: C0925X7
+        } else {
+            // Vérifier l’unicité du code dans ce magasin
+            $exists = Produit::where('magasin_id', $magasinId)
+                ->where('code', $validated['code'])
+                ->exists();
 
-        return redirect()->route('produits.index')->with('success', 'Produit créé avec succès.');
+            if ($exists) {
+                // --- MODIFICATION CLÉ ICI : Retourner une réponse JSON pour AJAX ---
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Le code fourni existe déjà dans ce magasin.',
+                        'errors' => ['code' => ['Le code est déjà utilisé.']] // Format d'erreur cohérent pour le frontend
+                    ], 409); // Le statut 409 Conflict est approprié pour un conflit de ressource
+                }
+                // Pour les requêtes non-AJAX, on garde la redirection standard
+                return back()->withInput()->with('error', 'Le code fourni existe déjà dans ce magasin.');
+            }
+        }
+
+        // Initialiser la quantité à 0 lors de la création du produit
+        $validated['quantite'] = 0; 
+
+        // Création du produit
+        $produit = Produit::create($validated);
+
+        // --- Réponse JSON pour AJAX en cas de succès ---
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'produit' => [
+                    'id' => $produit->id,
+                    'nom' => $produit->nom,
+                    'code' => $produit->code,        
+                    'reference' => $produit->reference, 
+                    // ajoute d’autres infos utiles si besoin
+                ]
+            ], 201); // Le statut 201 Created est idéal pour une nouvelle ressource
+        }
+
+        // --- Redirection pour les requêtes non-AJAX en cas de succès ---
+        return redirect()->route('commandes.create')->with('success', 'Produit créé avec succès.');
     }
 
     public function show($id)
     {
         $magasinId = session('magasin_actif_id');
 
+        // Eager load the stockLots relationship and order them by reception date for FIFO
         $produit = Produit::withTrashed()
             ->where('magasin_id', $magasinId)
+            ->with(['stockLots' => function ($query) {
+                $query->orderBy('date_reception', 'asc'); // Order by oldest lots first
+            }])
             ->findOrFail($id);
 
         return view('produits.show', compact('produit'));
@@ -85,6 +149,10 @@ class ProduitController extends Controller
             'prix_vente' => 'required|numeric|min:0',
             'marge' => 'required|numeric|min:0',
             'seuil_alerte' => 'nullable|integer|min:0',
+            'code' => 'nullable|string|max:255',
+            'description' => 'required|string|max:1000',
+            'marque' => 'required|string|max:255',
+            'unite' => 'required|in:pièce,kg,litre,mètre,paquet',
         ]);
 
         $produit->update($validated);
@@ -126,4 +194,27 @@ class ProduitController extends Controller
 
         return redirect()->route('produits.index')->with('success', 'Produit supprimé définitivement.');
     }
+
+    public function getProduitInfo(Request $request)
+    {
+        $magasinId = session('magasin_actif_id');
+
+        $produit = Produit::where('magasin_id', $magasinId)
+            ->when($request->id, fn($q) => $q->orWhere('id', $request->id))
+            ->when($request->code, fn($q) => $q->orWhere('code', $request->code))
+            ->when($request->reference, fn($q) => $q->orWhere('reference', $request->reference))
+            ->first();
+
+        if (!$produit) {
+            return response()->json(['error' => 'Produit introuvable'], 404);
+        }
+
+        return response()->json([
+            'id' => $produit->id,
+            'nom' => $produit->nom,
+            'code' => $produit->code,
+            'reference' => $produit->reference,
+        ]);
+    }
+
 }

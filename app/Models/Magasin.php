@@ -22,11 +22,6 @@ class Magasin extends Model
         return $this->belongsToMany(User::class, 'magasin_user')->withTimestamps();
     }
 
-    // Relation one-to-many avec les stocks
-    public function stocks()
-    {
-        return $this->hasMany(Stock::class);
-    }
 
     // Relation one-to-many avec les produits si applicable
     public function produits()

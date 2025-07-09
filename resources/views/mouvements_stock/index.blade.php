@@ -35,6 +35,7 @@
                 <th>Lot</th>
                 <th>Motif</th>
                 <th>Source</th>
+                <th>Statut Retard</th>
                 <th>Utilisateur</th>
             </tr>
         </thead>
@@ -44,7 +45,7 @@
                     <td>{{ $mouvement->date->format('d/m/Y H:i') }}</td>
                     <td>{{ $mouvement->produit->nom }}</td>
                     <td>
-                        <span class="badge {{ $mouvement->type === 'entrée' ? 'bg-success' : 'bg-danger' }}">
+                        <span class="badge {{ $mouvement->type === 'entree' ? 'bg-success' : 'bg-danger' }}">
                             {{ ucfirst($mouvement->type) }}
                         </span>
                     </td>
@@ -80,11 +81,23 @@
                             —
                         @endif
                     </td>
+
+                    <td>
+                        {{-- Afficher le statut de retard si c'est une commande d'entrée --}}
+                        @if ($mouvement->type === 'entree' && $mouvement->is_commande_late) {{-- Correction: 'entrée' en 'entree' --}}
+                            <span class="badge bg-danger">Retard ({{ $mouvement->days_commande_late }}j)</span>
+                        @elseif ($mouvement->type === 'entree') {{-- Correction: 'entrée' en 'entree' --}}
+                            <span class="badge bg-success">À temps</span>
+                        @else
+                            <span class="text-muted">—</span> {{-- Pas applicable pour les sorties ou autres types --}}
+                        @endif
+                    </td>
+
                     <td>{{ $mouvement->user->name ?? '-' }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" class="text-center">Aucun mouvement trouvé</td>
+                    <td colspan="9" class="text-center">Aucun mouvement trouvé</td>
                 </tr>
             @endforelse
         </tbody>

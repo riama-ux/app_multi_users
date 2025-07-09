@@ -17,7 +17,19 @@ class Produit extends Model
         'cout_achat',
         'prix_vente',
         'marge',
-        'seuil_alerte'
+        'seuil_alerte',
+        'code',
+        'description',
+        'marque',
+        'unite',
+        'quantite',
+    ];
+
+    protected $casts = [
+        'cout_achat' => 'decimal:2',
+        'prix_vente' => 'decimal:2',
+        'marge' => 'decimal:2',
+        'quantite' => 'decimal:2', // <-- AJOUTEZ CECI
     ];
 
     // Générer le code si vide
@@ -55,9 +67,10 @@ class Produit extends Model
         return $this->belongsTo(Categorie::class);
     }
 
-    public function stocks()
+    public function updateQuantiteFromLots()
     {
-        return $this->hasOne(Stock::class);
+        $totalQuantite = $this->stockLots()->sum('quantite');
+        $this->update(['quantite' => $totalQuantite]);
     }
 
     public function lignesCommande()
@@ -83,6 +96,11 @@ class Produit extends Model
     public function transferts()
     {
         return $this->hasMany(Transfert::class);
+    }
+
+    public function stockLots() 
+    {
+        return $this->hasMany(StockLot::class);
     }
 
 }

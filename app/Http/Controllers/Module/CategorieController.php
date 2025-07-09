@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Module;
 use App\Http\Controllers\Controller;
 
 use App\Models\Categorie;
+use App\Models\Commande;
 use Illuminate\Http\Request;
 
 class CategorieController extends Controller
@@ -34,7 +35,7 @@ class CategorieController extends Controller
             'magasin_id' => session('magasin_actif_id'),
         ]);
 
-        return redirect()->route('module.categories.index')->with('success', 'Catégorie ajoutée.');
+        return redirect()->route('commandes.create')->with('success', 'Catégorie ajoutée.');
     }
 
     public function edit(Categorie $categorie)
@@ -77,4 +78,21 @@ class CategorieController extends Controller
 
         return back()->with('success', 'Catégorie supprimée.');
     }
+
+    public function storeAjax(Request $request)
+    {
+        $request->validate(['nom' => 'required|string|max:255']);
+        $magasinId = session('magasin_actif_id');
+
+        $categorie = \App\Models\Categorie::create([
+            'nom' => $request->nom,
+            'magasin_id' => $magasinId,
+        ]);
+
+        return response()->json([
+            'id' => $categorie->id,
+            'nom' => $categorie->nom
+        ]);
+    }
+
 }

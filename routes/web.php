@@ -110,6 +110,8 @@ Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
     Route::resource('produits', ProduitController::class);
 
+    // routes/web.php ou api.php selon préférence
+    Route::get('/produit/info', [App\Http\Controllers\Gestion\ProduitController::class, 'getProduitInfo'])->name('produit.info');
     // Routes pour restauration et suppression définitive
     Route::post('produits/{id}/restore', [ProduitController::class, 'restore'])->name('produits.restore');
     Route::delete('produits/{id}/force-delete', [ProduitController::class, 'forceDelete'])->name('produits.forceDelete');
@@ -150,6 +152,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->pre
 
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
     Route::resource('categories', App\Http\Controllers\Module\CategorieController::class) ->parameters(['categories' => 'categorie']);
+    Route::post('/categories/store-ajax', [CategorieController::class, 'storeAjax'])->name('categories.store.ajax');
 });
 
 

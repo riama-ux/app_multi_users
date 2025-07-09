@@ -13,14 +13,25 @@ class Commande extends Model
         'fournisseur_id', 'user_id', 'magasin_id',
         'statut',
         'date_commande',
+        'date_prevue_livraison',
         'date_reception',
+        'is_late',
+        'days_late',
         'cout_transport',
         'frais_suppl',
         'cout_total'
     ];
 
-    protected $casts = [
+   /* protected $casts = [
         'date_commande' => 'date',
+    ];*/
+
+    protected $casts = [
+        'date_commande' => 'datetime',
+        'date_prevue_livraison' => 'datetime',
+        'date_reception' => 'datetime',
+        'is_late' => 'boolean', 
+        'days_late' => 'integer',
     ];
 
 

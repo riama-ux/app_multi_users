@@ -5,16 +5,46 @@
 
     <p><strong>Fournisseur :</strong> {{ $commande->fournisseur->nom }}</p>
     <p><strong>Date commande :</strong> {{ $commande->date_commande->format('d/m/Y') }}</p>
-    <p><strong>Statut :</strong> {{ ucfirst($commande->statut) }}</p>
-    <p><strong>Coût transport :</strong> {{ $commande->cout_transport ?? 'Non défini' }} FCFA</p>
-    <p><strong>Frais supplémentaires :</strong> {{ $commande->frais_suppl ?? 'Non défini' }} FCFA</p>
-    <p><strong>Coût total :</strong> {{ $commande->cout_total ?? 'Non défini' }} FCFA</p>
+    <p><strong>Date prévue de livraison :</strong> {{ $commande->date_prevue_livraison->format('d/m/Y') }}</p>
+
+    {{-- LOGIQUE POUR LE STATUT DE LIVRAISON BASÉE SUR 'is_late' ET 'days_late' --}}
+    @if ($commande->statut === 'livree')
+        <p><strong>Date de réception :</strong> {{ $commande->date_reception->format('d/m/Y H:i') }}</p>
+        @if ($commande->is_late)
+            <p class="text-danger"><strong>Statut de livraison :</strong> Livrée en retard de {{ $commande->days_late }} jour(s) !</p> {{-- AJOUTEZ CECI --}}
+        @else
+            <p class="text-success"><strong>Statut de livraison :</strong> Livrée à temps.</p>
+        @endif
+    @else
+        <p><strong>Date de réception :</strong> Non réceptionnée</p>
+        @if ($commande->date_prevue_livraison->isPast() && $commande->statut === 'en_attente')
+            <p class="text-warning"><strong>Statut de livraison :</strong> En retard (non réceptionnée) !</p>
+            {{-- Vous pourriez aussi calculer les jours de retard ici pour l'affichage, même si non enregistré --}}
+            @php
+                $currentDate = \Carbon\Carbon::now()->startOfDay();
+                $prevueDate = $commande->date_prevue_livraison->startOfDay();
+                if ($currentDate->greaterThan($prevueDate)) {
+                    $daysOverdue = $currentDate->diffInDays($prevueDate);
+                    echo '<p class="text-warning">Retard actuel : ' . $daysOverdue . ' jour(s).</p>';
+                }
+            @endphp
+        @else
+            <p><strong>Statut de livraison :</strong> En attente.</p>
+        @endif
+    @endif
+
+    <p><strong>Statut de la commande :</strong> {{ ucfirst($commande->statut) }}</p>
+    <p><strong>Coût transport :</strong> {{ number_format($commande->cout_transport ?? 0, 0, ',', ' ') }} FCFA</p>
+    <p><strong>Frais supplémentaires :</strong> {{ number_format($commande->frais_suppl ?? 0, 0, ',', ' ') }} FCFA</p>
+    <p><strong>Coût total :</strong> {{ number_format($commande->cout_total ?? 0, 0, ',', ' ') }} FCFA</p>
 
     <h4>Produits commandés</h4>
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Produit</th>
+                <th>Code</th>
+                <th>Référence</th>
                 <th>Quantité</th>
                 <th>Prix unitaire</th>
             </tr>
@@ -23,6 +53,8 @@
             @foreach ($commande->lignesCommande as $ligne)
                 <tr>
                     <td>{{ $ligne->produit->nom }}</td>
+                    <td>{{ $ligne->produit->code ?? 'N/A' }}</td>
+                    <td>{{ $ligne->produit->reference ?? 'N/A' }}</td>
                     <td>{{ $ligne->quantite }}</td>
                     <td>{{ number_format($ligne->prix_unitaire, 0, ',', ' ') }} FCFA</td>
                 </tr>
@@ -38,6 +70,7 @@
 
     <a href="{{ route('commandes.index') }}" class="btn btn-secondary">Retour</a>
 
+    {{-- Votre modal de réception --}}
     <div class="modal fade" id="receptionModal" tabindex="-1" aria-labelledby="receptionModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <form action="{{ route('commandes.reception', $commande) }}" method="POST" class="modal-content">
