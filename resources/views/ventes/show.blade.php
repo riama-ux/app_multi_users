@@ -3,6 +3,18 @@
 @section('content')
 <h1>Détails de la vente #{{ $vente->id }}</h1>
 
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Détails de la Vente #{{ $vente->id }}</h2>
+    <div class="btn-group">
+        <a href="{{ route('retours_clients.create', ['vente_id' => $vente->id]) }}" class="btn btn-primary">
+            <i class="fas fa-undo"></i> Enregistrer un retour
+        </a>
+        </div>
+</div>
+
+
+
 <p><strong>Client:</strong> {{ $vente->client->nom ?? 'N/A' }}</p>
 <p><strong>Date:</strong> {{ $vente->date_vente->format('d/m/Y H:i') }}</p>
 <p><strong>Mode de paiement:</strong> 
@@ -113,4 +125,5 @@
 
 <a href="{{ route('ventes.index') }}" class="btn btn-secondary">Retour à la liste</a>
 <a href="{{ route('ventes.edit', $vente) }}" class="btn btn-warning">Modifier</a>
+<a href="{{ route('ventes.retour.create', $vente) }}" class="btn btn-info">Retourner des produits</a>
 @endsection

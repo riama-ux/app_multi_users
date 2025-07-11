@@ -19,9 +19,9 @@ return new class extends Migration
             $table->enum('statut', ['en_attente', 'livree', 'annulee'])->default('en_attente');
             $table->datetime('date_commande');
             $table->datetime('date_reception')->nullable();
-            $table->decimal('cout_transport', 10, 2)->nullable();
-            $table->decimal('frais_suppl', 10, 2)->nullable();
-            $table->decimal('cout_total', 10, 2)->nullable();
+            $table->decimal('cout_transport', 10, 0)->nullable();
+            $table->decimal('frais_suppl', 10, 0)->nullable();
+            $table->decimal('cout_total', 10, 0)->nullable();
             $table->timestamps();
 
             $table->foreign('fournisseur_id')->references('id')->on('fournisseurs');

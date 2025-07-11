@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('vente_id');
             $table->unsignedBigInteger('produit_id');
-            $table->decimal('quantite', 10, 2);
-            $table->decimal('prix_unitaire', 10, 2);
-            $table->decimal('prix_total', 10, 2);
+            $table->decimal('quantite', 10, 0);
+            $table->decimal('prix_unitaire', 10, 0);
+            $table->decimal('prix_total', 10, 0);
             $table->foreignId('lot_id')->nullable()->constrained('stock_lots')->onDelete('set null');
             $table->timestamps();
 

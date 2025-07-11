@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('commande_id');
             $table->unsignedBigInteger('produit_id');
-            $table->decimal('quantite', 10, 2);
-            $table->decimal('prix_unitaire', 10, 2);
+            $table->decimal('quantite', 10, 0);
+            $table->decimal('prix_unitaire', 10, 0);
             $table->timestamps();
 
             $table->foreign('commande_id')->references('id')->on('commandes')->onDelete('cascade');

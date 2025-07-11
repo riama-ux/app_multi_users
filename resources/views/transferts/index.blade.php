@@ -24,7 +24,7 @@
         <tbody>
             @foreach($transferts as $transfert)
                 <tr>
-                    <td>{{ $transfert->date_transfert }}</td>
+                    <td>{{ $transfert->date_transfert->format('d/m/Y H:i') }}</td>
                     <td>{{ $transfert->magasinSource->nom }}</td>
                     <td>{{ $transfert->magasinDestination->nom }}</td>
                     <td>{{ ucfirst($transfert->statut) }}</td>

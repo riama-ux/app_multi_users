@@ -16,11 +16,10 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // utilisateur ayant effectué la vente
             $table->unsignedBigInteger('client_id');
             $table->unsignedBigInteger('magasin_id');
-            $table->decimal('total_ht', 10, 2);
-            $table->decimal('remise', 10, 2)->default(0);
-            $table->decimal('total_ttc', 10, 2);
-            $table->decimal('montant_paye', 10, 2);
-            $table->decimal('reste_a_payer', 10, 2);
+            $table->decimal('remise', 10, 0)->default(0);
+            $table->decimal('total_ttc', 10, 0);
+            $table->decimal('montant_paye', 10, 0);
+            $table->decimal('reste_a_payer', 10, 0);
             $table->enum('statut', ['payee', 'partielle', 'credit'])->default('payee');
             $table->enum('mode_paiement', ['especes', 'mobile_money', 'virement', 'cheque', 'autre'])->default('especes');
             $table->datetime('date_vente');

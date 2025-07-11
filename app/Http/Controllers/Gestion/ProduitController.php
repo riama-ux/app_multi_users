@@ -41,7 +41,7 @@ class ProduitController extends Controller
                 'cout_achat' => 'required|numeric|min:0',
                 'prix_vente' => 'required|numeric|min:0',
                 'marge' => 'required|numeric|min:0',
-                'seuil_alerte' => 'nullable|integer|min:0',
+                'seuil_alerte' => 'nullable|numeric|min:0',
                 'code' => 'nullable|string|max:255',
                 'reference' => 'nullable|string|max:255',
                 'description' => 'required|string|max:1000',

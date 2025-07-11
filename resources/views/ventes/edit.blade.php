@@ -5,154 +5,554 @@
 
 @if ($errors->any())
 <div class="alert alert-danger">
-  <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
 </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
 
-<form action="{{ route('ventes.update', $vente) }}" method="POST" id="venteEditForm">
-  @csrf
-  @method('PUT')
+{{-- Bouton Nouveau Client --}}
+<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClient">
+    + Nouveau client
+</button>
 
-  <div class="mb-3">
-    <label for="client_id" class="form-label">Client</label>
-    <select name="client_id" id="client_id" class="form-control" required>
-      <option value="">-- Choisir un client --</option>
-      @foreach($clients as $client)
-        <option value="{{ $client->id }}" {{ (old('client_id', $vente->client_id) == $client->id) ? 'selected' : '' }}>
-          {{ $client->nom }}
-        </option>
-      @endforeach
-    </select>
-  </div>
+<form action="{{ route('ventes.update', $vente->id) }}" method="POST" id="venteEditForm">
+    @csrf
+    @method('PUT')
 
-  @php
-    $oldProduits = old('produits', $vente->ligneVentes->toArray());
-  @endphp
-
-  <div id="produitsContainer">
-    <h4>Produits</h4>
-
-    @foreach($oldProduits as $index => $ligne)
-    <div class="produit-ligne row mb-2">
-      <div class="col-md-5">
-        <select name="produits[{{ $index }}][produit_id]" class="form-control produit-select" required>
-          <option value="">-- Choisir un produit --</option>
-          @foreach($produits as $produit)
-            <option value="{{ $produit->id }}"
-              {{ ($ligne['produit_id'] ?? $ligne['produit_id']) == $produit->id ? 'selected' : '' }}
-              data-prix="{{ $produit->prix_vente }}">
-              {{ $produit->nom }}
-            </option>
-          @endforeach
+    <div class="mb-3">
+        <label for="client_id" class="form-label">Client</label>
+        <select name="client_id" id="client_id" class="form-control" required>
+            <option value="">-- Choisir un client --</option>
+            @foreach($clients as $client)
+                <option value="{{ $client->id }}" {{ (old('client_id', $vente->client_id) == $client->id) ? 'selected' : '' }}>
+                    {{ $client->nom }}
+                </option>
+            @endforeach
         </select>
-      </div>
-      <div class="col-md-2">
-        <input type="number" name="produits[{{ $index }}][quantite]" class="form-control" min="1"
-          value="{{ $ligne['quantite'] ?? 1 }}" required>
-      </div>
-      <div class="col-md-3">
-        <input type="number" step="0.01" name="produits[{{ $index }}][prix_unitaire]" class="form-control prix-unitaire"
-          placeholder="Prix unitaire" value="{{ $ligne['prix_unitaire'] ?? '' }}" required>
-      </div>
-      <div class="col-md-2">
-        <button type="button" class="btn btn-outline-danger btn-sm btn-remove-ligne">✕</button>
-      </div>
     </div>
-    @endforeach
-  </div>
 
-  <button type="button" id="addProduitBtn" class="btn btn-secondary mb-3">Ajouter un produit</button>
+    <h4>Produits</h4>
+    {{-- Intégration du composant Livewire pour la recherche de produits --}}
+    <div class="mb-4">
+        @livewire('vente-product-search')
+    </div>
 
-  <div class="mb-3">
-    <label for="remise" class="form-label">Remise globale (en FCFA)</label>
-    <input type="number" step="0.01" min="0" name="remise" id="remise" class="form-control"
-      value="{{ old('remise', $vente->remise) }}">
-  </div>
+    <table class="table table-bordered" id="produitsTable">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix Unitaire</th>
+                <th>Sous-total</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
+            <tr style="display: none;" class="product-row-template">
+                <td>
+                    <input type="hidden" class="product-id-input">
+                    <input type="hidden" class="ligne-id-input"> {{-- Pour les lignes de vente existantes --}}
+                    <span class="product-name-display"></span>
+                </td>
+                <td>
+                    <input type="number" class="form-control quantite-input" min="1" value="1">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control prix-unitaire-input" min="0">
+                </td>
+                <td>
+                    <input type="text" class="form-control sous-total-display" readonly>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
+                </td>
+            </tr>
+            {{-- Les lignes de produits existantes seront pré-remplies ici par JavaScript --}}
+        </tbody>
+    </table>
 
-  <div class="mb-3">
-    <label for="montant_paye" class="form-label">Montant payé</label>
-    <input type="number" step="0.01" min="0" name="montant_paye" id="montant_paye" class="form-control"
-      value="{{ old('montant_paye', $vente->montant_paye) }}" required>
-  </div>
+    <h4>Résumé</h4>
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <label>Remise (FCFA)</label>
+            <input type="number" step="0.01" min="0" name="remise" id="remise" class="form-control" value="{{ old('remise', $vente->remise) }}">
+        </div>
+        <div class="col-md-3">
+            <label>Total TTC</label>
+            <input type="text" name="total_ttc" id="total_ttc" class="form-control" readonly value="0">
+        </div>
+        <div class="col-md-3">
+            <label>Montant payé</label>
+            <input type="number" step="0.01" min="0" name="montant_paye" id="montant_paye" class="form-control" value="{{ old('montant_paye', $vente->montant_paye) }}" required>
+        </div>
+        <div class="col-md-3 mt-3">
+            <label>Reste à payer</label>
+            <input type="text" id="reste_a_payer" class="form-control" readonly value="0">
+        </div>
+    </div>
 
-  <div class="mb-3">
-    <label for="mode_paiement" class="form-label">Mode de paiement</label>
-    <select name="mode_paiement" id="mode_paiement" class="form-control" required>
-      <option value="especes" {{ (old('mode_paiement', $vente->mode_paiement) == 'especes') ? 'selected' : '' }}>Espèces</option>
-      <option value="mobile_money" {{ (old('mode_paiement', $vente->mode_paiement) == 'mobile_money') ? 'selected' : '' }}>Mobile Money</option>
-      <option value="virement" {{ (old('mode_paiement', $vente->mode_paiement) == 'virement') ? 'selected' : '' }}>Virement</option>
-      <option value="cheque" {{ (old('mode_paiement', $vente->mode_paiement) == 'cheque') ? 'selected' : '' }}>Chèque</option>
-    </select>
-  </div>
+    <div class="mb-3 col-md-3">
+        <label for="mode_paiement">Mode de paiement</label>
+        <select name="mode_paiement" id="mode_paiement" class="form-control" required>
+            <option value="especes" {{ (old('mode_paiement', $vente->mode_paiement) == 'especes') ? 'selected' : '' }}>Espèces</option>
+            <option value="mobile_money" {{ (old('mode_paiement', $vente->mode_paiement) == 'mobile_money') ? 'selected' : '' }}>Mobile Money</option>
+            <option value="virement" {{ (old('mode_paiement', $vente->mode_paiement) == 'virement') ? 'selected' : '' }}>Virement</option>
+            <option value="cheque" {{ (old('mode_paiement', $vente->mode_paiement) == 'cheque') ? 'selected' : '' }}>Chèque</option>
+        </select>
+    </div>
 
-  <div class="mb-3">
-    <label class="form-label">Total TTC (estimation)</label>
-    <input type="text" class="form-control" id="total_ttc" readonly>
-  </div>
-
-  <button type="submit" class="btn btn-primary">Modifier la vente</button>
+    <button type="submit" class="btn btn-primary mt-4">Modifier la vente</button>
 </form>
 
+{{-- Modals existants (Produit, Catégorie) --}}
+<div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" id="form-produit-modal" action="{{ route('produits.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProduitLabel">Créer un nouveau produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <div class="col-md-2">
+                        <label for="nom" class="form-label">Nom *</label>
+                        <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="reference" class="form-label">Référence</label>
+                        <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="code">Code </label>
+                        <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="marque">Marque *</label>
+                        <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="unite">Unité*</label>
+                        <select name="unite" class="form-control" required>
+                            <option value="">-- Sélectionner --</option>
+                            @foreach(['pièce', 'kg', 'litre', 'mètre', 'paquet'] as $unit)
+                                <option value="{{ $unit }}" {{ old('unite', $produit->unite ?? '') == $unit ? 'selected' : '' }}>
+                                    {{ ucfirst($unit) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <label class="w-100">Catégorie *</label>
+                        <div class="input-group">
+                            <select name="categorie_id" id="selectCategorie" class="form-select" required>
+                                <option value="" >-- Choisir --</option>
+                                @foreach($categories as $categorie)
+                                    <option value="{{ $categorie->id }}" {{ old('categorie_id') == $categorie->id ? 'selected' : '' }}>{{ $categorie->nom }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategorie">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="description">Description *</label>
+                        <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cout_achat" class="form-label">Coût d'achat par défaut *</label>
+                        <input type="number" step="0.01" name="cout_achat" id="cout_achat" class="form-control" value="{{ old('cout_achat') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="prix_vente" class="form-label">Prix de vente par défaut *</label>
+                        <input type="number" step="0.01" name="prix_vente" id="prix_vente" class="form-control" value="{{ old('prix_vente') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="marge" class="form-label">Marge (%) *</label>
+                        <input type="number" step="0.01" name="marge" id="marge" class="form-control" value="{{ old('marge') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité) *</label>
+                        <input type="number" name="seuil_alerte" id="seuil_alerte" class="form-control" value="{{ old('seuil_alerte') }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Créer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCategorie" tabindex="-1" aria-labelledby="modalCategorieLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('module.categories.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCategorieLabel">Nouvelle catégorie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Nom de la catégorie *</label>
+                    <input type="text" name="nom" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- NOUVEAU MODAL CLIENT --}}
+<div class="modal fade" id="modalClient" tabindex="-1" aria-labelledby="modalClientLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-client-modal" method="POST" action="{{ route('module.clients.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalClientLabel">Ajouter un client</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="client-nom" class="form-label">Nom *</label>
+                        <input type="text" name="nom" id="client-nom" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-telephone" class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" id="client-telephone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-email" class="form-label">Email</label>
+                        <input type="email" name="email" id="client-email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-adresse" class="form-label">Adresse</label>
+                        <input type="text" name="adresse" id="client-adresse" class="form-control">
+                    </div>
+                    <div id="client-error" class="alert alert-danger d-none"></div>
+                    <div id="client-success" class="alert alert-success d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{{-- Scripts JavaScript --}}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    let produitIndex = {{ count($oldProduits) }};
+    document.addEventListener('DOMContentLoaded', function () {
+        const produitsTableBody = document.querySelector('#produitsTable tbody');
+        const productRowTemplate = document.querySelector('.product-row-template');
 
-    const container = document.querySelector('#produitsContainer');
+        let currentLigneIndex = 0; // Index pour les noms d'input
 
-    // Ajout d'une nouvelle ligne produit
-    document.querySelector('#addProduitBtn').addEventListener('click', function () {
-      const newLine = container.querySelector('.produit-ligne').cloneNode(true);
-      newLine.querySelectorAll('select, input').forEach(input => {
-        const name = input.getAttribute('name');
-        const newName = name.replace(/\[\d+\]/, `[${produitIndex}]`);
-        input.setAttribute('name', newName);
-        if (input.tagName === 'SELECT') input.selectedIndex = 0;
-        else input.value = input.classList.contains('prix-unitaire') ? '' : 1;
-      });
-      produitIndex++;
-      container.appendChild(newLine);
-      calculerTotalTTC();
-    });
+        // Fonction pour ajouter une ligne de produit au tableau
+        // product: objet produit (id, nom, prix_vente, etc.)
+        // quantity: quantité initiale (par défaut 1)
+        // prixUnitaire: prix unitaire spécifique pour cette ligne (par défaut vide, utilise prix_vente du produit)
+        // ligneId: ID de la ligne de vente si c'est une ligne existante (null pour les nouvelles)
+        function addProductRow(product, quantity = 1, prixUnitaire = '', ligneId = null) {
+            // Vérifier si le produit existe déjà par son ID pour éviter les doublons lors de l'ajout via Livewire
+            // Cette vérification est ignorée si on pré-remplit des lignes existantes (ligneId non null)
+            if (ligneId === null) {
+                let existingRowInput = Array.from(produitsTableBody.querySelectorAll('.product-id-input'))
+                                            .find(input => input.value == product.id);
 
-    // Auto-remplir le prix unitaire à la sélection d’un produit
-    container.addEventListener('change', function (e) {
-      if (e.target.classList.contains('produit-select')) {
-        const option = e.target.selectedOptions[0];
-        const prix = option.getAttribute('data-prix') || '';
-        const prixInput = e.target.closest('.produit-ligne').querySelector('.prix-unitaire');
-        prixInput.value = prix;
-        calculerTotalTTC();
-      }
-    });
+                if (existingRowInput) {
+                    const qtyInput = existingRowInput.closest('tr').querySelector('.quantite-input');
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    calculerTotaux(); // Recalculer les totaux après incrémentation
+                    return;
+                }
+            }
 
-    // Suppression de ligne
-    container.addEventListener('click', function (e) {
-      if (e.target.classList.contains('btn-remove-ligne')) {
-        const lignes = container.querySelectorAll('.produit-ligne');
-        if (lignes.length > 1) {
-          e.target.closest('.produit-ligne').remove();
-          calculerTotalTTC();
-        } else {
-          alert('Au moins un produit est requis.');
+
+            const newRow = productRowTemplate.cloneNode(true);
+            newRow.style.display = '';
+            newRow.classList.remove('product-row-template');
+
+            newRow.querySelector('.product-id-input').value = product.id;
+            newRow.querySelector('.product-name-display').textContent = product.nom;
+
+            // Si c'est une ligne existante, on met à jour l'input caché avec l'ID de la ligne de vente
+            if (ligneId) {
+                newRow.querySelector('.ligne-id-input').value = ligneId;
+            }
+
+            const quantiteInput = newRow.querySelector('.quantite-input');
+            quantiteInput.value = quantity;
+            quantiteInput.setAttribute('required', 'required');
+            quantiteInput.addEventListener('input', calculerTotaux); // Écouteur pour la quantité
+
+            const prixUnitaireInput = newRow.querySelector('.prix-unitaire-input');
+            // Utiliser le prix unitaire passé (pour les lignes existantes) ou le prix de vente par défaut du produit
+            prixUnitaireInput.value = prixUnitaire !== '' ? prixUnitaire : (product.prix_vente || '');
+            prixUnitaireInput.setAttribute('required', 'required');
+            prixUnitaireInput.addEventListener('input', calculerTotaux); // Écouteur pour le prix unitaire
+
+            newRow.querySelector('.removeRow').addEventListener('click', function() {
+                newRow.remove();
+                updateRowIndexes(); // Ré-indexer après la suppression
+                calculerTotaux(); // Recalculer les totaux après suppression
+            });
+
+            produitsTableBody.appendChild(newRow);
+            updateRowIndexes(); // Mettre à jour les indices après l'ajout
+            calculerTotaux(); // Recalculer les totaux après l'ajout
         }
-      }
+
+        // Pré-remplir les lignes de vente existantes
+        const existingLigneVentes = @json($vente->ligneVentes ?? []);
+        existingLigneVentes.forEach(ligne => {
+            if (ligne.produit) {
+                const productData = {
+                    id: ligne.produit.id,
+                    nom: ligne.produit.nom,
+                    prix_vente: ligne.produit.prix_vente // Assurez-vous que prix_vente est disponible
+                };
+                // Appeler addProductRow avec les données de la ligne existante
+                addProductRow(productData, ligne.quantite, ligne.prix_unitaire, ligne.id);
+            } else {
+                console.warn('Produit est null ou indéfini pour la ligne de vente :', ligne);
+            }
+        });
+
+
+        // Fonction pour réindexer les noms des inputs après suppression ou ajout
+        function updateRowIndexes() {
+            currentLigneIndex = 0; // Réinitialiser l'index
+            // Cible toutes les lignes qui ne sont PAS le template
+            produitsTableBody.querySelectorAll('tr:not(.product-row-template)').forEach((row) => {
+                row.querySelector('.product-id-input').setAttribute('name', `produits[${currentLigneIndex}][produit_id]`);
+                const ligneIdInput = row.querySelector('.ligne-id-input');
+                if (ligneIdInput) {
+                    ligneIdInput.setAttribute('name', `produits[${currentLigneIndex}][id]`); // Pour l'ID de la ligne de vente existante
+                }
+                row.querySelector('.quantite-input').setAttribute('name', `produits[${currentLigneIndex}][quantite]`);
+                row.querySelector('.prix-unitaire-input').setAttribute('name', `produits[${currentLigneIndex}][prix_unitaire]`);
+                currentLigneIndex++;
+            });
+        }
+
+        // Écouteur d'événement Livewire pour ajouter un produit à la table
+        window.addEventListener('productSelectedForVente', event => {
+            const product = event.detail.product;
+            addProductRow(product); // Ajoute le produit avec la quantité 1 et son prix de vente par défaut
+        });
+
+        // Calcul automatique à chaque modification quantité/prix/remise/montant payé
+        document.querySelector('#remise').addEventListener('input', calculerTotaux);
+        document.querySelector('#montant_paye').addEventListener('input', calculerTotaux);
+
+        // Fonction de calcul des totaux
+        function calculerTotaux(){
+            let totalLignes = 0;
+
+            // Cible toutes les lignes qui ne sont PAS le template
+            document.querySelectorAll('#produitsTable tbody tr:not(.product-row-template)').forEach(ligne => {
+                const qte = parseFloat(ligne.querySelector('.quantite-input').value) || 0;
+                const prix = parseFloat(ligne.querySelector('.prix-unitaire-input').value) || 0;
+                const sousTotal = qte * prix;
+
+                // Affichage du sous-total par ligne
+                ligne.querySelector('.sous-total-display').value = sousTotal.toFixed(2);
+
+                totalLignes += sousTotal;
+            });
+
+            const remise = parseFloat(document.querySelector('#remise').value) || 0;
+            const montantPaye = parseFloat(document.querySelector('#montant_paye').value) || 0;
+
+            const totalTTC = Math.max(totalLignes - remise, 0);
+            const resteAPayer = Math.max(totalTTC - montantPaye, 0);
+
+            document.querySelector('#total_ttc').value = totalTTC.toFixed(2);
+            document.querySelector('#reste_a_payer').value = resteAPayer.toFixed(2);
+        }
+
+        // Calcul initial au chargement
+        calculerTotaux();
+
+        // Scripts pour le modal de création de produit (inchangés)
+        const formProduit = document.getElementById('form-produit-modal');
+        const modalProduit = new bootstrap.Modal(document.getElementById('modalProduit'));
+
+        document.getElementById('modalProduit').addEventListener('show.bs.modal', function (event) {
+            formProduit.reset();
+            formProduit.querySelectorAll('.alert').forEach(alert => alert.classList.add('d-none'));
+            formProduit.querySelectorAll('.text-danger').forEach(error => error.remove());
+        });
+
+        formProduit.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(formProduit);
+
+            fetch(formProduit.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formProduit.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(data));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.produit) {
+                    modalProduit.hide();
+                    Livewire.dispatch('productSelectedForVente', { product: data.produit });
+                    formProduit.reset();
+                } else {
+                    let errorMessage = 'Une erreur est survenue.';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).map(arr => arr.join('<br>')).join('<br>');
+                        for (const field in data.errors) {
+                            const input = formProduit.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.classList.add('invalid-feedback');
+                                errorDiv.innerHTML = data.errors[field].join('<br>');
+                                input.parentNode.appendChild(errorDiv);
+                            }
+                        }
+                    } else if (data.message) {
+                        errorMessage = data.message;
+                    }
+                    alert(errorMessage);
+                }
+            })
+            .catch(err => {
+                let errorMessage = 'Une erreur est survenue.';
+                if (err.errors) {
+                    errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                    for (const field in err.errors) {
+                        const input = formProduit.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.classList.add('invalid-feedback');
+                            errorDiv.innerHTML = err.errors[field].join('<br>');
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                alert(errorMessage);
+            });
+        });
+
+        // Script pour le modal de création de catégorie (inchangé)
+        const formCategorie = document.querySelector('#modalCategorie form');
+        const modalCategorie = new bootstrap.Modal(document.getElementById('modalCategorie'));
+        const selectCategorie = document.getElementById('selectCategorie');
+
+        formCategorie.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(formCategorie);
+
+            fetch(formCategorie.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formCategorie.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(data => Promise.reject(data));
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.categorie) {
+                    modalCategorie.hide();
+                    const option = new Option(data.categorie.nom, data.categorie.id);
+                    selectCategorie.appendChild(option);
+                    selectCategorie.value = data.categorie.id;
+                } else {
+                    alert(data.message || 'Impossible d\'ajouter la catégorie.');
+                }
+            })
+            .catch(err => {
+                alert(err.message || 'Une erreur est survenue lors de l\'ajout de la catégorie.');
+            });
+        });
+
+        // NOUVEAU SCRIPT POUR LE MODAL CLIENT
+        const formClient = document.getElementById('form-client-modal');
+        const modalClient = new bootstrap.Modal(document.getElementById('modalClient'));
+        const selectClient = document.getElementById('client_id'); // Le sélecteur de client principal
+        const clientErrorDiv = document.getElementById('client-error');
+        const clientSuccessDiv = document.getElementById('client-success');
+
+        formClient.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            clientErrorDiv.classList.add('d-none');
+            clientSuccessDiv.classList.add('d-none');
+            clientErrorDiv.innerHTML = '';
+            clientSuccessDiv.innerHTML = '';
+
+            const formData = new FormData(formClient);
+
+            fetch(formClient.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formClient.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(data => Promise.reject(data));
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.client) {
+                    modalClient.hide();
+                    const option = new Option(data.client.nom, data.client.id);
+                    selectClient.appendChild(option);
+                    selectClient.value = data.client.id; // Sélectionne le nouveau client
+                    clientSuccessDiv.innerHTML = 'Client ajouté avec succès!';
+                    clientSuccessDiv.classList.remove('d-none');
+                    formClient.reset();
+                } else {
+                    clientErrorDiv.innerHTML = data.message || 'Impossible d\'ajouter le client.';
+                    clientErrorDiv.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                let errorMessage = 'Une erreur est survenue.';
+                if (err.errors) {
+                    errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                clientErrorDiv.innerHTML = errorMessage;
+                clientErrorDiv.classList.remove('d-none');
+            });
+        });
+
     });
-
-    // Calcul TTC
-    document.querySelector('#venteEditForm').addEventListener('input', calculerTotalTTC);
-    calculerTotalTTC();
-
-    function calculerTotalTTC() {
-      let total = 0;
-      container.querySelectorAll('.produit-ligne').forEach(row => {
-        const quantite = parseFloat(row.querySelector('input[name$="[quantite]"]').value) || 0;
-        const prix = parseFloat(row.querySelector('input[name$="[prix_unitaire]"]').value) || 0;
-        total += quantite * prix;
-      });
-      const remise = parseFloat(document.querySelector('#remise').value) || 0;
-      const ttc = total - remise;
-      document.querySelector('#total_ttc').value = ttc.toFixed(2);
-    }
-  });
 </script>
 @endsection

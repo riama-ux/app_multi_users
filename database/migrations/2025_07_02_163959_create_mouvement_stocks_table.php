@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('produit_id');
             $table->unsignedBigInteger('magasin_id');
             $table->enum('type', ['entree', 'sortie']);
-            $table->decimal('quantite', 10, 2);
+            $table->decimal('quantite', 10, 0);
             $table->string('source_type');
             $table->unsignedBigInteger('source_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();

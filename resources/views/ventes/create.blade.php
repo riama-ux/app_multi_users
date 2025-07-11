@@ -12,6 +12,14 @@
     </ul>
 </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger">{{ session('error') }}</div>
+@endif
+
+{{-- CHANGEMENT ICI : Bouton Nouveau Client --}}
+<button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClient">
+    + Nouveau client
+</button>
 
 <form action="{{ route('ventes.store') }}" method="POST" id="venteForm">
     @csrf
@@ -27,42 +35,44 @@
     </div>
 
     <h4>Produits</h4>
-    <div id="produitsContainer">
-        @php
-            $oldProduits = old('produits', [['produit_id' => '', 'quantite' => 1, 'prix_unitaire' => '']]);
-        @endphp
-
-        @foreach($oldProduits as $index => $oldProduit)
-        <div class="produit-ligne row mb-2 align-items-center">
-            <div class="col-md-3">
-                <select name="produits[{{ $index }}][produit_id]" class="form-control produit-select" required>
-                    <option value="">-- Choisir un produit --</option>
-                    @foreach($produits as $produit)
-                        <option value="{{ $produit->id }}" data-prix="{{ $produit->prix_vente }}"
-                            {{ $oldProduit['produit_id'] == $produit->id ? 'selected' : '' }}>
-                            {{ $produit->nom }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="produits[{{ $index }}][quantite]" class="form-control quantite" min="1" value="{{ $oldProduit['quantite'] }}" required>
-            </div>
-            <div class="col-md-3">
-                <input type="number" step="0.01" name="produits[{{ $index }}][prix_unitaire]" class="form-control prix-unitaire" placeholder="Prix unitaire" value="{{ $oldProduit['prix_unitaire'] }}" required>
-            </div>
-            <div class="col-md-2">
-                <input type="text" class="form-control sous-total" placeholder="Sous-total" readonly>
-            </div>
-
-            <div class="col-md-2">
-                <button type="button" class="btn btn-danger btn-remove-ligne">X</button>
-            </div>
-        </div>
-        @endforeach
+    {{-- Intégration du composant Livewire pour la recherche de produits --}}
+    <div class="mb-4">
+        @livewire('vente-product-search')
     </div>
 
-    <button type="button" id="addProduitBtn" class="btn btn-secondary mb-3">Ajouter un produit</button>
+    <table class="table table-bordered" id="produitsTable">
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th>Quantité</th>
+                <th>Prix Unitaire</th>
+                <th>Sous-total</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
+            <tr style="display: none;" class="product-row-template">
+                <td>
+                    <input type="hidden" class="product-id-input">
+                    <span class="product-name-display"></span>
+                </td>
+                <td>
+                    <input type="number" class="form-control quantite-input" min="1" value="1">
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="form-control prix-unitaire-input" min="0">
+                </td>
+                <td>
+                    <input type="text" class="form-control sous-total-display" readonly>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
+                </td>
+            </tr>
+            {{-- Les lignes de produits ajoutées dynamiquement iront ici --}}
+        </tbody>
+    </table>
 
     <h4>Résumé</h4>
     <div class="row mb-3">
@@ -97,77 +107,233 @@
     <button type="submit" class="btn btn-primary mt-4">Enregistrer la vente</button>
 </form>
 
+{{-- Modals existants (Produit, Catégorie) --}}
+<div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" id="form-produit-modal" action="{{ route('produits.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalProduitLabel">Créer un nouveau produit</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body row g-3">
+                    <div class="col-md-2">
+                        <label for="nom" class="form-label">Nom *</label>
+                        <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="reference" class="form-label">Référence</label>
+                        <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference') }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label for="code">Code </label>
+                        <input type="text" name="code" class="form-control" value="{{ old('code') }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="marque">Marque *</label>
+                        <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="unite">Unité*</label>
+                        <select name="unite" class="form-control" required>
+                            <option value="">-- Sélectionner --</option>
+                            @foreach(['pièce', 'kg', 'litre', 'mètre', 'paquet'] as $unit)
+                                <option value="{{ $unit }}" {{ old('unite', $produit->unite ?? '') == $unit ? 'selected' : '' }}>
+                                    {{ ucfirst($unit) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <label class="w-100">Catégorie *</label>
+                        <div class="input-group">
+                            <select name="categorie_id" id="selectCategorie" class="form-select" required>
+                                <option value="" >-- Choisir --</option>
+                                @foreach($categories as $categorie)
+                                    <option value="{{ $categorie->id }}" {{ old('categorie_id') == $categorie->id ? 'selected' : '' }}>{{ $categorie->nom }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategorie">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <label for="description">Description *</label>
+                        <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="cout_achat" class="form-label">Coût d'achat par défaut *</label>
+                        <input type="number" step="0.01" name="cout_achat" id="cout_achat" class="form-control" value="{{ old('cout_achat') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="prix_vente" class="form-label">Prix de vente par défaut *</label>
+                        <input type="number" step="0.01" name="prix_vente" id="prix_vente" class="form-control" value="{{ old('prix_vente') }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="marge" class="form-label">Marge (%) *</label>
+                        <input type="number" step="0.01" name="marge" id="marge" class="form-control" value="{{ old('marge') }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité) *</label>
+                        <input type="number" name="seuil_alerte" id="seuil_alerte" class="form-control" value="{{ old('seuil_alerte') }}">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Créer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCategorie" tabindex="-1" aria-labelledby="modalCategorieLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form method="POST" action="{{ route('module.categories.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCategorieLabel">Nouvelle catégorie</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Nom de la catégorie *</label>
+                    <input type="text" name="nom" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Créer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- NOUVEAU MODAL CLIENT --}}
+<div class="modal fade" id="modalClient" tabindex="-1" aria-labelledby="modalClientLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <form id="form-client-modal" method="POST" action="{{ route('module.clients.store') }}">
+            @csrf
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalClientLabel">Ajouter un client</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="client-nom" class="form-label">Nom *</label>
+                        <input type="text" name="nom" id="client-nom" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-telephone" class="form-label">Téléphone</label>
+                        <input type="text" name="telephone" id="client-telephone" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-email" class="form-label">Email</label>
+                        <input type="email" name="email" id="client-email" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="client-adresse" class="form-label">Adresse</label>
+                        <input type="text" name="adresse" id="client-adresse" class="form-control">
+                    </div>
+                    <div id="client-error" class="alert alert-danger d-none"></div>
+                    <div id="client-success" class="alert alert-success d-none"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Enregistrer</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+{{-- Scripts JavaScript --}}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        let produitIndex = {{ count($oldProduits) }};
+        const produitsTableBody = document.querySelector('#produitsTable tbody');
+        const productRowTemplate = document.querySelector('.product-row-template');
 
-        // Met à jour le prix unitaire à la sélection d'un produit
-        document.querySelector('#produitsContainer').addEventListener('change', function(e){
-            if(e.target.classList.contains('produit-select')){
-                const option = e.target.selectedOptions[0];
-                const prix = option?.getAttribute('data-prix') || '';
-                const prixInput = e.target.closest('.produit-ligne').querySelector('.prix-unitaire');
-                prixInput.value = prix;
-                calculerTotaux();
+        let currentLigneIndex = 0; // Index pour les noms d'input
+
+        // Fonction pour ajouter une ligne de produit au tableau
+        function addProductRow(product, quantity = 1) {
+            // Vérifier si le produit existe déjà par son ID pour éviter les doublons
+            let existingRowInput = Array.from(produitsTableBody.querySelectorAll('.product-id-input'))
+                                        .find(input => input.value == product.id);
+
+            if (existingRowInput) {
+                const qtyInput = existingRowInput.closest('tr').querySelector('.quantite-input');
+                qtyInput.value = parseInt(qtyInput.value) + 1;
+                calculerTotaux(); // Recalculer les totaux après incrémentation
+                return;
             }
-        });
 
-        // Ajout d'une ligne produit
-        document.querySelector('#addProduitBtn').addEventListener('click', function(){
-            const container = document.querySelector('#produitsContainer');
-            const newLine = container.querySelector('.produit-ligne').cloneNode(true);
+            const newRow = productRowTemplate.cloneNode(true);
+            newRow.style.display = '';
+            newRow.classList.remove('product-row-template');
 
-            // Reset valeurs
-            newLine.querySelector('select').value = '';
-            newLine.querySelector('input.quantite').value = 1;
-            newLine.querySelector('input.prix-unitaire').value = '';
+            newRow.querySelector('.product-id-input').value = product.id;
+            newRow.querySelector('.product-name-display').textContent = product.nom;
 
-            // Met à jour les noms des inputs avec un index unique
-            newLine.querySelectorAll('select, input').forEach(input => {
-                let name = input.getAttribute('name');
-                if(name){
-                    name = name.replace(/\d+/, produitIndex);
-                    input.setAttribute('name', name);
-                }
+            const quantiteInput = newRow.querySelector('.quantite-input');
+            quantiteInput.value = quantity;
+            quantiteInput.setAttribute('required', 'required');
+            quantiteInput.addEventListener('input', calculerTotaux); // Écouteur pour la quantité
+
+            const prixUnitaireInput = newRow.querySelector('.prix-unitaire-input');
+            prixUnitaireInput.value = product.prix_vente || ''; // Utiliser prix_vente comme prix par défaut
+            prixUnitaireInput.setAttribute('required', 'required');
+            prixUnitaireInput.addEventListener('input', calculerTotaux); // Écouteur pour le prix unitaire
+
+            newRow.querySelector('.removeRow').addEventListener('click', function() {
+                newRow.remove();
+                updateRowIndexes(); // Ré-indexer après la suppression
+                calculerTotaux(); // Recalculer les totaux après suppression
             });
-            produitIndex++;
 
-            container.appendChild(newLine);
-        });
+            produitsTableBody.appendChild(newRow);
+            updateRowIndexes(); // Mettre à jour les indices après l'ajout
+            calculerTotaux(); // Recalculer les totaux après l'ajout
+        }
 
-        // Suppression d'une ligne produit
-        document.querySelector('#produitsContainer').addEventListener('click', function(e){
-            if(e.target.classList.contains('btn-remove-ligne')){
-                const lignes = document.querySelectorAll('.produit-ligne');
-                if(lignes.length > 1){
-                    e.target.closest('.produit-ligne').remove();
-                    calculerTotaux();
-                } else {
-                    alert('Au moins un produit est requis.');
-                }
-            }
+        // Fonction pour réindexer les noms des inputs après suppression ou ajout
+        function updateRowIndexes() {
+            currentLigneIndex = 0; // Réinitialiser l'index
+            // CORRECTION ICI : Cible toutes les lignes qui ne sont PAS le template
+            produitsTableBody.querySelectorAll('tr:not(.product-row-template)').forEach((row) => {
+                row.querySelector('.product-id-input').setAttribute('name', `produits[${currentLigneIndex}][produit_id]`);
+                row.querySelector('.quantite-input').setAttribute('name', `produits[${currentLigneIndex}][quantite]`);
+                row.querySelector('.prix-unitaire-input').setAttribute('name', `produits[${currentLigneIndex}][prix_unitaire]`);
+                currentLigneIndex++;
+            });
+        }
+
+        // Écouteur d'événement Livewire pour ajouter un produit à la table
+        window.addEventListener('productSelectedForVente', event => {
+            const product = event.detail.product;
+            addProductRow(product); // Ajoute le produit avec la quantité 1 et son prix de vente par défaut
         });
 
         // Calcul automatique à chaque modification quantité/prix/remise/montant payé
-        document.querySelector('#produitsContainer').addEventListener('input', function(e){
-            if(e.target.classList.contains('quantite') || e.target.classList.contains('prix-unitaire')){
-                calculerTotaux();
-            }
-        });
         document.querySelector('#remise').addEventListener('input', calculerTotaux);
         document.querySelector('#montant_paye').addEventListener('input', calculerTotaux);
 
-        // Fonction de calcul
+        // Fonction de calcul des totaux
         function calculerTotaux(){
             let totalLignes = 0;
 
-            document.querySelectorAll('.produit-ligne').forEach(ligne => {
-                const qte = parseFloat(ligne.querySelector('.quantite').value) || 0;
-                const prix = parseFloat(ligne.querySelector('.prix-unitaire').value) || 0;
+            // CORRECTION ICI : Cible toutes les lignes qui ne sont PAS le template
+            document.querySelectorAll('#produitsTable tbody tr:not(.product-row-template)').forEach(ligne => {
+                const qte = parseFloat(ligne.querySelector('.quantite-input').value) || 0;
+                const prix = parseFloat(ligne.querySelector('.prix-unitaire-input').value) || 0;
                 const sousTotal = qte * prix;
 
                 // Affichage du sous-total par ligne
-                ligne.querySelector('.sous-total').value = sousTotal.toFixed(2);
+                ligne.querySelector('.sous-total-display').value = sousTotal.toFixed(2);
 
                 totalLignes += sousTotal;
             });
@@ -184,9 +350,176 @@
 
         // Calcul initial au chargement
         calculerTotaux();
+
+        // Scripts pour le modal de création de produit (inchangés)
+        const formProduit = document.getElementById('form-produit-modal');
+        const modalProduit = new bootstrap.Modal(document.getElementById('modalProduit'));
+
+        document.getElementById('modalProduit').addEventListener('show.bs.modal', function (event) {
+            formProduit.reset();
+            formProduit.querySelectorAll('.alert').forEach(alert => alert.classList.add('d-none'));
+            formProduit.querySelectorAll('.text-danger').forEach(error => error.remove());
+        });
+
+        formProduit.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(formProduit);
+
+            fetch(formProduit.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formProduit.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(data));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.produit) {
+                    modalProduit.hide();
+                    // Dispatch l'événement Livewire pour ajouter le nouveau produit au tableau de vente
+                    Livewire.dispatch('productSelectedForVente', { product: data.produit });
+                    formProduit.reset();
+                } else {
+                    let errorMessage = 'Une erreur est survenue.';
+                    if (data.errors) {
+                        errorMessage = Object.values(data.errors).map(arr => arr.join('<br>')).join('<br>');
+                        for (const field in data.errors) {
+                            const input = formProduit.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.classList.add('invalid-feedback');
+                                errorDiv.innerHTML = data.errors[field].join('<br>');
+                                input.parentNode.appendChild(errorDiv);
+                            }
+                        }
+                    } else if (data.message) {
+                        errorMessage = data.message;
+                    }
+                    alert(errorMessage);
+                }
+            })
+            .catch(err => {
+                let errorMessage = 'Une erreur est survenue.';
+                if (err.errors) {
+                    errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                    for (const field in err.errors) {
+                        const input = formProduit.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.classList.add('invalid-feedback');
+                            errorDiv.innerHTML = err.errors[field].join('<br>');
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                alert(errorMessage);
+            });
+        });
+
+        // Script pour le modal de création de catégorie (inchangé)
+        const formCategorie = document.querySelector('#modalCategorie form');
+        const modalCategorie = new bootstrap.Modal(document.getElementById('modalCategorie'));
+        const selectCategorie = document.getElementById('selectCategorie');
+
+        formCategorie.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(formCategorie);
+
+            fetch(formCategorie.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formCategorie.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(data => Promise.reject(data));
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.categorie) {
+                    modalCategorie.hide();
+                    const option = new Option(data.categorie.nom, data.categorie.id);
+                    selectCategorie.appendChild(option);
+                    selectCategorie.value = data.categorie.id;
+                    // Pas de dispatch Livewire ici car le modal est pour la création de produit
+                } else {
+                    alert(data.message || 'Impossible d\'ajouter la catégorie.');
+                }
+            })
+            .catch(err => {
+                alert(err.message || 'Une erreur est survenue lors de l\'ajout de la catégorie.');
+            });
+        });
+
+        // NOUVEAU SCRIPT POUR LE MODAL CLIENT
+        const formClient = document.getElementById('form-client-modal');
+        const modalClient = new bootstrap.Modal(document.getElementById('modalClient'));
+        const selectClient = document.getElementById('client_id'); // Le sélecteur de client principal
+        const clientErrorDiv = document.getElementById('client-error');
+        const clientSuccessDiv = document.getElementById('client-success');
+
+        formClient.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            clientErrorDiv.classList.add('d-none');
+            clientSuccessDiv.classList.add('d-none');
+            clientErrorDiv.innerHTML = '';
+            clientSuccessDiv.innerHTML = '';
+
+            const formData = new FormData(formClient);
+
+            fetch(formClient.action, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': formClient.querySelector('input[name="_token"]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(data => Promise.reject(data));
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.client) {
+                    modalClient.hide();
+                    const option = new Option(data.client.nom, data.client.id);
+                    selectClient.appendChild(option);
+                    selectClient.value = data.client.id; // Sélectionne le nouveau client
+                    clientSuccessDiv.innerHTML = 'Client ajouté avec succès!';
+                    clientSuccessDiv.classList.remove('d-none');
+                    formClient.reset();
+                } else {
+                    clientErrorDiv.innerHTML = data.message || 'Impossible d\'ajouter le client.';
+                    clientErrorDiv.classList.remove('d-none');
+                }
+            })
+            .catch(err => {
+                let errorMessage = 'Une erreur est survenue.';
+                if (err.errors) {
+                    errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                } else if (err.message) {
+                    errorMessage = err.message;
+                }
+                clientErrorDiv.innerHTML = errorMessage;
+                clientErrorDiv.classList.remove('d-none');
+            });
+        });
+
     });
 </script>
 @endsection
-
-
-

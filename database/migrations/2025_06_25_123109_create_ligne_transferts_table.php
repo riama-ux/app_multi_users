@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('transfert_id');
             $table->unsignedBigInteger('produit_id');
-            $table->decimal('quantite', 10, 2);
+            $table->decimal('quantite', 10, 0);
             $table->timestamps();
 
             $table->foreign('transfert_id')->references('id')->on('transferts')->onDelete('cascade');

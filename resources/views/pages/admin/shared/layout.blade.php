@@ -5,6 +5,7 @@
     <base href="../">
     <meta charset="utf-8">
     <meta name="author" content="Softnio">
+    <meta name="csrf-token" content="{{ csrf_token() }}"> 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
     <!-- Fav Icon  -->
@@ -12,8 +13,11 @@
     <!-- Page Title  -->
     <title>Dashboard - Campaign | DashLite Admin Template</title>
     <!-- StyleSheets  -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-..." crossorigin="anonymous"></script> 
     <link rel="stylesheet" href="{{ URL::to('./assets/css/dashlite.css?ver=3.2.3') }}">
     <link id="skin-default" rel="stylesheet" href="{{ URL::to('./assets/css/theme.css?ver=3.2.3') }}">
+
+    @livewireStyles
 </head>
 
 <body class="nk-body ui-rounder has-sidebar ">
@@ -342,6 +346,8 @@
     <script src="{{ URL::to('./assets/js/bundle.js?ver=3.2.3') }}"></script>
     <script src="{{ URL::to('./assets/js/scripts.js?ver=3.2.3') }}"></script>
     <script src="{{ URL::to('./assets/js/charts/gd-campaign.js?ver=3.2.3') }}"></script>
+
+    @livewireScripts
 </body>
 
 </html>

@@ -10,6 +10,8 @@ use App\Http\Controllers\Gestion\VenteController;
 use App\Http\Controllers\Gestion\PaiementController;
 use App\Http\Controllers\Gestion\StockLotController;
 use App\Http\Controllers\Gestion\TransfertController;
+use App\Http\Controllers\Gestion\RetourClientController;
+use App\Http\Controllers\Gestion\AjustementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,6 +126,18 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->gro
 
     Route::post('/commandes/{commande}/reception', [CommandeController::class, 'reception'])
     ->name('commandes.reception');
+
+    
+
+    Route::prefix('ajustements')->name('ajustements.')->group(function () {
+        Route::get('/', [AjustementController::class, 'index'])->name('index');
+        Route::get('/create', [AjustementController::class, 'create'])->name('create');
+        Route::post('/', [AjustementController::class, 'store'])->name('store');
+        Route::get('/{ajustement}', [AjustementController::class, 'show'])->name('show');
+        Route::get('/{ajustement}/edit', [AjustementController::class, 'edit'])->name('edit');
+        Route::put('/{ajustement}', [AjustementController::class, 'update'])->name('update');
+        Route::delete('/{ajustement}', [AjustementController::class, 'destroy'])->name('destroy');
+    });
 });
 
 
@@ -177,9 +191,24 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager
     Route::get('/{transfert}/edit', [TransfertController::class, 'edit'])->name('edit');
     Route::put('/{transfert}', [TransfertController::class, 'update'])->name('update');
     Route::delete('/{transfert}', [TransfertController::class, 'destroy'])->name('destroy');
+     Route::get('/api/produits/recherche', [TransfertController::class, 'searchProducts'])->name('api.produits.recherche');
 
     // Validation
     Route::post('/{transfert}/valider', [TransfertController::class, 'valider'])->name('valider');
+});
+
+
+Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manager'])->group(function () {
+    // Routes pour les Retours Clients
+    Route::resource('retours_clients', RetourClientController::class);
+
+    // Ajout d'une route pour initier un retour depuis une vente spécifique
+    Route::get('ventes/{vente}/retour', [RetourClientController::class, 'create'])->name('ventes.retour.create');
+
+    // Routes pour les Ajustements de Stock
+    Route::resource('ajustements', AjustementController::class);
+
+    // ... vos autres routes (commandes, ventes, etc.)
 });
 
 

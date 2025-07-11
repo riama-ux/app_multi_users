@@ -1,7 +1,7 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-    <h1>Nouvelle commande</h1>
+    <h1>Créer une nouvelle commande</h1>
 
     @if ($errors->any())
         <div class="alert alert-danger">
@@ -12,6 +12,7 @@
             </ul>
         </div>
     @endif
+
     <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalProduit">
         + Nouveau produit
     </button>
@@ -33,13 +34,13 @@
         </div>
 
         <div class="mb-3">
-            <label for="date_commande" class="form-label">Date de commande *</label>
-            <input type="date" name="date_commande" id="date_commande" class="form-control" value="{{ old('date_commande', date('Y-m-d')) }}" required>
+            <label for="date_commande" class="form-label">Date et heure de commande *</label>
+            <input type="datetime-local" name="date_commande" id="date_commande" class="form-control" value="{{ old('date_commande', now()->format('Y-m-d\TH:i')) }}" required>
         </div>
 
         <div class="mb-3">
-            <label for="date_prevue_livraison" class="form-label">Date prévue de livraison</label>
-            <input type="date" name="date_prevue_livraison" id="date_prevue_livraison" class="form-control" value="{{ old('date_prevue_livraison') }}" required>
+            <label for="date_prevue_livraison" class="form-label">Date et heure prévue de livraison</label>
+            <input type="datetime-local" name="date_prevue_livraison" id="date_prevue_livraison" class="form-control" value="{{ old('date_prevue_livraison', now()->addDays(7)->format('Y-m-d\TH:i')) }}" required>
             @error('date_prevue_livraison')
                 <div class="text-danger">{{ $message }}</div>
             @enderror
@@ -47,43 +48,45 @@
 
         <h4>Lignes de commande</h4>
 
+        {{-- Intégration du composant Livewire pour la recherche de produits --}}
+        <div class="mb-4">
+            @livewire('commande-product-search')
+        </div>
+
         <table class="table" id="lignes-commande-table">
             <thead>
                 <tr>
                     <th>Produit *</th>
-                    <th>Code</th>
-                    <th>Référence</th>
+                    {{-- Supprimé: <th>Code</th> --}}
+                    {{-- Supprimé: <th>Référence</th> --}}
+                    {{-- Supprimé: <th>Description</th> --}}
                     <th>Quantité *</th>
                     <th>Prix unitaire *</th>
                     <th></th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="ligne-commande">
+                {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
+                <tr style="display: none;" class="ligne-commande-template">
                     <td>
-                        <select name="lignes[0][produit_id]" class="form-select produit-select" required>
-                            <option value="">-- Choisir un produit --</option>
-                            @foreach ($produits as $produit)
-                                <option value="{{ $produit->id }}" data-code="{{ $produit->code }}" data-reference="{{ $produit->reference }}">{{ $produit->nom }}</option>
-                            @endforeach
-                        </select>
+                        <input type="hidden" class="produit-id-input">
+                        <span class="product-name-display"></span>
                     </td>
-                    <td><input type="text" class="form-control code-input" name="lignes[0][code]"></td>
-                    <td><input type="text" class="form-control reference-input" name="lignes[0][reference]"></td>
-                    <td><input type="number" name="lignes[0][quantite]" class="form-control" min="1" required></td>
-                    <td><input type="number" step="0.01" name="lignes[0][prix_unitaire]" class="form-control" min="0" required></td>
+                    {{-- Supprimé: <td><input type="text" class="form-control code-input" readonly></td> --}}
+                    {{-- Supprimé: <td><input type="text" class="form-control reference-input" readonly></td> --}}
+                    {{-- Supprimé: <td><input type="text" class="form-control description-input" readonly></td> --}}
+                    <td><input type="number" class="form-control quantite-input" min="1" value="1"></td>
+                    <td><input type="number" step="0.01" class="form-control prix-unitaire-input" min="0"></td>
                     <td><button type="button" class="btn btn-danger btn-sm remove-ligne">-</button></td>
                 </tr>
             </tbody>
         </table>
 
-        <button type="button" id="add-ligne" class="btn btn-secondary mb-3">Ajouter une ligne</button>
-
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
+        <button type="submit" class="btn btn-primary">Créer la commande</button>
         <a href="{{ route('commandes.index') }}" class="btn btn-secondary">Annuler</a>
     </form>
 
-
+    {{-- Modals existants (Produit, Catégorie, Fournisseur) --}}
     <div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <form method="POST" id="form-produit-modal" action="{{ route('produits.store') }}">
@@ -94,27 +97,22 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
                     </div>
                     <div class="modal-body row g-3">
-
                         <div class="col-md-2">
                             <label for="nom" class="form-label">Nom *</label>
                             <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
                         </div>
-
                         <div class="col-md-2">
                             <label for="reference" class="form-label">Référence</label>
                             <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference') }}">
                         </div>
-
                         <div class="col-md-2">
                             <label for="code">Code </label>
                             <input type="text" name="code" class="form-control" value="{{ old('code') }}">
                         </div>
-
                         <div class="col-md-6">
                             <label for="marque">Marque *</label>
                             <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
                         </div>
-
                         <div class="col-md-6">
                             <label for="unite">Unité*</label>
                             <select name="unite" class="form-control" required>
@@ -126,7 +124,6 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="col-md-6 d-flex align-items-end">
                             <label class="w-100">Catégorie *</label>
                             <div class="input-group">
@@ -141,12 +138,10 @@
                                 </button>
                             </div>
                         </div>
-
                         <div class="col-md-12">
                             <label for="description">Description *</label>
                             <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
                         </div>
-
                         <div class="col-md-4">
                             <label for="cout_achat" class="form-label">Coût d'achat par défaut *</label>
                             <input type="number" step="0.01" name="cout_achat" id="cout_achat" class="form-control" value="{{ old('cout_achat') }}" required>
@@ -159,7 +154,6 @@
                             <label for="marge" class="form-label">Marge (%) *</label>
                             <input type="number" step="0.01" name="marge" id="marge" class="form-control" value="{{ old('marge') }}" required>
                         </div>
-
                         <div class="mb-3">
                             <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité) *</label>
                             <input type="number" name="seuil_alerte" id="seuil_alerte" class="form-control" value="{{ old('seuil_alerte') }}">
@@ -234,12 +228,7 @@
         </div>
     </div>
 
-    {{-- Intégration des données des produits en JSON pour JavaScript --}}
-    <script>
-        // Use a mutable array for allProducts
-        let allProducts = @json($produits);
-    </script>
-
+    {{-- Scripts JavaScript --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const coutAchatInput = document.getElementById('cout_achat');
@@ -254,12 +243,14 @@
                     const marge = ((prix - cout) / cout) * 100;
                     margeInput.value = marge.toFixed(2);
                 } else {
-                    margeInput.value = ''; // Effacer la marge si les entrées sont invalides
+                    margeInput.value = '';
                 }
             }
 
-            coutAchatInput.addEventListener('input', updateMarge);
-            prixVenteInput.addEventListener('input', updateMarge);
+            if (coutAchatInput && prixVenteInput && margeInput) {
+                coutAchatInput.addEventListener('input', updateMarge);
+                prixVenteInput.addEventListener('input', updateMarge);
+            }
         });
     </script>
 
@@ -268,25 +259,85 @@
             const formProduit = document.getElementById('form-produit-modal');
             const modalProduit = new bootstrap.Modal(document.getElementById('modalProduit'));
             const lignesCommandeTableBody = document.querySelector('#lignes-commande-table tbody');
+            const ligneCommandeTemplate = document.querySelector('.ligne-commande-template');
 
-            let targetSelect = null; // Pour suivre quel sélecteur de produit a déclenché le modal
+            let currentLigneIndex = 0;
 
-            // Écouteur d'événement pour l'affichage du modal produit, afin de déterminer quel sélecteur l'a déclenché
-            document.getElementById('modalProduit').addEventListener('show.bs.modal', function (event) {
-                // Tenter de trouver le dernier sélecteur de produit vide ou le dernier tout court
-                const allProduitSelects = lignesCommandeTableBody.querySelectorAll('.produit-select');
-                targetSelect = null;
-                for (let i = allProduitSelects.length - 1; i >= 0; i--) {
-                    if (!allProduitSelects[i].value) {
-                        targetSelect = allProduitSelects[i];
-                        break;
-                    }
+            function addProductRow(product, quantity = 1, prixUnitaire = '', ligneId = null) {
+                let existingRowInput = Array.from(lignesCommandeTableBody.querySelectorAll('.produit-id-input'))
+                                            .find(input => input.value == product.id);
+
+                if (existingRowInput) {
+                    const qtyInput = existingRowInput.closest('tr').querySelector('.quantite-input');
+                    qtyInput.value = parseInt(qtyInput.value) + 1;
+                    return;
                 }
-                if (!targetSelect && allProduitSelects.length > 0) {
-                    targetSelect = allProduitSelects[allProduitSelects.length - 1];
+
+                const newRow = ligneCommandeTemplate.cloneNode(true);
+                newRow.style.display = '';
+                newRow.classList.remove('ligne-commande-template');
+
+                if (ligneId) {
+                    newRow.querySelector('.ligne-id-input').value = ligneId;
+                }
+
+                const productIdInput = newRow.querySelector('.produit-id-input');
+                productIdInput.value = product.id;
+
+                newRow.querySelector('.product-name-display').textContent = product.nom;
+                // Supprimé: newRow.querySelector('.code-input').value = product.code || '';
+                // Supprimé: newRow.querySelector('.reference-input').value = product.reference || '';
+                // Supprimé: newRow.querySelector('.description-input').value = product.description || '';
+
+                const quantiteInput = newRow.querySelector('.quantite-input');
+                quantiteInput.value = quantity;
+                quantiteInput.setAttribute('required', 'required');
+
+                const prixUnitaireInput = newRow.querySelector('.prix-unitaire-input');
+                prixUnitaireInput.value = prixUnitaire !== '' ? prixUnitaire : (product.prix_unitaire_defaut || '');
+                prixUnitaireInput.setAttribute('required', 'required');
+
+                newRow.querySelector('.remove-ligne').addEventListener('click', function() {
+                    newRow.remove();
+                    updateRowIndexes();
+                });
+
+                lignesCommandeTableBody.appendChild(newRow);
+                updateRowIndexes();
+            }
+
+            // Pas de pré-remplissage pour la création, mais la fonction est là si besoin pour d'autres usages
+            // const existingLignesCommande = @json($commande->lignesCommande ?? []); // Cette ligne serait pour edit.blade.php
+            // existingLignesCommande.forEach(ligne => { ... });
+
+            lignesCommandeTableBody.addEventListener('click', function (e) {
+                if (e.target.classList.contains('remove-ligne')) {
+                    const row = e.target.closest('tr');
+                    row.remove();
+                    updateRowIndexes();
                 }
             });
 
+            function updateRowIndexes() {
+                currentLigneIndex = 0;
+                lignesCommandeTableBody.querySelectorAll('tr:not(.ligne-commande-template)').forEach((row) => {
+                    row.querySelector('.produit-id-input').setAttribute('name', `lignes[${currentLigneIndex}][produit_id]`);
+                    const ligneIdInput = row.querySelector('.ligne-id-input');
+                    if (ligneIdInput) {
+                        ligneIdInput.setAttribute('name', `lignes[${currentLigneIndex}][id]`);
+                    }
+                    row.querySelector('.quantite-input').setAttribute('name', `lignes[${currentLigneIndex}][quantite]`);
+                    row.querySelector('.prix-unitaire-input').setAttribute('name', `lignes[${currentLigneIndex}][prix_unitaire]`);
+
+                    currentLigneIndex++;
+                });
+            }
+
+            document.getElementById('modalProduit').addEventListener('show.bs.modal', function (event) {
+                formProduit.reset();
+                formProduit.querySelectorAll('.alert').forEach(alert => alert.classList.add('d-none'));
+                formProduit.querySelectorAll('.text-danger').forEach(error => error.remove());
+            });
 
             formProduit.addEventListener('submit', function(e) {
                 e.preventDefault();
@@ -309,50 +360,55 @@
                 })
                 .then(data => {
                     if (data.success && data.produit) {
-                        // Fermer le modal
                         modalProduit.hide();
-
-                        // Add the new product to the local allProducts array
-                        allProducts.push(data.produit);
-
-                        // Add the new product to all existing product dropdowns
-                        document.querySelectorAll('.produit-select').forEach(select => {
-                            const option = new Option(data.produit.nom, data.produit.id);
-                            // Only append if the option doesn't already exist to prevent duplicates
-                            if (!Array.from(select.options).some(opt => opt.value == data.produit.id)) {
-                                select.appendChild(option);
-                            }
-                        });
-
-                        if (targetSelect) {
-                            // Set the value of the target select to the newly created product's ID
-                            targetSelect.value = data.produit.id;
-                            // Manually trigger the 'change' event on the target select
-                            // This will make sure the code and reference inputs get updated.
-                            targetSelect.dispatchEvent(new Event('change'));
-                        }
-
-                        // Réinitialiser le formulaire modal pour une nouvelle utilisation propre
+                        Livewire.dispatch('productSelectedForCommande', { product: data.produit });
                         formProduit.reset();
                     } else {
-                        alert('Erreur: ' + (data.message || 'Impossible de créer le produit'));
+                        let errorMessage = 'Une erreur est survenue.';
+                        if (data.errors) {
+                            errorMessage = Object.values(data.errors).map(arr => arr.join('<br>')).join('<br>');
+                            for (const field in data.errors) {
+                                const input = formProduit.querySelector(`[name="${field}"]`);
+                                if (input) {
+                                    input.classList.add('is-invalid');
+                                    const errorDiv = document.createElement('div');
+                                    errorDiv.classList.add('invalid-feedback');
+                                    errorDiv.innerHTML = data.errors[field].join('<br>');
+                                    input.parentNode.appendChild(errorDiv);
+                                }
+                            }
+                        } else if (data.message) {
+                            errorMessage = data.message;
+                        }
+                        alert(errorMessage);
                     }
                 })
                 .catch(err => {
                     let errorMessage = 'Une erreur est survenue.';
                     if (err.errors) {
                         errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                        for (const field in err.errors) {
+                            const input = formProduit.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.classList.add('invalid-feedback');
+                                errorDiv.innerHTML = err.errors[field].join('<br>');
+                                input.parentNode.appendChild(errorDiv);
+                            }
+                            }
                     } else if (err.message) {
                         errorMessage = err.message;
                     }
                     alert(errorMessage);
                 });
             });
-        });
-    </script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
+            window.addEventListener('productSelectedForCommande', event => {
+                const product = event.detail.product;
+                addProductRow(product, 1, product.prix_unitaire_defaut);
+            });
+
             const formFournisseur = document.getElementById('form-fournisseur-modal');
             const modalFournisseur = new bootstrap.Modal(document.getElementById('modalFournisseur'));
             const selectFournisseur = document.getElementById('selectFournisseur');
@@ -382,159 +438,29 @@
                     return response.json();
                 })
                 .then(data => {
-                    if(data.success && data.fournisseur) {
-                        // Ajouter à la liste et sélectionner
-                        const option = new Option(data.fournisseur.nom, data.fournisseur.id, true, true);
+                    if (data.success && data.fournisseur) {
+                        modalFournisseur.hide();
+                        const option = new Option(data.fournisseur.nom, data.fournisseur.id);
                         selectFournisseur.appendChild(option);
                         selectFournisseur.value = data.fournisseur.id;
-
-                        // Afficher un message de succès temporaire
-                        successDiv.textContent = "Fournisseur ajouté avec succès.";
+                        successDiv.innerHTML = 'Fournisseur ajouté avec succès!';
                         successDiv.classList.remove('d-none');
-
-                        // Réinitialiser le formulaire modal
                         formFournisseur.reset();
-
-                        // Fermer le modal après 1.5s
-                        setTimeout(() => modalFournisseur.hide(), 1500);
                     } else {
-                        errorDiv.textContent = data.message || 'Erreur lors de la création.';
+                        errorDiv.innerHTML = data.message || 'Impossible d\'ajouter le fournisseur.';
                         errorDiv.classList.remove('d-none');
                     }
                 })
-                .catch(errors => {
-                    if(errors.errors) {
-                        // Afficher les erreurs de validation Laravel
-                        errorDiv.innerHTML = Object.values(errors.errors).map(arr => arr.join('<br>')).join('<br>');
-                        errorDiv.classList.remove('d-none');
-                    } else {
-                        errorDiv.textContent = errors.message || 'Erreur serveur.';
-                        errorDiv.classList.remove('d-none');
+                .catch(err => {
+                    let errorMessage = 'Une erreur est survenue.';
+                    if (err.errors) {
+                        errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
+                    } else if (err.message) {
+                        errorMessage = err.message;
                     }
+                    errorDiv.innerHTML = errorMessage;
+                    errorDiv.classList.remove('d-none');
                 });
-            });
-        });
-    </script>
-
-    <script>
-        let index = 1; // Index de départ pour les nouvelles lignes
-
-        // Fonction pour appliquer les écouteurs d'événements à une ligne donnée
-        function applyProductListeners(row) {
-            const produitSelect = row.querySelector('.produit-select');
-            const codeInput = row.querySelector('.code-input');
-            const referenceInput = row.querySelector('.reference-input');
-            const removeButton = row.querySelector('.remove-ligne');
-
-            // --- Écouteur d'événement pour le sélecteur de produit ---
-            produitSelect.addEventListener('change', function () {
-                const selectedProductId = this.value;
-                // Trouver le produit correspondant dans le tableau allProducts
-                const selectedProduct = allProducts.find(p => p.id == selectedProductId);
-
-                if (selectedProduct) {
-                    codeInput.value = selectedProduct.code || '';
-                    referenceInput.value = selectedProduct.reference || '';
-                } else {
-                    // Si rien n'est sélectionné, vider les champs code et référence
-                    codeInput.value = '';
-                    referenceInput.value = '';
-                }
-            });
-
-            // --- Écouteur d'événement pour le champ Code ---
-            codeInput.addEventListener('input', function () {
-                const enteredCode = this.value.trim();
-                // Trouver le produit correspondant par le code (insensible à la casse)
-                const matchedProduct = allProducts.find(p => p.code && p.code.toLowerCase() === enteredCode.toLowerCase());
-
-                if (enteredCode === '') {
-                    // Si le code est vidé, vider le sélecteur de produit et la référence
-                    produitSelect.value = '';
-                    referenceInput.value = '';
-                    return;
-                }
-
-                if (matchedProduct) {
-                    // Sélectionner le produit dans le dropdown
-                    produitSelect.value = matchedProduct.id;
-                    // Remplir le champ référence
-                    referenceInput.value = matchedProduct.reference || '';
-                } else {
-                    // Si aucune correspondance, vider le sélecteur de produit et la référence
-                    produitSelect.value = '';
-                    referenceInput.value = '';
-                }
-            });
-
-            // --- Écouteur d'événement pour le champ Référence ---
-            referenceInput.addEventListener('input', function () {
-                const enteredReference = this.value.trim();
-                // Trouver le produit correspondant par la référence (insensible à la casse)
-                const matchedProduct = allProducts.find(p => p.reference && p.reference.toLowerCase() === enteredReference.toLowerCase());
-
-                if (enteredReference === '') {
-                    // Si la référence est vidée, vider le sélecteur de produit et le code
-                    produitSelect.value = '';
-                    codeInput.value = '';
-                    return;
-                }
-
-                if (matchedProduct) {
-                    // Sélectionner le produit dans le dropdown
-                    produitSelect.value = matchedProduct.id;
-                    // Remplir le champ code
-                    codeInput.value = matchedProduct.code || '';
-                } else {
-                    // Si aucune correspondance, vider le sélecteur de produit et le code
-                    produitSelect.value = '';
-                    codeInput.value = '';
-                }
-            });
-
-
-            // --- Écouteur d'événement pour le bouton Supprimer ---
-            removeButton.addEventListener('click', function () {
-                // S'assurer qu'au moins une ligne reste
-                if (document.querySelectorAll('.ligne-commande').length > 1) {
-                    this.closest('tr').remove();
-                } else {
-                    alert("Vous devez avoir au moins une ligne de commande.");
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const tbody = document.querySelector('#lignes-commande-table tbody');
-            const addLigneButton = document.getElementById('add-ligne');
-
-            // Appliquer les écouteurs à la ligne initiale
-            document.querySelectorAll('.ligne-commande').forEach(row => {
-                applyProductListeners(row);
-            });
-
-            addLigneButton.addEventListener('click', () => {
-                const originalRow = document.querySelector('.ligne-commande');
-                const newRow = originalRow.cloneNode(true); // Cloner en profondeur
-
-                // Réinitialiser les valeurs pour la nouvelle ligne et mettre à jour les noms des champs
-                newRow.querySelectorAll('select, input').forEach(el => {
-                    if (el.name) {
-                        // Remplacer l'index dans le nom du champ (ex: lignes[0] devient lignes[1])
-                        el.name = el.name.replace(/lignes\[\d+\]/, `lignes[${index}]`);
-                    }
-                    if (el.tagName === 'SELECT') {
-                        el.value = ''; // Réinitialiser le sélecteur à l'option par défaut
-                    } else if (el.type === 'number' || el.type === 'text' || el.type === 'email') {
-                        el.value = ''; // Vider les champs texte et numériques
-                    }
-                });
-
-                tbody.appendChild(newRow);
-                index++; // Incrémenter l'index pour la prochaine ligne
-
-                // Appliquer les écouteurs à la nouvelle ligne créée
-                applyProductListeners(newRow);
             });
         });
     </script>

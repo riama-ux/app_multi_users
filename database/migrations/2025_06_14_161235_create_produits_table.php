@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('reference');
             $table->foreignId('categorie_id')->constrained('categories')->onDelete('cascade');
             $table->foreignId('magasin_id')->constrained('magasins')->onDelete('cascade');
-            $table->decimal('cout_achat', 10, 2)->nullable();
-            $table->decimal('prix_vente', 10, 2)->nullable();
-            $table->decimal('marge', 5, 2)->default(0);
+            $table->decimal('cout_achat', 10, 0)->nullable();
+            $table->decimal('prix_vente', 10, 0)->nullable();
+            $table->decimal('marge', 5, 0)->default(0);
             $table->integer('seuil_alerte')->default(0);
             $table->string('description');
             $table->string('marque');

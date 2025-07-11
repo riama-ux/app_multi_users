@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('paiements', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('vente_id');
-            $table->decimal('montant', 10, 2);
+            $table->decimal('montant', 10, 0);
             $table->enum('mode_paiement', ['especes', 'mobile_money', 'virement', 'cheque', 'autre'])->default('especes');
             $table->datetime('date_paiement');
             $table->unsignedBigInteger('user_id');

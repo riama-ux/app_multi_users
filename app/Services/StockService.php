@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\StockLot;
 use App\Models\MouvementStock;
 use Illuminate\Support\Facades\DB;
-use App\Models\Stock;
+use App\Models\Produit;
 
 
 class StockService
@@ -128,23 +128,15 @@ class StockService
         }
 
         // Mise à jour directe du stock global ici, après avoir modifié les lots
-        $stock = Stock::withTrashed()->firstOrCreate(
-            [
-                'produit_id' => $produitId,
-                'magasin_id' => $magasinId,
-            ],
-            ['quantite' => 0]
-        );
-
-        if ($stock->trashed()) {
-            $stock->restore();
-        }
-
-        $stock->update([
-            'quantite' => StockLot::where('produit_id', $produitId)
-                ->where('magasin_id', $magasinId)
-                ->sum('quantite')
-        ]);
+        $produit = Produit::find($produitId);
+            if ($produit) {
+                // Assurez-vous que cette méthode existe dans votre modèle Produit
+                // et qu'elle calcule la somme des quantités de tous les StockLot pour ce produit.
+                $produit->updateQuantiteFromLots();
+            } else {
+                // Gérer le cas où le produit n'est pas trouvé (bien que cela soit peu probable si $produitId est valide)
+                throw new \Exception("Produit avec l'ID {$produitId} introuvable lors de la mise à jour du stock global.");
+            }
 
         DB::commit();
 
@@ -162,7 +154,7 @@ class StockService
     {
         $quantite = StockLot::where('produit_id', $produit_id)
             ->where('magasin_id', $magasin_id)
-            ->sum('quantite_restante');
+            ->sum('quantite');
 
         $stock = \App\Models\Stock::firstOrCreate([
             'produit_id' => $produit_id,
@@ -172,7 +164,7 @@ class StockService
         $stock->update(['quantite' => $quantite]);
     }
 
-    public static function reintegrerStockLot($lotId, $quantite, $magasinId, $userId = null, $motif = null)
+    public static function reintegrerStockLot($lotId, $quantite, $magasinId, $userId = null, $motif = null, $sourceType = 'correction', $sourceId = null)
     {
         DB::beginTransaction();
         try {
@@ -185,32 +177,24 @@ class StockService
             $lot->quantite += $quantite;
             $lot->save();
 
-            // Mise à jour du stock global (avec gestion soft delete comme dans sortirFifo)
-            $stock = \App\Models\Stock::withTrashed()->firstOrCreate(
-                [
-                    'produit_id' => $lot->produit_id,
-                    'magasin_id' => $magasinId,
-                ],
-                ['quantite' => 0]
-            );
-
-            if ($stock->trashed()) {
-                $stock->restore();
+            $produit = Produit::find($lot->produit_id);
+            if ($produit) {
+                $produit->updateQuantiteFromLots(); // Cette méthode doit sommer les quantités des lots
+            } else {
+                throw new \Exception("Produit avec l'ID {$lot->produit_id} introuvable lors de la réintégration du stock.");
             }
 
-            $stock->update([
-                'quantite' => StockLot::where('produit_id', $lot->produit_id)
-                    ->where('magasin_id', $magasinId)
-                    ->sum('quantite')
-            ]);
+            // Mise à jour du stock global (Assurez-vous de la cohérence de cette logique de mise à jour)
+            // Vous pouvez appeler ici la méthode de mise à jour du stock global (Produit->updateQuantiteFromLots() ou mettreAJourStock())
+            // ... (Votre logique de mise à jour de $stock) ...
 
             // Créer un mouvement de type "entrée"
             MouvementStock::create([
                 'produit_id'   => $lot->produit_id,
                 'type'         => 'entree',
                 'quantite'     => $quantite,
-                'source_type'  => 'correction', // ou 'modification_vente'
-                'source_id'    => null,
+                'source_type'  => $sourceType, // Utilisation du sourceType fourni (ex: 'retour_client')
+                'source_id'    => $sourceId,   // Utilisation du sourceId fourni (ex: ID du retour client)
                 'lot_id'       => $lot->id,
                 'magasin_id'   => $magasinId,
                 'user_id'      => $userId,
@@ -225,5 +209,56 @@ class StockService
         }
     }
 
+
+    public static function entrerStock(
+        int $produitId,
+        float $quantite,
+        string $sourceType,
+        ?int $sourceId,
+        int $magasinId,
+        int $userId,
+        string $description,
+        float $coutUnitaire
+    ) {
+        DB::transaction(function () use ($produitId, $quantite, $sourceType, $sourceId, $magasinId, $userId, $description, $coutUnitaire) {
+            $produit = Produit::where('id', $produitId)
+                              ->where('magasin_id', $magasinId)
+                              ->firstOrFail();
+
+            // Quantité du produit avant ce mouvement
+            $quantiteAvantProduit = $produit->quantite;
+
+            // Créer un nouveau lot pour l'entrée de stock
+            $lot = StockLot::create([
+                'produit_id' => $produit->id,
+                'magasin_id' => $magasinId,
+                'quantite' => $quantite,
+                'quantite_restante' => $quantite, // Initialement, la quantité restante est égale à la quantité totale du lot
+                'cout_achat' => $coutUnitaire,
+                'date_reception' => now(),
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+            ]);
+
+            // Mettre à jour la quantité agrégée du produit via la somme des lots
+            $produit->updateQuantiteFromLots();
+
+            // Enregistrer le mouvement de stock
+            MouvementStock::create([
+                'produit_id' => $produit->id,
+                'magasin_id' => $magasinId,
+                'type' => 'entree',
+                'quantite' => $quantite,
+                'quantite_avant' => $quantiteAvantProduit,
+                'quantite_apres' => $produit->quantite, // Après l'incrémentation par updateQuantiteFromLots
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'lot_id' => $lot->id,
+                'user_id' => $userId,
+                'motif' => $description,
+                'date' => now(),
+            ]);
+        });
+    }
 
 }
