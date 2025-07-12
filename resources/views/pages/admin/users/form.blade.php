@@ -1,22 +1,14 @@
 @extends('pages.admin.shared.layout')
 
-@section('header')
-<div class="toggle-expand-content" data-content="pageMenu">
-    <ul class="nk-block-tools g-3">
-        <li class="nk-block-tools-opt">
-            <a href="{{ route('admin.compte.index') }}" class="btn btn-icon btn-primary">
-                <em class="icon ni ni-eye"></em>
-            </a>
-        </li>
-    </ul>
-</div>
-@endsection
-
 @section('content')
 <div class="card card-preview">
     <div class="card-inner">
-        @include('flash-message')
-
+        <div class=" d-flex justify-content-end">
+            <a href="{{ route('admin.compte.index') }}" class="btn btn-icon btn-primary mb-5">
+                <em class="icon ni ni-eye"></em>
+            </a>
+        </div>
+        
         <div class="preview-block">
             <form action="{{ request()->is('admin/compte/create') ? route('admin.compte.store') : route('admin.compte.update', $user->id) }}" method="POST">
                 @csrf

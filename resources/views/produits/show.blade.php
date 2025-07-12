@@ -1,6 +1,7 @@
 @extends('pages.admin.shared.layout') {{-- Assurez-vous que ce layout inclut les CSS de DashLite et Bootstrap --}}
 
 @section('content')
+<div class="nk-block nk-block-lg">
     <div class="nk-block-head nk-block-head-sm">
         <div class="nk-block-between">
             <div class="nk-block-head-content">
@@ -8,13 +9,14 @@
                 <div class="nk-block-des text-soft">
                     <p>Informations complètes sur {{ $produit->nom }}.</p>
                 </div>
-            </div><div class="nk-block-head-content">
+            </div><!-- .nk-block-head-content -->
+            <div class="nk-block-head-content">
                 <div class="toggle-wrap nk-block-tools-toggle">
                     <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
                     <div class="toggle-expand-content" data-content="pageMenu">
                         <ul class="nk-block-tools g-3">
                             <li>
-                                <a href="{{ route('produits.edit', $produit->id) }}" class="btn btn-white btn-dim btn-outline-warning">
+                                <a href="{{ route('produits.edit', $produit->id) }}" class="btn btn-white btn-dim btn-outline-primary">
                                     <em class="icon ni ni-edit"></em><span>Modifier</span>
                                 </a>
                             </li>
@@ -26,19 +28,11 @@
                         </ul>
                     </div>
                 </div>
-            </div></div></div>{{-- Alertes de succès ou d'erreur --}}
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-            {{ session('success') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+            </div><!-- .nk-block-head-content -->
+        </div><!-- .nk-block-between -->
+    </div><!-- .nk-block-head -->
+
+    
 
     <div class="nk-block">
         <div class="row g-gs"> {{-- g-gs pour l'espacement des colonnes DashLite --}}
@@ -68,7 +62,7 @@
                                     }
                                 @endphp
                                 <span class="badge bg-{{ $statusClass }} rounded-pill p-1 px-2">
-                                    <em class="icon ni ni-{{ $statusIcon }}"></em> {{ $statusText }}
+                                    <em class="icon ni ni-{{ $statusIcon }} me-2"></em> {{ $statusText }}
                                 </span>
                             </div>
                         </div>
@@ -177,7 +171,11 @@
                         </ul>
                     </div>
                 </div>
-            </div></div></div><div class="nk-block nk-block-lg">
+            </div>
+        </div><!-- .row -->
+    </div><!-- .nk-block -->
+
+    <div class="nk-block nk-block-lg">
         <div class="nk-block-head">
             <div class="nk-block-head-content">
                 <h4 class="nk-block-title"><em class="icon ni ni-box"></em> Lots de Stock pour ce Produit</h4>
@@ -201,78 +199,78 @@
                                     <th class="nk-tb-col"><span>ID Lot</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Quantité Restante</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Quantité Initiale</span></th>
+                                    <th class="nk-tb-col tb-col-md"><span>Statut</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Coût d'Achat Unitaire</span></th>
-                                    <th class="nk-tb-col tb-col-lg"><span>Date de Réception</span></th>
-                                    <th class="nk-tb-col nk-tb-col-tools">Actions</th>
+                                    <th class="nk-tb-col tb-col-md"><span>Date de Réception</span></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach ($produit->stockLots->sortByDesc('created_at') as $lot)
                                     <tr class="nk-tb-item">
                                         <td class="nk-tb-col"><span>#{{ $lot->id }}</span></td>
-                                        <td class="nk-tb-col tb-col-md"><span>{{ $lot->quantite }} {{ $produit->unite }}</span></td>
+
+                                        <td class="nk-tb-col tb-col-md">
+                                            <span>{{ $lot->quantite_initiale ?? $lot->quantite }} {{ $produit->unite }}</span>
+                                        </td>
+
                                         <td class="nk-tb-col tb-col-md">
                                             @php
                                                 $remaining_qty = $lot->quantite_restante ?? $lot->quantite;
                                                 $lotStatusClass = 'primary';
-                                                $lotStatusIcon = '';
-                                                $lotStatusText = '';
+                                                $lotStatusIcon = 'check-circle-fill';
+                                                $lotStatusText = 'En stock';
 
+                                                // Logique pour déterminer l'état et la classe du statut
                                                 if ($remaining_qty <= $produit->seuil_alerte && $remaining_qty > 0) {
                                                     $lotStatusClass = 'warning';
                                                     $lotStatusIcon = 'alert-fill';
-                                                    $lotStatusText = ' (Bas)';
+                                                    $lotStatusText = 'Faible';
                                                 } elseif ($remaining_qty <= 0) {
                                                     $lotStatusClass = 'danger';
                                                     $lotStatusIcon = 'cross-circle-fill';
-                                                    $lotStatusText = ' (Épuisé)';
+                                                    $lotStatusText = 'Épuisé';
                                                 }
                                             @endphp
+                                            <span>{{ $remaining_qty }} {{ $produit->unite }}</span>
+                                        </td>
+                                        
+                                        <td class="nk-tb-col tb-col-md">
                                             <span class="badge bg-{{ $lotStatusClass }} rounded-pill p-1 px-2">
-                                                @if($lotStatusIcon)<em class="icon ni ni-{{ $lotStatusIcon }}"></em>@endif
-                                                {{ $remaining_qty }} {{ $produit->unite }}{{ $lotStatusText }}
+                                                @if($lotStatusIcon)<em class="icon ni ni-{{ $lotStatusIcon }} me-2"></em>@endif
+                                                {{ $lotStatusText }}
                                             </span>
                                         </td>
+
                                         <td class="nk-tb-col tb-col-md"><span>{{ number_format($lot->cout_achat, 0) }} {{ config('app.currency', 'CFA') }}</span></td>
-                                        <td class="nk-tb-col tb-col-lg"><span>{{ $lot->date_reception ? $lot->date_reception->format('d/m/Y H:i') : '-' }}</span></td>
-                                        <td class="nk-tb-col nk-tb-col-tools">
-                                            <ul class="nk-tb-actions gx-1">
-                                                <li>
-                                                    <a href="#" class="btn btn-trigger btn-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Voir les mouvements de ce lot">
-                                                        <em class="icon ni ni-package"></em>
-                                                    </a>
-                                                </li>
-                                                {{-- Ajoutez d'autres actions ici, par exemple un bouton pour ajuster ce lot --}}
-                                                {{-- <li>
-                                                    <a href="#" class="btn btn-trigger btn-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Ajuster le lot">
-                                                        <em class="icon ni ni-reload"></em>
-                                                    </a>
-                                                </li> --}}
-                                            </ul>
-                                        </td>
+                                        
+                                        <td class="nk-tb-col tb-col-md"><span>{{ $lot->date_reception ? $lot->date_reception->format('d/m/Y H:i') : '-' }}</span></td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                    </div>@endif
-            </div></div></div>
-            <script>
+                    </div>
+                @endif
+            </div><!-- .card-inner -->
+        </div><!-- .card-preview -->
+    </div><!-- .nk-block -->
+</div><!-- .nk-block-lg (fermeture du conteneur principal) -->
+
+<script>
     // Initialiser les tooltips DashLite (basés sur Bootstrap)
     $(document).ready(function() {
         $('[data-bs-toggle="tooltip"]').tooltip();
+
         // Pour le toggle du menu d'actions en haut (si DashLite l'utilise avec des classes JS)
-        // $('.toggle-expand-content').each(function() {
-        //     var target = $(this).data('content');
-        //     $('[data-target="'+ target +'"]').on('click', function(e) {
-        //         e.preventDefault();
-        //         $(this).toggleClass('active');
-        //         $('#'+ target).slideToggle(); // ou une autre méthode d'affichage DashLite
-        //     });
+        // Le code DashLite gère généralement cela automatiquement si les scripts sont inclus.
+        // Si ce n'est pas le cas, vous pouvez décommenter et adapter ce bloc :
+        // $('.toggle-expand').on('click', function(e) {
+        //     e.preventDefault();
+        //     var target = $(this).data('target');
+        //     $('[data-content="' + target + '"]').toggleClass('d-block'); // Ou .show() si c'est un display none
+        //     $(this).toggleClass('active');
         // });
     });
 </script>
+
 @endsection
 
-@push('scripts')
-
-@endpush

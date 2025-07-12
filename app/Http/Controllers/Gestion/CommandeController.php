@@ -24,7 +24,7 @@ class CommandeController extends Controller
 
         $commandes = Commande::where('magasin_id', $magasinId)
             ->with('fournisseur')
-            ->orderByDesc('date_commande')
+            ->orderBy('id', 'asc')
             ->paginate(15);
 
         return view('commandes.index', compact('commandes'));

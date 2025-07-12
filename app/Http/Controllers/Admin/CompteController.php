@@ -107,7 +107,7 @@ class CompteController extends Controller
         $user->magasins()->attach($request->magasins); // ✅ maintenant $user existe bien
 
 
-        return to_route('admin.compte.create')->with('success', "Vous avez créé un compte !");
+        return to_route('admin.compte.index')->with('success', "Vous avez créé un compte !");
     }
 
     public function edit($id)

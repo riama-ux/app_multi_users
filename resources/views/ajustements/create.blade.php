@@ -1,126 +1,150 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="container-fluid">
-    <h1>Créer un nouvel Ajustement de Stock</h1>
+<div class="container-fluid py-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 text-dark mb-0">Créer un nouvel Ajustement de Stock</h1>
+    </div>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <h5 class="alert-heading">Erreurs de validation :</h5>
             <ul>
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
     @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     @endif
 
-    <form action="{{ route('ajustements.store') }}" method="POST" id="ajustementForm">
-        @csrf
+    <div class="card shadow-lg border-0 mt-4">
+        <div class="card-body">
+            <form action="{{ route('ajustements.store') }}" method="POST" id="ajustementForm">
+                @csrf
 
-        <div class="mb-3">
-            <label for="date_ajustement" class="form-label">Date et heure de l'ajustement *</label>
-            <input type="datetime-local" name="date_ajustement" id="date_ajustement" class="form-control" value="{{ old('date_ajustement', now()->format('Y-m-d\TH:i')) }}" required >
-        </div>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="date_ajustement" class="form-label">Date et heure de l'ajustement <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="date_ajustement" id="date_ajustement" class="form-control" value="{{ old('date_ajustement', now()->format('Y-m-d\TH:i')) }}" required>
+                        </div>
+                    </div>
 
-        <div class="mb-3">
-            <label for="type" class="form-label">Type d'ajustement *</label>
-            <select name="type" id="type" class="form-control" required>
-                <option value="">-- Sélectionner le type --</option>
-                <option value="entree" {{ old('type') == 'entree' ? 'selected' : '' }}>Entrée (Ajout de stock)</option>
-                <option value="sortie" {{ old('type') == 'sortie' ? 'selected' : '' }}>Sortie (Retrait de stock)</option>
-            </select>
-        </div>
+                    <div class="col-md-6">
+                        <div class="form-group mb-3">
+                            <label for="type" class="form-label">Type d'ajustement <span class="text-danger">*</span></label>
+                            <select name="type" id="type" class="form-control" required>
+                                <option value="">-- Sélectionner le type --</option>
+                                <option value="entree" {{ old('type') == 'entree' ? 'selected' : '' }}>Entrée (Ajout de stock)</option>
+                                <option value="sortie" {{ old('type') == 'sortie' ? 'selected' : '' }}>Sortie (Retrait de stock)</option>
+                            </select>
+                        </div>
+                    </div>
 
-        <div class="mb-3">
-            <label for="motif_global" class="form-label">Motif global de l'ajustement</label>
-            <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global') }}</textarea>
-        </div>
+                    <div class="col-12">
+                        <div class="form-group mb-3">
+                            <label for="motif_global" class="form-label">Motif global de l'ajustement</label>
+                            <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global') }}</textarea>
+                        </div>
+                    </div>
+                </div>
 
-        <h4>Produits à ajuster</h4>
+                <hr class="mt-4 mb-4">
 
-        {{-- Composant Livewire pour la recherche de produits --}}
-        <div class="mb-4">
-            @livewire('ajustement-product-search')
-        </div>
+                <h4 class="mb-4">Produits à ajuster</h4>
 
-        <table class="table table-bordered" id="produitsAjustementTable">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Stock Actuel</th>
-                    <th>Quantité Ajustée *</th>
-                    <th>Prix Unitaire Ajusté (pour entrée)</th>
-                    <th>Motif Spécifique</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
-                <tr style="display: none;" class="product-ajustement-row-template">
-                    <td>
-                        {{-- IMPORTANT : Utilisez data-name et disabled pour le template --}}
-                        <input type="hidden" class="product-id-input" data-name="lignes[idx][produit_id]" disabled>
-                        <span class="product-name-display"></span>
-                    </td>
-                    <td>
-                        <span class="product-current-stock-display text-info fw-bold"></span>
-                    </td>
-                    <td>
-                        {{-- IMPORTANT : Utilisez data-name et disabled pour le template --}}
-                        <input type="number" class="form-control quantite-ajustee-input" min="1" value="1" required data-name="lignes[idx][quantite_ajustee]" disabled>
-                    </td>
-                    <td>
-                        {{-- IMPORTANT : Utilisez data-name et disabled pour le template --}}
-                        <input type="number" step="1" class="form-control prix-unitaire-ajuste-input" min="1" data-name="lignes[idx][prix_unitaire_ajuste]" disabled>
-                    </td>
-                    <td>
-                        {{-- IMPORTANT : Utilisez data-name et disabled pour le template --}}
-                        <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" data-name="lignes[idx][motif_ligne]" disabled>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
-                    </td>
-                </tr>
-                {{-- Les lignes de produits ajoutées dynamiquement iront ici --}}
-                @if(old('lignes'))
-                    @foreach(old('lignes') as $index => $oldLigne)
-                        @php
-                            $product = \App\Models\Produit::find($oldLigne['produit_id']);
-                        @endphp
-                        @if($product)
-                            <tr class="product-ajustement-row">
+                {{-- Composant Livewire pour la recherche de produits --}}
+                <div class="mb-4">
+                    @livewire('ajustement-product-search')
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped" id="produitsAjustementTable">
+                        <thead>
+                            <tr class="table-light">
+                                <th>Produit</th>
+                                <th>Stock Actuel</th>
+                                <th>Quantité Ajustée <span class="text-danger">*</span></th>
+                                <th>Prix Unitaire Ajusté (pour entrée)</th>
+                                <th>Motif Spécifique</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
+                            <tr style="display: none;" class="product-ajustement-row-template">
                                 <td>
-                                    <input type="hidden" name="lignes[{{ $index }}][produit_id]" value="{{ $product->id }}">
-                                    <span class="product-name-display">{{ $product->nom }}</span>
+                                    <input type="hidden" class="product-id-input" data-name="lignes[idx][produit_id]" disabled>
+                                    <span class="product-name-display fw-bold"></span>
                                 </td>
                                 <td>
-                                    <span class="product-current-stock-display text-info fw-bold">{{ $product->quantite }}</span>
+                                    <span class="product-current-stock-display text-info fw-bold"></span>
                                 </td>
                                 <td>
-                                    <input type="number" name="lignes[{{ $index }}][quantite_ajustee]" class="form-control quantite-ajustee-input" min="1" value="{{ $oldLigne['quantite_ajustee'] }}" required>
+                                    <input type="number" class="form-control quantite-ajustee-input" min="1" value="1" required data-name="lignes[idx][quantite_ajustee]" disabled>
                                 </td>
                                 <td>
-                                    <input type="number" step="1" name="lignes[{{ $index }}][prix_unitaire_ajuste]" class="form-control prix-unitaire-ajuste-input" min="1" value="{{ $oldLigne['prix_unitaire_ajuste'] ?? '' }}">
+                                    <input type="number" step="1" class="form-control prix-unitaire-ajuste-input" min="1" data-name="lignes[idx][prix_unitaire_ajuste]" disabled>
                                 </td>
                                 <td>
-                                    <input type="text" name="lignes[{{ $index }}][motif_ligne]" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" value="{{ $oldLigne['motif_ligne'] ?? '' }}">
+                                    <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" data-name="lignes[idx][motif_ligne]" disabled>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
                                 </td>
                             </tr>
-                        @endif
-                    @endforeach
-                @endif
-            </tbody>
-        </table>
+                            
+                            {{-- Lignes pré-remplies en cas d'erreur de validation (old('lignes')) --}}
+                            @if(old('lignes'))
+                                @foreach(old('lignes') as $index => $oldLigne)
+                                    @php
+                                        // Récupération du produit pour l'affichage (nécessite d'avoir la relation configurée ou de le retrouver)
+                                        $product = \App\Models\Produit::find($oldLigne['produit_id']);
+                                    @endphp
+                                    @if($product)
+                                        <tr class="product-ajustement-row">
+                                            <td>
+                                                <input type="hidden" name="lignes[{{ $index }}][produit_id]" value="{{ $product->id }}">
+                                                <span class="product-name-display fw-bold">{{ $product->nom }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="product-current-stock-display text-info fw-bold">{{ $product->quantite }}</span>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="lignes[{{ $index }}][quantite_ajustee]" class="form-control quantite-ajustee-input" min="1" value="{{ $oldLigne['quantite_ajustee'] }}" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="1" name="lignes[{{ $index }}][prix_unitaire_ajuste]" class="form-control prix-unitaire-ajuste-input" min="1" value="{{ $oldLigne['prix_unitaire_ajuste'] ?? '' }}">
+                                            </td>
+                                            <td>
+                                                <input type="text" name="lignes[{{ $index }}][motif_ligne]" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" value="{{ $oldLigne['motif_ligne'] ?? '' }}">
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
 
-        <button type="submit" class="btn btn-primary mt-4">Enregistrer l'Ajustement</button>
-        <a href="{{ route('ajustements.index') }}" class="btn btn-secondary mt-4">Annuler</a>
-    </form>
+                <div class="mt-5">
+                    <button type="submit" class="btn btn-primary me-2">Enregistrer l'Ajustement</button>
+                    <a href="{{ route('ajustements.index') }}" class="btn btn-secondary">Annuler</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -131,7 +155,7 @@
 
         // Fonction pour ajouter une ligne de produit au tableau d'ajustement
         function addProductAjustementRow(product, quantiteAjustee = 1, prixUnitaireAjuste = '') {
-            // Vérifier si le produit existe déjà par son ID
+            // Vérifier si le produit existe déjà par son ID pour éviter les doublons
             let existingRowInput = Array.from(produitsAjustementTableBody.querySelectorAll('.product-id-input'))
                                          .find(input => input.value == product.id);
 
@@ -143,42 +167,36 @@
             const newRow = productAjustementRowTemplate.cloneNode(true);
             newRow.style.display = '';
             newRow.classList.remove('product-ajustement-row-template');
-            newRow.classList.add('product-ajustement-row'); // Ajouter une classe pour les lignes réelles
+            newRow.classList.add('product-ajustement-row');
 
-            // IMPORTANT: Réactiver les inputs et définir leurs attributs 'name' à partir de 'data-name'
+            // Réactiver les inputs et définir les noms
             newRow.querySelectorAll('input, select, textarea').forEach(input => {
-                const dataName = input.getAttribute('data-name');
-                if (dataName) { // Vérifier si data-name existe
-                    input.setAttribute('name', dataName); // Définir l'attribut 'name'
-                }
-                // Retirer l'attribut disabled pour les inputs clonés afin qu'ils soient soumis
-                input.removeAttribute('disabled'); 
+                input.removeAttribute('disabled');
             });
 
             // Assigner les valeurs des inputs
             newRow.querySelector('.product-id-input').value = product.id;
             newRow.querySelector('.product-name-display').textContent = product.nom;
-            newRow.querySelector('.product-current-stock-display').textContent = product.quantite; // Afficher le stock actuel
-
+            // Afficher le stock actuel du produit
+            newRow.querySelector('.product-current-stock-display').textContent = product.quantite; 
             newRow.querySelector('.quantite-ajustee-input').value = quantiteAjustee;
             newRow.querySelector('.prix-unitaire-ajuste-input').value = prixUnitaireAjuste;
 
-
+            // Ajouter l'écouteur de suppression pour la nouvelle ligne
             newRow.querySelector('.removeRow').addEventListener('click', function() {
                 newRow.remove();
-                updateRowIndexes(); // Réindexer après suppression
+                updateRowIndexes();
             });
 
             produitsAjustementTableBody.appendChild(newRow);
-            updateRowIndexes(); // Appeler pour s'assurer que tous les index sont corrects après l'ajout
+            updateRowIndexes();
         }
 
-        // Fonction pour réindexer les noms des inputs après suppression ou ajout
+        // Fonction pour réindexer les noms des inputs
         function updateRowIndexes() {
-            let index = 0; // Réinitialiser l'index
+            let index = 0;
             produitsAjustementTableBody.querySelectorAll('tr.product-ajustement-row').forEach((row) => {
                 // Assigner les attributs 'name' en utilisant l'index courant
-                // Utiliser querySelectorAll pour s'assurer de récupérer tous les inputs dans la ligne
                 row.querySelector('.product-id-input').setAttribute('name', `lignes[${index}][produit_id]`);
                 row.querySelector('.quantite-ajustee-input').setAttribute('name', `lignes[${index}][quantite_ajustee]`);
                 row.querySelector('.prix-unitaire-ajuste-input').setAttribute('name', `lignes[${index}][prix_unitaire_ajuste]`);
@@ -187,120 +205,29 @@
             });
         }
 
-        // Écouteur d'événement Livewire pour ajouter un produit à la table
+        // Écouteur Livewire pour la sélection d'un nouveau produit
         window.addEventListener('productSelectedForAjustement', event => {
             const product = event.detail.product;
-            addProductAjustementRow(product, 1, product.cout_achat); // Par défaut 1 quantité, coût d'achat comme prix ajusté
+            addProductAjustementRow(product, 1, product.cout_achat);
         });
 
-        // =====================================================================
         // Gestion de la soumission du formulaire
-        // =====================================================================
         ajustementForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Empêcher la soumission par défaut du navigateur
-
-            // S'assurer que tous les inputs ont les bons noms avant la soumission
+            e.preventDefault(); 
             updateRowIndexes();
-
-            // --- Validation côté client pour les champs principaux ---
-            let validationErrors = [];
-
-            const dateAjustementInput = document.getElementById('date_ajustement');
-            if (!dateAjustementInput.value) {
-                validationErrors.push('La date et l\'heure de l\'ajustement sont requises.');
-            }
-
-            const typeSelect = document.getElementById('type');
-            if (!typeSelect.value) {
-                validationErrors.push('Le type d\'ajustement est requis.');
-            }
-
+            
+            // Validation côté client pour s'assurer qu'au moins une ligne est présente
             const actualProductRows = produitsAjustementTableBody.querySelectorAll('tr.product-ajustement-row');
             if (actualProductRows.length === 0) {
-                validationErrors.push('Veuillez ajouter au moins un produit à l\'ajustement.');
+                alert('Veuillez ajouter au moins un produit à l\'ajustement.');
+                return;
             }
 
-            if (validationErrors.length > 0) {
-                const errorDiv = document.createElement('div');
-                errorDiv.classList.add('alert', 'alert-danger', 'mt-3');
-                errorDiv.innerHTML = '<strong>Erreur de validation:</strong><br>' + validationErrors.join('<br>');
-                
-                // Clear previous errors
-                const existingErrors = ajustementForm.querySelectorAll('.alert-danger');
-                existingErrors.forEach(err => err.remove());
-
-                ajustementForm.prepend(errorDiv);
-                return; // Stop form submission
-            }
-            // --- FIN Validation ---
-
-            // Créer un nouvel objet FormData à partir du formulaire après la mise à jour des noms
-            const formData = new FormData(ajustementForm);
-
-            // Soumettre le formulaire manuellement via fetch
-            fetch(ajustementForm.action, {
-                method: 'POST', // La méthode est POST pour la création
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest', // Important pour les requêtes AJAX de Laravel
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') // Assurez-vous d'avoir cette balise meta dans votre layout
-                }
-            })
-            .then(response => {
-                // Vérifier si la réponse est JSON avant d'essayer de la parser
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.includes("application/json")) {
-                    return response.json().then(data => {
-                        if (!response.ok) { // Vérifier les codes de statut non-2xx (comme 422, 500)
-                            let errorMessage = 'Erreur lors de la soumission du formulaire.';
-                            if (data.errors) {
-                                // Formater les erreurs de validation pour un affichage clair
-                                errorMessage = Object.entries(data.errors)
-                                    .map(([field, messages]) => `<strong>${field}</strong>: ${messages.join(', ')}`)
-                                    .join('<br>');
-                            } else if (data.message) {
-                                errorMessage = data.message;
-                            }
-                            // Afficher le message d'erreur détaillé à l'utilisateur
-                            const errorDiv = document.createElement('div');
-                            errorDiv.classList.add('alert', 'alert-danger', 'mt-3');
-                            errorDiv.innerHTML = '<strong>Erreur de validation ou de serveur:</strong><br>' + errorMessage;
-                            ajustementForm.prepend(errorDiv);
-                            
-                            // Supprimer les erreurs précédentes si elles existent
-                            const existingErrors = ajustementForm.querySelectorAll('.alert-danger');
-                            existingErrors.forEach((err, index) => {
-                                if (index > 0) err.remove();
-                            });
-
-                            throw new Error(errorMessage);
-                        }
-                        return data;
-                    });
-                } else {
-                    // Gérer les réponses non-JSON (ex: pages d'erreur HTML)
-                    return response.text().then(text => {
-                        alert('Une erreur inattendue est survenue. Réponse non-JSON du serveur.');
-                        console.error('La réponse du serveur n\'était pas JSON:', text);
-                        throw new Error('Réponse non-JSON du serveur');
-                    });
-                }
-            })
-            .then(data => {
-                if (data.success) {
-                    // Redirection ou affichage d'un message de succès
-                    window.location.href = data.redirect || '{{ route('ajustements.index') }}';
-                }
-            })
-            .catch(error => {
-                console.error('Erreur lors de la soumission:', error);
-                if (!document.querySelector('.alert-danger')) {
-                    alert('Une erreur inattendue est survenue lors de la soumission.');
-                }
-            });
+            // Soumission standard du formulaire (le code JavaScript de soumission via Fetch a été retiré pour laisser le formulaire se soumettre normalement, permettant à Laravel de gérer les validations et la redirection)
+            this.submit();
         });
 
-        // Appel initial pour les lignes pré-remplies par old('lignes')
+        // Mise à jour initiale des indices pour les lignes pré-remplies (si applicable)
         updateRowIndexes();
     });
 </script>

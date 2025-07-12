@@ -1,28 +1,14 @@
 @extends('pages.admin.shared.layout')
 
-@section('header')
-<div class="toggle-expand-content" data-content="pageMenu">
-    <ul class="nk-block-tools g-3">
-        <li>
-            <a href="#" class="dropdown-toggle btn btn-white btn-dim btn-outline-light" data-bs-toggle="dropdown">
-                <em class="icon ni ni-plus"></em>
-                <span><span class="d-md-none">Autres</span><span class="d-none d-md-block">Autres Magasins</span></span>
-            </a>
-        </li>
-        <li class="nk-block-tools-opt">
-            <a href="{{ route('admin.compte.create') }}" class="btn btn-icon btn-primary">
-                <em class="icon ni ni-plus"></em>
-            </a>
-        </li>
-    </ul>
-</div>
-@endsection
-
 @section('content')
 <div class="col-xxl-8">
     <div class="card card-full">
         <div class="card-inner">
-            @include('flash-message')
+            <div class=" d-flex justify-content-end">
+                <a href="{{ route('admin.compte.create') }}" class="btn btn-icon btn-primary mb-5">
+                    <em class="icon ni ni-plus"></em>
+                </a>
+            </div>
             <div class="card-header bg-white">
                 <form class="navbar-search" method="get" action="{{ route('admin.compte.search') }}">
                     @include('pages.admin.shared.compteSearchBar')

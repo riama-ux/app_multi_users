@@ -91,108 +91,27 @@ class TransfertController extends Controller
         // --- FIN DE LA VÉRIFICATION DE STOCK AVEC LES LOTS ---
 
         DB::transaction(function () use ($produitIds, $quantitesDemandees, $request, $magasinId) {
+            // Crée l'enregistrement du transfert avec le statut 'attente'
             $transfert = Transfert::create([
                 'magasin_source_id' => $magasinId,
                 'magasin_destination_id' => $request->magasin_destination_id,
                 'user_id' => auth()->id(),
                 'date_transfert' => $request->date_transfert,
-                'statut' => 'attente',
+                'statut' => 'attente', // Le statut initial est 'attente'
             ]);
 
+            // Crée les lignes de transfert associées
             foreach ($produitIds as $index => $produitId) {
                 $quantiteATransferer = $quantitesDemandees[$index];
-                $produitSource = Produit::where('id', $produitId)
-                                        ->where('magasin_id', $magasinId)
-                                        ->firstOrFail(); // Doit exister car vérifié avant
 
-                // Créer la ligne de transfert
                 LigneTransfert::create([
                     'transfert_id' => $transfert->id,
                     'produit_id' => $produitId, // ID du produit source
                     'quantite' => $quantiteATransferer,
                 ]);
-
-                // --- GESTION FIFO DES LOTS POUR LE MAGASIN SOURCE ---
-                $quantiteRestantePourSource = $quantiteATransferer;
-                $lotsSource = StockLot::where('produit_id', $produitId)
-                    ->where('magasin_id', $magasinId)
-                    ->where('quantite', '>', 0)
-                    ->orderBy('date_reception') // FIFO
-                    ->lockForUpdate() // Verrouille les lots pour la transaction
-                    ->get();
-
-                foreach ($lotsSource as $lot) {
-                    if ($quantiteRestantePourSource <= 0) break;
-
-                    $aRetirerDeCeLot = min($lot->quantite, $quantiteRestantePourSource);
-                    $lot->quantite -= $aRetirerDeCeLot;
-                    $lot->save();
-
-                    // Enregistrer le mouvement de stock (SORTIE) pour le magasin source
-                    MouvementStock::create([
-                        'produit_id' => $produitId,
-                        'magasin_id' => $magasinId,
-                        'type' => 'sortie',
-                        'quantite' => $aRetirerDeCeLot,
-                        'source_type' => 'transfert',
-                        'source_id' => $transfert->id,
-                        'user_id' => auth()->id(),
-                        'motif' => 'Transfert vers magasin ID ' . $request->magasin_destination_id,
-                        'date' => now(),
-                        'lot_id' => $lot->id,
-                    ]);
-
-                    $quantiteRestantePourSource -= $aRetirerDeCeLot;
-                }
-                // Si la quantité restante est > 0 ici, c'est une erreur logique car on a vérifié le stock avant.
-                // throw new \Exception("Erreur interne: Stock insuffisant malgré la vérification préalable.");
-
-                // Mettre à jour la quantité agrégée du produit source après décrémentation des lots
-                $produitSource->updateQuantiteFromLots(); // Appelle la méthode du modèle Produit
-
-                // --- GESTION POUR LE MAGASIN DE DESTINATION ---
-                // 1. Créer ou retrouver le produit dans le magasin de destination
-                $produitDestination = Produit::where('reference', $produitSource->reference)
-                                             ->where('magasin_id', $request->magasin_destination_id)
-                                             ->first();
-
-                if (!$produitDestination) {
-                    // Créer le produit dans le magasin de destination s'il n'existe pas
-                    $newProductData = $produitSource->toArray();
-                    unset($newProductData['id']); // L'ID doit être unique
-                    $newProductData['magasin_id'] = $request->magasin_destination_id;
-                    $newProductData['quantite'] = 0; // La quantité agrégée sera mise à jour par les lots
-                    // Assurez-vous que 'categorie_id' est géré correctement si les catégories sont spécifiques au magasin
-                    $produitDestination = Produit::create($newProductData);
-                }
-
-                // 2. Créer un nouveau lot pour le magasin de destination
-                $nouveauLotDestination = StockLot::create([
-                    'produit_id' => $produitDestination->id,
-                    'magasin_id' => $request->magasin_destination_id,
-                    'quantite' => $quantiteATransferer,
-                    'quantite_restante' => $quantiteATransferer,
-                    'cout_achat' => $produitSource->cout_achat, // Utiliser le coût d'achat du produit source
-                    'date_reception' => now(), // Date de réception dans le magasin de destination
-                ]);
-
-                // 3. Enregistrer le mouvement de stock (ENTRÉE) pour le magasin de destination
-                MouvementStock::create([
-                    'produit_id' => $produitDestination->id,
-                    'magasin_id' => $request->magasin_destination_id,
-                    'type' => 'entree',
-                    'quantite' => $quantiteATransferer,
-                    'source_type' => 'transfert',
-                    'source_id' => $transfert->id,
-                    'user_id' => auth()->id(),
-                    'motif' => 'Réception de transfert depuis magasin ID ' . $magasinId,
-                    'date' => now(),
-                    'lot_id' => $nouveauLotDestination->id,
-                ]);
-
-                // Mettre à jour la quantité agrégée du produit de destination après création du lot
-                $produitDestination->updateQuantiteFromLots(); // Appelle la méthode du modèle Produit
             }
+            // IMPORTANT : Aucune modification de StockLot ou MouvementStock ici.
+            // Ces opérations sont déplacées dans la méthode 'valider'.
         });
 
         return redirect()->route('transferts.index')->with('success', 'Transfert créé avec succès.');
@@ -243,10 +162,12 @@ class TransfertController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
+        // Autorisation : Seul le magasin source peut modifier
         if ($transfert->magasin_source_id != $magasinId) {
-            abort(403);
+            abort(403, 'Vous n\'êtes pas autorisé à modifier ce transfert.');
         }
 
+        // Vérifie si le transfert est encore en attente
         if ($transfert->statut !== 'attente') {
             return redirect()->route('transferts.index')->with('error', 'Impossible de modifier un transfert déjà validé ou refusé.');
         }
@@ -258,7 +179,7 @@ class TransfertController extends Controller
             'quantites' => 'required|array|min:1',
         ]);
 
-        // Nettoyer les tableaux reçus du formulaire (supprimer les null/vides et réindexer)
+        // Nettoie les tableaux reçus du formulaire
         $produitIds = array_values(array_filter($request->produits, fn($value) => !is_null($value) && $value !== ''));
         $quantitesDemandees = array_values(array_filter($request->quantites, fn($value) => !is_null($value) && $value !== ''));
 
@@ -267,6 +188,7 @@ class TransfertController extends Controller
         }
 
         // Vérification de stock avant la transaction (identique à la méthode store)
+        // Ceci s'assure que même après modification, le magasin source a toujours assez de stock.
         foreach ($produitIds as $index => $produitId) {
             $quantiteDemandee = $quantitesDemandees[$index];
             $produitSource = Produit::where('id', $produitId)
@@ -286,127 +208,34 @@ class TransfertController extends Controller
             }
         }
 
-        DB::transaction(function () use ($produitIds, $quantitesDemandees, $request, $transfert, $magasinId) {
-            // Revertir les stocks des anciens lignes de transfert avant de les supprimer
-            // ATTENTION: Cette logique de rollback est simplifiée et ne gère pas les lots FIFO.
-            // Pour une gestion complète, il faudrait annuler les mouvements de stock et réajuster les lots.
-            // Ici, nous nous basons sur la quantité agrégée du produit pour le rollback.
-            foreach ($transfert->ligneTransferts as $oldLigne) {
-                $oldProduitSource = Produit::where('id', $oldLigne->produit_id)
-                                            ->where('magasin_id', $magasinId)
-                                            ->first();
-                if ($oldProduitSource) {
-                    // Ré-incrémenter la quantité dans les lots du magasin source
-                    // C'est une logique complexe de "rollback" des lots,
-                    // pour simplifier, nous allons juste ré-incrémenter la quantité agrégée du produit source
-                    // et décrémenter celle du produit destination.
-                    // Une gestion complète des lots pour l'édition serait très complexe.
-                    // Pour l'instant, on se base sur la quantité agrégée pour le rollback.
-                    $oldProduitSource->increment('quantite', $oldLigne->quantite);
-
-                    $oldProduitDestination = Produit::where('reference', $oldProduitSource->reference)
-                                                    ->where('magasin_id', $transfert->magasin_destination_id)
-                                                    ->first();
-                    if ($oldProduitDestination) {
-                        $oldProduitDestination->decrement('quantite', $oldLigne->quantite);
-                    }
-                }
-            }
-
-            // Supprimer les anciennes lignes de transfert
+        DB::transaction(function () use ($produitIds, $quantitesDemandees, $request, $transfert) {
+            // Supprime les anciennes lignes de transfert
+            // Aucune logique de "rollback" de stock n'est nécessaire ici car
+            // les stocks ne sont pas affectés tant que le transfert est en statut 'attente'.
             $transfert->ligneTransferts()->delete();
 
-            // Mettre à jour les détails du transfert
+            // Met à jour les détails du transfert
             $transfert->update([
                 'magasin_destination_id' => $request->magasin_destination_id,
                 'date_transfert' => $request->date_transfert,
             ]);
 
-            // Ajouter les nouvelles lignes de transfert et gérer les stocks
+            // Ajoute les nouvelles lignes de transfert
             foreach ($produitIds as $index => $produitId) {
                 $quantiteATransferer = $quantitesDemandees[$index];
-                $produitSource = Produit::where('id', $produitId)
-                                        ->where('magasin_id', $magasinId)
-                                        ->firstOrFail();
 
                 LigneTransfert::create([
                     'transfert_id' => $transfert->id,
                     'produit_id' => $produitId,
                     'quantite' => $quantiteATransferer,
                 ]);
-
-                // --- GESTION FIFO DES LOTS POUR LE MAGASIN SOURCE (identique à store) ---
-                $quantiteRestantePourSource = $quantiteATransferer;
-                $lotsSource = StockLot::where('produit_id', $produitId)
-                    ->where('magasin_id', $magasinId)
-                    ->where('quantite', '>', 0)
-                    ->orderBy('date_reception')
-                    ->lockForUpdate()
-                    ->get();
-
-                foreach ($lotsSource as $lot) {
-                    if ($quantiteRestantePourSource <= 0) break;
-
-                    $aRetirerDeCeLot = min($lot->quantite, $quantiteRestantePourSource);
-                    $lot->quantite -= $aRetirerDeCeLot;
-                    $lot->save();
-
-                    MouvementStock::create([
-                        'produit_id' => $produitId,
-                        'magasin_id' => $magasinId,
-                        'type' => 'sortie',
-                        'quantite' => $aRetirerDeCeLot,
-                        'source_type' => 'transfert',
-                        'source_id' => $transfert->id,
-                        'user_id' => auth()->id(),
-                        'motif' => 'Transfert (modification) vers magasin ID ' . $request->magasin_destination_id,
-                        'date' => now(),
-                        'lot_id' => $lot->id,
-                    ]);
-                    $quantiteRestantePourSource -= $aRetirerDeCeLot;
-                }
-                $produitSource->updateQuantiteFromLots(); // Mettre à jour la quantité agrégée du produit source
-
-                // --- GESTION POUR LE MAGASIN DE DESTINATION (identique à store) ---
-                $produitDestination = Produit::where('reference', $produitSource->reference)
-                                             ->where('magasin_id', $request->magasin_destination_id)
-                                             ->first();
-
-                if (!$produitDestination) {
-                    $newProductData = $produitSource->toArray();
-                    unset($newProductData['id']);
-                    $newProductData['magasin_id'] = $request->magasin_destination_id;
-                    $newProductData['quantite'] = 0;
-                    $produitDestination = Produit::create($newProductData);
-                }
-
-                $nouveauLotDestination = StockLot::create([
-                    'produit_id' => $produitDestination->id,
-                    'magasin_id' => $request->magasin_destination_id,
-                    'quantite' => $quantiteATransferer,
-                    'quantite_restante' => $quantiteATransferer,
-                    'cout_achat' => $produitSource->cout_achat,
-                    'date_reception' => now(),
-                ]);
-
-                MouvementStock::create([
-                    'produit_id' => $produitDestination->id,
-                    'magasin_id' => $request->magasin_destination_id,
-                    'type' => 'entree',
-                    'quantite' => $quantiteATransferer,
-                    'source_type' => 'transfert',
-                    'source_id' => $transfert->id,
-                    'user_id' => auth()->id(),
-                    'motif' => 'Réception de transfert (modification) depuis magasin ID ' . $magasinId,
-                    'date' => now(),
-                    'lot_id' => $nouveauLotDestination->id,
-                ]);
-                $produitDestination->updateQuantiteFromLots(); // Mettre à jour la quantité agrégée du produit de destination
             }
+            // IMPORTANT : Aucune modification de StockLot ou MouvementStock ici.
         });
 
         return redirect()->route('transferts.index')->with('success', 'Transfert modifié avec succès.');
     }
+
 
     public function destroy(Transfert $transfert)
     {
@@ -482,9 +311,11 @@ class TransfertController extends Controller
                         'magasin_id' => $magasinId,
                         'reference' => $produitSource->reference,
                         'code' => $produitSource->code,
+                        'marque' => $produitSource->marque,
                         'prix_achat' => $produitSource->prix_achat,
                         'cout_achat' => $produitSource->cout_achat,
                         'prix_vente' => $produitSource->prix_vente,
+                        'marge' => $produitSource->marge,
                         'description' => $produitSource->description,
                         'seuil_alerte' => $produitSource->seuil_alerte,
                         'quantite' => 0, // La quantité sera mise à jour via les lots

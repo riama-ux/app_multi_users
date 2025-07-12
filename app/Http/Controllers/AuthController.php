@@ -101,7 +101,7 @@ class AuthController extends Controller
             ]);
 
             return redirect()->route('auth.login')
-                ->with('success', 'Votre compte a été bien créé avec succès ! Maintenant veuillez contacter votre Administrateur pour activer le compte !');
+                ->with('success', 'Votre compte a été créé ! Maintenant veuillez contacter votre Administrateur pour activer le compte !');
         }
     }
 }
