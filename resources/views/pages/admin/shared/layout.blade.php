@@ -40,7 +40,6 @@
                     </div>
                 </div><!-- .nk-sidebar-element -->
 
-
                 <div class="nk-sidebar-element">
                     <div class="nk-sidebar-content">
                         <div class="nk-sidebar-menu" data-simplebar>
@@ -48,207 +47,127 @@
                                 <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">Dashboard</h6>
                                 </li><!-- .nk-menu-heading -->
-                                <li class="nk-menu-item {{ request()->routeIs('admin.home') ? 'active' : '' }}">
-                                    <a href="{{ route('admin.home') }}" class="nk-menu-link">
+                                <li class="nk-menu-item {{ request()->routeIs('administrateur.home') ? 'active' : '' }}">
+                                    <a href="{{ route('administrateur.home') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-presentation"></em></span>
                                         <span class="nk-menu-text">Tableau de bord</span>
                                     </a>
                                 </li><!-- .nk-menu-item -->
 
                                 <li class="nk-menu-heading">
-                                    <h6 class="overline-title text-primary-alt">Modules</h6>
+                                    <h6 class="overline-title text-primary-alt">Module Ventes et Retours</h6>
                                 </li><!-- .nk-menu-heading -->
 
-                                <!-- Ventes et Retours Clients -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('ventes.*') || request()->routeIs('retours_clients.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-cart"></em></span>
-                                        <span class="nk-menu-text">Ventes et Retours</span>
+                                <!-- Nouvelle Vente -->
+                                <li class="nk-menu-item {{ request()->routeIs('ventes.create') ? 'active' : '' }}">
+                                    <a href="{{ route('ventes.create') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-plus-circle"></em></span> {{-- Icône ajoutée --}}
+                                        <span class="nk-menu-text">Nouvelle Vente</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('ventes.create') ? 'active' : '' }}">
-                                            <a href="{{ route('ventes.create') }}" class="nk-menu-link"><span class="nk-menu-text">Nouvelle Vente</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('ventes.index') ? 'active' : '' }}">
-                                            <a href="{{ route('ventes.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Ventes</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('retours_clients.index') ? 'active' : '' }}">
-                                            <a href="{{ route('retours_clients.index') }}" class="nk-menu-link"><span class="nk-menu-text">Retours Clients</span></a>
-                                        </li>
-                                    </ul>
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Stock (Inventaire, Mouvements, Transferts, Ajustements) -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('stocks.*') || request()->routeIs('mouvements_stock.*') || request()->routeIs('transferts.*') || request()->routeIs('ajustements.*') || request()->routeIs('stock_lots.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-layers"></em></span>
-                                        <span class="nk-menu-text">Stock</span>
+                                <!-- Ajouter Client -->
+                                <li class="nk-menu-item {{ request()->routeIs('module.clients.create') ? 'active' : '' }}">
+                                    <a href="{{ route('module.clients.create') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-user-list"></em></span> {{-- Icône ajoutée --}}
+                                        <span class="nk-menu-text">Client</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('stocks.index') ? 'active' : '' }}">
-                                            <a href="{{ route('stocks.index') }}" class="nk-menu-link"><span class="nk-menu-text">Inventaire (Stocks Actuels)</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('mouvements_stock.index') ? 'active' : '' }}">
-                                            <a href="{{ route('mouvements_stock.index') }}" class="nk-menu-link"><span class="nk-menu-text">Mouvements de Stock</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('transferts.index') ? 'active' : '' }}">
-                                            <a href="{{ route('transferts.index') }}" class="nk-menu-link"><span class="nk-menu-text">Transferts de Stock</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('ajustements.index') ? 'active' : '' }}">
-                                            <a href="{{ route('ajustements.index') }}" class="nk-menu-link"><span class="nk-menu-text">Ajustements de Stock</span></a>
-                                        </li>
-                                        {{-- Si vous voulez un lien direct pour ajouter un ajustement de type "sortie" (perte), vous pouvez ajouter : --}}
-                                        {{-- <li class="nk-menu-item {{ request()->routeIs('ajustements.create') && request('type') == 'sortie' ? 'active' : '' }}">
-                                            <a href="{{ route('ajustements.create', ['type' => 'sortie']) }}" class="nk-menu-link"><span class="nk-menu-text">Nouvelle Perte (Ajustement)</span></a>
-                                        </li> --}}
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Produits -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('produits.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Module Stock</h6>
+                                </li><!-- .nk-menu-heading -->
+
+                                <!-- Mouvements de Stock -->
+                                <li class="nk-menu-item {{ request()->routeIs('mouvements_stock.index') ? 'active' : '' }}">
+                                    <a href="{{ route('mouvements_stock.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-move"></em></span> {{-- Icône adaptée --}}
+                                        <span class="nk-menu-text">Historique </span>
+                                    </a>
+                                </li><!-- .nk-menu-item -->
+
+                                <!-- Transferts de Stock -->
+                                <li class="nk-menu-item {{ request()->routeIs('transferts.index') ? 'active' : '' }}">
+                                    <a href="{{ route('transferts.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-swap"></em></span> {{-- Icône adaptée --}}
+                                        <span class="nk-menu-text">Transferts de Stock</span>
+                                    </a>
+                                </li><!-- .nk-menu-item -->
+
+                                <!-- Ajustements de Stock -->
+                                <li class="nk-menu-item {{ request()->routeIs('ajustements.index') ? 'active' : '' }}">
+                                    <a href="{{ route('ajustements.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-setting"></em></span> {{-- Icône adaptée --}}
+                                        <span class="nk-menu-text">Ajustements de Stock</span>
+                                    </a>
+                                </li><!-- .nk-menu-item -->
+
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Module Produits</h6>
+                                </li><!-- .nk-menu-heading -->
+
+                                <!-- Liste des Produits -->
+                                <li class="nk-menu-item {{ request()->routeIs('produits.index') ? 'active' : '' }}">
+                                    <a href="{{ route('produits.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-tile-thumb"></em></span>
                                         <span class="nk-menu-text">Produits</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('produits.create') ? 'active' : '' }}">
-                                            <a href="{{ route('produits.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Produit</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('produits.index') ? 'active' : '' }}">
-                                            <a href="{{ route('produits.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Produits</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Catégories -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('module.categories.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
+                                <!-- Liste des Catégories -->
+                                <li class="nk-menu-item {{ request()->routeIs('module.categories.index') ? 'active' : '' }}">
+                                    <a href="{{ route('module.categories.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-menu-circled"></em></span>
                                         <span class="nk-menu-text">Catégories</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-
-                                        <li class="nk-menu-item {{ request()->routeIs('module.categories.index') ? 'active' : '' }}">
-                                            <a href="{{ route('module.categories.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Catégories</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('module.categories.create') ? 'active' : '' }}">
-                                            <a href="{{ route('module.categories.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Catégorie</span></a>
-                                        </li>
-                                        
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Fournisseurs -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('module.fournisseurs.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-users"></em></span>
-                                        <span class="nk-menu-text">Fournisseurs</span>
-                                    </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('module.fournisseurs.create') ? 'active' : '' }}">
-                                            <a href="{{ route('module.fournisseurs.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Fournisseur</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('module.fournisseurs.index') ? 'active' : '' }}">
-                                            <a href="{{ route('module.fournisseurs.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Fournisseurs</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
-                                </li><!-- .nk-menu-item -->
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Module Commandes</h6>
+                                </li><!-- .nk-menu-heading -->
 
-                                <!-- Commandes -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('commandes.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
+                                <!-- Liste des Commandes -->
+                                <li class="nk-menu-item {{ request()->routeIs('commandes.index') ? 'active' : '' }}">
+                                    <a href="{{ route('commandes.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-grid-alt"></em></span>
                                         <span class="nk-menu-text">Commandes</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('commandes.create') ? 'active' : '' }}">
-                                            <a href="{{ route('commandes.create') }}" class="nk-menu-link"><span class="nk-menu-text">Nouvelle Commande</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('commandes.index') ? 'active' : '' }}">
-                                            <a href="{{ route('commandes.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Commandes</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Clients -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('module.clients.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-users"></em></span>
-                                        <span class="nk-menu-text">Clients</span>
+                                <!-- Liste des Fournisseurs -->
+                                <li class="nk-menu-item {{ request()->routeIs('module.fournisseurs.index') ? 'active' : '' }}">
+                                    <a href="{{ route('module.fournisseurs.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-truck"></em></span> {{-- Icône adaptée --}}
+                                        <span class="nk-menu-text">Fournisseurs</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('module.clients.create') ? 'active' : '' }}">
-                                            <a href="{{ route('module.clients.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Client</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('module.clients.index') ? 'active' : '' }}">
-                                            <a href="{{ route('module.clients.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Clients</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Utilisateurs -->
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('admin.compte.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Module Utilisateurs</h6>
+                                </li><!-- .nk-menu-heading -->
+
+                                <li class="nk-menu-item {{ request()->routeIs('admin.compte.index') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.compte.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-user-list"></em></span>
                                         <span class="nk-menu-text">Utilisateurs</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('admin.compte.create') ? 'active' : '' }}">
-                                            <a href="{{ route('admin.compte.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Utilisateur</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('admin.compte.index') ? 'active' : '' }}">
-                                            <a href="{{ route('admin.compte.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Utilisateurs</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
-                                <!-- Magasin -->
-                                {{-- J'ai supposé que vous avez des routes de ressource pour les magasins sous le préfixe 'admin.' --}}
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('admin.magasins.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-block-over"></em></span>
-                                        <span class="nk-menu-text">Magasin</span>
-                                    </a>
-                                    <ul class="nk-menu-sub">
-                                        <li class="nk-menu-item {{ request()->routeIs('admin.magasins.create') ? 'active' : '' }}">
-                                            <a href="{{ route('admin.magasins.create') }}" class="nk-menu-link"><span class="nk-menu-text">Ajouter Magasin</span></a>
-                                        </li>
-                                        <li class="nk-menu-item {{ request()->routeIs('admin.magasins.index') ? 'active' : '' }}">
-                                            <a href="{{ route('admin.magasins.index') }}" class="nk-menu-link"><span class="nk-menu-text">Liste des Magasins</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
-                                </li><!-- .nk-menu-item -->
+                                <li class="nk-menu-heading">
+                                    <h6 class="overline-title text-primary-alt">Module Magasin</h6>
+                                </li><!-- .nk-menu-heading -->
 
-                                <!-- Paiement des crédits -->
-                                {{-- Note: Vos routes pour les paiements sont des POST pour store/annuler.
-                                    Pour "Ajouter" et "Afficher", vous aurez besoin de routes GET dédiées.
-                                    J'ai mis des placeholders ici, assurez-vous que ces routes existent ou adaptez-les.
-                                    Par exemple, si "Afficher" liste les crédits, la route pourrait être 'credits.index'.
-                                --}}
-                                <li class="nk-menu-item has-sub {{ request()->routeIs('paiements.*') || request()->routeIs('credits.*') ? 'active' : '' }}">
-                                    <a href="#" class="nk-menu-link nk-menu-toggle">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-coins"></em></span>
-                                        <span class="nk-menu-text">Paiements des crédits</span>
+                                <li class="nk-menu-item {{ request()->routeIs('admin.magasins.index') ? 'active' : '' }}">
+                                    <a href="{{ route('admin.magasins.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-building"></em></span> {{-- Icône adaptée --}}
+                                        <span class="nk-menu-text">Magasins</span>
                                     </a>
-                                    <ul class="nk-menu-sub">
-                                        {{-- Si vous avez une route pour créer un nouveau paiement de crédit (ex: via une vente ou un client) --}}
-                                        <li class="nk-menu-item {{ request()->routeIs('paiements.create') ? 'active' : '' }}">
-                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Ajouter Paiement</span></a>
-                                        </li>
-                                        {{-- Si vous avez une route pour lister tous les paiements ou les crédits --}}
-                                        <li class="nk-menu-item {{ request()->routeIs('paiements.index') || request()->routeIs('credits.index') ? 'active' : '' }}">
-                                            <a href="#" class="nk-menu-link"><span class="nk-menu-text">Afficher Paiements/Crédits</span></a>
-                                        </li>
-                                    </ul><!-- .nk-menu-sub -->
                                 </li><!-- .nk-menu-item -->
 
                             </ul><!-- .nk-menu -->
                         </div><!-- .nk-sidebar-menu -->
                     </div><!-- .nk-sidebar-content -->
                 </div><!-- .nk-sidebar-element -->
-
-
-                <!-- .nk-sidebar-element -->
             </div>
             <!-- sidebar @e -->
             <!-- wrap @s -->

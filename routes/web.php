@@ -12,6 +12,7 @@ use App\Http\Controllers\Gestion\StockLotController;
 use App\Http\Controllers\Gestion\TransfertController;
 use App\Http\Controllers\Gestion\RetourClientController;
 use App\Http\Controllers\Gestion\AjustementController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,10 @@ Route::prefix('auth')->name('auth.')->group(function () {
 | Admin Routes
 |--------------------------------------------------------------------------
 */
+Route::middleware(['auth', 'user-access:Admin'])->group(function () {
+    Route::get('administrateur', [App\Http\Controllers\HomeController::class, 'adminHome'])->name('administrateur.home');
+});
+
 Route::middleware(['auth', 'user-access:Admin'])->group(function () {
     Route::get('admin', [App\Http\Controllers\HomeController::class, 'adminHome'])->name('admin.home');
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -210,6 +215,23 @@ Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manage
 
     // ... vos autres routes (commandes, ventes, etc.)
 });
+
+
+
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+});
+
+
+
+
+
+
+
+
 
 
 /*

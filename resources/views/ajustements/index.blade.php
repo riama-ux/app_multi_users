@@ -2,7 +2,13 @@
 
 @section('content')
 <div class="container-fluid">
-    <h1>Liste des Ajustements de Stock</h1>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Liste des Ajustements de Stock</h1>
+        <a href="{{ route('ajustements.create') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
+            <i class="bi bi-plus-lg me-2"></i> Nouvel Ajustement
+        </a>
+    </div>
 
     {{-- Section de filtrage --}}
     <div class="card mb-4">
@@ -30,19 +36,6 @@
             </form>
         </div>
     </div>
-
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger">
-            {{ session('error') }}
-        </div>
-    @endif
-
-    <a href="{{ route('ajustements.create') }}" class="btn btn-primary mb-3">Nouvel Ajustement</a>
 
     <div class="table-responsive">
         <table class="table table-striped table-hover">

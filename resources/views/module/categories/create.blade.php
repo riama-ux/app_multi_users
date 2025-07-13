@@ -2,13 +2,12 @@
 
 
 @section('content')
-    <h3>Ajouter une catégorie</h3>
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
-        </div>
-    @endif
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Ajouter une catégorie</h3>
+        <a href="{{ route('module.categories.index') }}" class="btn btn-outline-primary">
+            <em class="icon ni ni-list"></em><span>Liste des catégorie</span>
+        </a>
+    </div>
 
     <form action="{{ route('module.categories.store') }}" method="POST">
         @csrf

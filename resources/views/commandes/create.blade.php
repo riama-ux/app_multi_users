@@ -3,10 +3,15 @@
 @section('content')
 <div class="container-fluid py-4">
 
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+            <h3 class="nk-block-title">Nouvelle Commande</h3>
+            <a href="{{ route('commandes.index') }}" class="btn btn-outline-primary">
+                <em class="icon ni ni-list"></em><span>Liste des commandes</span>
+            </a>
+    </div>
+
     <div class="card shadow-lg border-0 mb-5">
-        <div class="card-header bg-white border-bottom pt-4">
-            <h1 class="h3 text-dark mb-0">Créer une nouvelle commande</h1>
-        </div>
+        
         <div class="card-body p-5">
 
             @if ($errors->any())

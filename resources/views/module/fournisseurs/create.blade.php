@@ -1,7 +1,13 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<h3>Ajouter un fournisseur</h3>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Ajouter un fournisseur</h3>
+        <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-outline-primary shadow-sm d-flex align-items-center">
+            <em class="icon ni ni-list me-2"></em>Liste des fournisseurs
+        </a>
+</div>
 
 <form action="{{ route('module.fournisseurs.store') }}" method="POST">
     @csrf

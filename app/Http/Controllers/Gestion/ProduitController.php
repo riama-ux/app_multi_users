@@ -16,6 +16,7 @@ class ProduitController extends Controller
         // Affiche produits actifs et supprimés
         $produits = Produit::withTrashed()
             ->where('magasin_id', $magasinId)
+            ->orderBy('id', 'asc')
             ->paginate(15);
 
         return view('produits.index', compact('produits'));

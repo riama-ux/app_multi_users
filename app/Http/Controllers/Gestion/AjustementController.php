@@ -65,16 +65,25 @@ class AjustementController extends Controller
     {
         $magasinId = session('magasin_actif_id');
 
-        $validated = $request->validate([
-            'date_ajustement' => 'required|date_format:Y-m-d\TH:i',
-            'type' => 'required|in:entree,sortie', // Type d'ajustement: entrée ou sortie
-            'motif_global' => 'nullable|string|max:255',
-            'lignes' => 'required|array|min:1',
-            'lignes.*.produit_id' => 'required|exists:produits,id',
-            'lignes.*.quantite_ajustee' => 'required|numeric|min:1',
-            'lignes.*.prix_unitaire_ajuste' => 'nullable|numeric|min:1', // Prix unitaire pour l'ajustement (peut être 0)
-            'lignes.*.motif_ligne' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'date_ajustement' => 'required|date_format:Y-m-d\TH:i',
+                'type' => 'required|in:entree,sortie', // Type d'ajustement: entrée ou sortie
+                'motif_global' => 'nullable|string|max:255',
+                'lignes' => 'required|array|min:1',
+                'lignes.*.produit_id' => 'required|exists:produits,id',
+                'lignes.*.quantite_ajustee' => 'required|numeric|min:1',
+                'lignes.*.prix_unitaire_ajuste' => 'nullable|numeric|min:1', // Prix unitaire pour l'ajustement (peut être 0)
+                'lignes.*.motif_ligne' => 'nullable|string|max:255',
+            ]);
+        } catch (ValidationException $e) {
+            // Si c'est une requête AJAX, renvoyer les erreurs en JSON
+            if ($request->ajax()) {
+                return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+            }
+            // Sinon, laisser Laravel gérer la redirection avec les erreurs pour les formulaires HTML standard
+            throw $e;
+        }
 
         DB::beginTransaction();
         try {
@@ -133,11 +142,12 @@ class AjustementController extends Controller
             }
 
             DB::commit();
-            return response()->json(['success' => true, 'redirect' => route('ajustements.index')], 200);
+            return redirect()->route('ajustements.index')->with('success', 'Ajustement de stock enregistré avec succès.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Erreur lors de l\'enregistrement de l\'ajustement: ' . $e->getMessage()], 500);
+            // Pour les erreurs inattendues, rediriger avec un message d'erreur
+            return back()->withInput()->with('error', 'Erreur lors de l\'enregistrement de l\'ajustement: ' . $e->getMessage());
         }
     }
 

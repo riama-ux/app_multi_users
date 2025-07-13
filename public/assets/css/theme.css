@@ -53,7 +53,7 @@ body{
 .custom-card-height {
     min-height: 200px; /* Ajuste ici selon le rendu souhaité */
     /*background-color: #ffffff;*/
-    border: 2px solid #D0E1E9;
+    /*border: 2px solid #D0E1E9;*/
     background-color: #D0E1E9;
 }
 .custom-card-full-height {

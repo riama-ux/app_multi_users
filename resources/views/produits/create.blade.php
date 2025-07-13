@@ -4,25 +4,16 @@
 
 <div class="nk-block nk-block-lg">
     <div class="nk-block-head">
-        <div class="nk-block-head-content">
-            <h4 class="nk-block-title">Créer un produit</h4>
-            <div class="nk-block-des">
-                <p>Remplissez les informations ci-dessous pour ajouter un nouveau produit.</p>
-            </div>
+        <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+            <h1 class="nk-block-title">Liste des produits</h1>
+            <a href="{{ route('produits.index') }}" class="btn btn-outline-primary">
+                <em class="icon ni ni-list"></em><span>Liste des produit</span>
+            </a>
         </div>
-    </div><div class="card card-bordered">
+    </div>
+    <div class="card card-bordered">
         <div class="card-inner">
             
-            @if ($errors->any())
-                <div class="alert alert-danger alert-icon">
-                    <em class="icon ni ni-cross-circle"></em>
-                    <p>
-                        @foreach ($errors->all() as $error)
-                            {{ $error }}<br>
-                        @endforeach
-                    </p>
-                </div>
-            @endif
 
             <form action="{{ route('produits.store') }}" method="POST" class="form-validate is-alter">
                 @csrf

@@ -2,34 +2,21 @@
 
 @section('content')
 
+    
+
 <!-- Conteneur principal de DashLite -->
 <div class="nk-block nk-block-lg">
-    <div class="nk-block-head">
-        <div class="nk-block-head-content">
-            <h4 class="nk-block-title">Liste des produits</h4>
-            <div class="nk-block-des">
-                <p>Gérez tous vos produits ici. Vous pouvez ajouter, voir, modifier ou supprimer des produits.</p>
-            </div>
-        </div>
-    </div><!-- .nk-block-head -->
-
-    <div class="nk-block-head-content mb-3">
+    
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h1 class="nk-block-title">Liste des produits</h1>
         <a href="{{ route('produits.create') }}" class="btn btn-primary">
             <em class="icon ni ni-plus"></em><span>Ajouter un produit</span>
         </a>
     </div>
 
-    <!-- Gestion des messages de session avec le style DashLite -->
-    @if(session('success'))
-        <div class="alert alert-success alert-icon">
-            <em class="icon ni ni-check-circle"></em>
-            <p>{{ session('success') }}</p>
-        </div>
-    @endif
-
     <div class="card card-bordered card-preview">
         <div class="card-inner">
-            <table class="datatable-init nk-tb-list nk-tb-ulgy" data-auto-responsive="false">
+            <table class="nk-tb-list nk-tb-ulgy" data-auto-responsive="false">
                 <thead>
                     <tr class="nk-tb-item nk-tb-head">
                         <th class="nk-tb-col"><span>Nom</span></th>

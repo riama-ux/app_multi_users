@@ -263,11 +263,12 @@ class RetourClientController extends Controller
             // Supprimer l'ancien paiement de remboursement lié à ce retour si existant
             Paiement::where('retour_client_id', $retour->id)->delete();
                 if (($validated['montant_rembourse'] ?? 0) > 0) {
+                $modePaiementRemboursement = 'autre'; 
                 Paiement::create([
                     'vente_id' => $validated['vente_id'],
                     'retour_client_id' => $retour->id,
                     'montant' => -($validated['montant_rembourse']),
-                    'mode_paiement' => 'remboursement',
+                    'mode_paiement' => 'autre',
                     'user_id' => Auth::id(),
                     'date_paiement' => now(),
                     'motif' => 'Remboursement retour client #' . $retour->id,

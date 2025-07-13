@@ -134,12 +134,35 @@
                         </ul>
                     </div>
                 </div>
-            </div>{{-- Colonne Informations Financières --}}
+            </div>
+            {{-- Colonne Informations Financières --}}
             <div class="col-md-6">
                 <div class="card card-bordered h-100">
                     <div class="card-inner">
-                        <div class="card-title">
-                            <h6 class="title"><em class="icon ni ni-money"></em> Informations Financières</h6>
+                        <div class="card-title-group align-items-start mb-3"> {{-- Ajout du groupement pour le badge --}}
+                            <div class="card-title">
+                                <h6 class="title"><em class="icon ni ni-money"></em> Informations Financières</h6>
+                            </div>
+                            <div class="card-tools">
+                                @php
+                                    $margeClass = 'success';
+                                    $margeIcon = 'check-circle';
+                                    $margeText = 'Marge Saine';
+
+                                    if ($produit->marge <= 0) { // Marge négative ou nulle
+                                        $margeClass = 'danger';
+                                        $margeIcon = 'cross-circle-fill';
+                                        $margeText = 'Perte !';
+                                    } elseif ($produit->marge > 0 && $produit->marge < 5) { // Marge faible (ajustez le seuil si besoin)
+                                        $margeClass = 'warning';
+                                        $margeIcon = 'alert-fill';
+                                        $margeText = 'Marge Faible';
+                                    }
+                                @endphp
+                                <span class="badge bg-{{ $margeClass }} rounded-pill p-1 px-2">
+                                    <em class="icon ni ni-{{ $margeIcon }} me-2"></em> {{ $margeText }}
+                                </span>
+                            </div>
                         </div>
                         <ul class="data-list is-compact">
                             <li class="data-item">
@@ -199,7 +222,6 @@
                                     <th class="nk-tb-col"><span>ID Lot</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Quantité Restante</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Quantité Initiale</span></th>
-                                    <th class="nk-tb-col tb-col-md"><span>Statut</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Coût d'Achat Unitaire</span></th>
                                     <th class="nk-tb-col tb-col-md"><span>Date de Réception</span></th>
                                 </tr>
@@ -216,29 +238,8 @@
                                         <td class="nk-tb-col tb-col-md">
                                             @php
                                                 $remaining_qty = $lot->quantite_restante ?? $lot->quantite;
-                                                $lotStatusClass = 'primary';
-                                                $lotStatusIcon = 'check-circle-fill';
-                                                $lotStatusText = 'En stock';
-
-                                                // Logique pour déterminer l'état et la classe du statut
-                                                if ($remaining_qty <= $produit->seuil_alerte && $remaining_qty > 0) {
-                                                    $lotStatusClass = 'warning';
-                                                    $lotStatusIcon = 'alert-fill';
-                                                    $lotStatusText = 'Faible';
-                                                } elseif ($remaining_qty <= 0) {
-                                                    $lotStatusClass = 'danger';
-                                                    $lotStatusIcon = 'cross-circle-fill';
-                                                    $lotStatusText = 'Épuisé';
-                                                }
                                             @endphp
                                             <span>{{ $remaining_qty }} {{ $produit->unite }}</span>
-                                        </td>
-                                        
-                                        <td class="nk-tb-col tb-col-md">
-                                            <span class="badge bg-{{ $lotStatusClass }} rounded-pill p-1 px-2">
-                                                @if($lotStatusIcon)<em class="icon ni ni-{{ $lotStatusIcon }} me-2"></em>@endif
-                                                {{ $lotStatusText }}
-                                            </span>
                                         </td>
 
                                         <td class="nk-tb-col tb-col-md"><span>{{ number_format($lot->cout_achat, 0) }} {{ config('app.currency', 'CFA') }}</span></td>

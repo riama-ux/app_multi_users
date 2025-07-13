@@ -1,14 +1,13 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<h3>Liste des fournisseurs</h3>
 
-@if(session('success'))
-    <div class="alert alert-success">{{ session('success') }}</div>
-@endif
-
-<a href="{{ route('module.fournisseurs.create') }}" class="btn btn-primary mb-3">Ajouter un fournisseur</a>
-
+<div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Liste des fournisseurs</h3>
+        <a href="{{ route('module.fournisseurs.create') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
+            <em class="icon ni ni-plus me-2"></em> Nouveau fournisseur
+        </a>
+</div>
 <table class="table table-bordered">
     <thead>
         <tr>

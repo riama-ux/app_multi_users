@@ -164,48 +164,73 @@ class StockService
         $stock->update(['quantite' => $quantite]);
     }
 
-    public static function reintegrerStockLot($lotId, $quantite, $magasinId, $userId = null, $motif = null, $sourceType = 'correction', $sourceId = null)
-    {
+    public static function reintegrerStockLot(
+        int $produitId,
+        float $quantiteAReintegrer,
+        int $magasinId,
+        int $userId,
+        string $motif,
+        string $sourceType,
+        int $sourceId,
+        ?int $lotId = null, // Peut être null
+        float $coutAchat = 0 // Coût d'achat pour le nouveau lot si créé
+    ): void {
+        if ($quantiteAReintegrer <= 0) {
+            throw new Exception("La quantité à réintégrer doit être supérieure à zéro.");
+        }
+
         DB::beginTransaction();
         try {
-            $lot = StockLot::where('id', $lotId)
-                ->where('magasin_id', $magasinId)
-                ->lockForUpdate()
-                ->firstOrFail();
+            $lot = null;
 
-            // Réintégrer la quantité dans le lot
-            $lot->quantite += $quantite;
-            $lot->save();
-
-            $produit = Produit::find($lot->produit_id);
-            if ($produit) {
-                $produit->updateQuantiteFromLots(); // Cette méthode doit sommer les quantités des lots
-            } else {
-                throw new \Exception("Produit avec l'ID {$lot->produit_id} introuvable lors de la réintégration du stock.");
+            // Si un lotId est fourni, tenter de le trouver
+            if ($lotId) {
+                $lot = StockLot::where('id', $lotId)
+                               ->where('produit_id', $produitId)
+                               ->where('magasin_id', $magasinId)
+                               ->lockForUpdate() // Verrouille le lot pour la transaction
+                               ->first(); // Utiliser first() au lieu de firstOrFail() pour éviter l'erreur si non trouvé
             }
 
-            // Mise à jour du stock global (Assurez-vous de la cohérence de cette logique de mise à jour)
-            // Vous pouvez appeler ici la méthode de mise à jour du stock global (Produit->updateQuantiteFromLots() ou mettreAJourStock())
-            // ... (Votre logique de mise à jour de $stock) ...
+            // Si le lot est trouvé, ou si un nouveau lot doit être créé
+            if ($lot) {
+                // Si le lot existant est trouvé, ajouter la quantité retournée
+                $lot->quantite_restante += $quantiteAReintegrer;
+                $lot->save();
+            } else {
+                // Si aucun lotId n'est fourni, ou si le lotId fourni n'existe pas,
+                // créer un nouveau lot pour le stock retourné.
+                $lot = StockLot::create([
+                    'produit_id' => $produitId,
+                    'magasin_id' => $magasinId,
+                    'quantite' => $quantiteAReintegrer,
+                    'quantite_restante' => $quantiteAReintegrer,
+                    'cout_achat' => $coutAchat, // Utilise le coutAchat fourni pour le nouveau lot
+                    'date_reception' => now(),
+                ]);
+            }
 
-            // Créer un mouvement de type "entrée"
+            // Enregistre le mouvement de stock (entrée) pour le retour
             MouvementStock::create([
-                'produit_id'   => $lot->produit_id,
-                'type'         => 'entree',
-                'quantite'     => $quantite,
-                'source_type'  => $sourceType, // Utilisation du sourceType fourni (ex: 'retour_client')
-                'source_id'    => $sourceId,   // Utilisation du sourceId fourni (ex: ID du retour client)
-                'lot_id'       => $lot->id,
-                'magasin_id'   => $magasinId,
-                'user_id'      => $userId,
-                'motif'        => $motif,
-                'date'         => now(),
+                'produit_id' => $produitId,
+                'magasin_id' => $magasinId,
+                'type' => 'entree', // Un retour est une entrée de stock
+                'quantite' => $quantiteAReintegrer,
+                'source_type' => $sourceType,
+                'source_id' => $sourceId,
+                'user_id' => $userId,
+                'motif' => $motif,
+                'date' => now(),
+                'lot_id' => $lot->id, // Lie le mouvement au lot qui a reçu le stock
             ]);
 
+            // Met à jour la quantité agrégée du produit dans le modèle Produit
+            Produit::find($produitId)->updateQuantiteFromLots();
+
             DB::commit();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
-            throw $e;
+            throw new Exception("Erreur lors de la réintégration de stock: " . $e->getMessage());
         }
     }
 

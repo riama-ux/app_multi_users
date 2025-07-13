@@ -27,7 +27,7 @@ class VenteController extends Controller
             $query->where('statut', $request->statut);
         }
 
-        $ventes = $query->orderBy('date_vente', 'desc')->paginate(15);
+        $ventes = $query->orderBy('date_vente', 'asc')->paginate(15);
 
         return view('ventes.index', compact('ventes'));
     }

@@ -8,28 +8,14 @@
         <h1 class="h3 mb-0 text-gray-800">Nouvelle vente</h1>
     </div>
 
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-
     {{-- Main Form Card --}}
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Nouvelle vente</h6>
+        <div class="card-header bg-white mt-3 py-3">
+            <div class="d-sm-flex align-items-center justify-content-end mb-4">
+                <a href="{{ route('ventes.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-list me-2"></i> Liste des ventes
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <form action="{{ route('ventes.store') }}" method="POST" id="venteForm">

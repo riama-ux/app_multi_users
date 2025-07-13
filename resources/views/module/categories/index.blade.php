@@ -1,13 +1,13 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-    <h3>Catégories du magasin actif</h3>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
-
-    <a href="{{ route('module.categories.create') }}" class="btn btn-primary mb-3">Ajouter une catégorie</a>
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Liste des catégories</h3>
+        <a href="{{ route('module.categories.create') }}" class="btn btn-primary">
+            <em class="icon ni ni-plus"></em><span>Ajouter une catégorie</span>
+        </a>
+    </div>
 
     <table class="table table-bordered">
         <thead>

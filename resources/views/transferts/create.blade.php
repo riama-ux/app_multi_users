@@ -3,14 +3,12 @@
 @section('content')
 <div class="container py-4">
 
-    <h2>Nouveau Transfert</h2>
-
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-dark mb-0"> Nouveau Transfert</h2>
+        <a href="{{ route('transferts.index') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
+            <i class="fas fa-list me-2"></i> Liste des Transferts
+        </a>
+    </div>
 
     <div class="card mt-4">
         <div class="card-body">

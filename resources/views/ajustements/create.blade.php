@@ -5,25 +5,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 text-dark mb-0">Créer un nouvel Ajustement de Stock</h1>
+        <a href="{{ route('ajustements.index') }}" class="btn btn-outline-primary shadow-sm d-flex align-items-center">
+            <i class="fas fa-list me-2"></i> Liste des Ajustements
+        </a>
     </div>
-
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <h5 class="alert-heading">Erreurs de validation :</h5>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    @endif
 
     <div class="card shadow-lg border-0 mt-4">
         <div class="card-body">

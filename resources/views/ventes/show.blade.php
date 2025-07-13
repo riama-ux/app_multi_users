@@ -74,12 +74,22 @@
                                 </div>
                             </div>
                         </div>
+                        {{-- Nouvelle ligne pour la remise globale --}}
+                        <div class="col-sm-6 col-lg-4">
+                            <div class="d-flex align-items-center">
+                                <em class="icon ni ni-wallet me-2"></em> {{-- Icône pour la remise --}}
+                                <div>
+                                    <span class="text-muted">Remise Globale :</span>
+                                    <h6 class="text-dark">{{ number_format($vente->remise, 0, ',', ' ') }} FCFA</h6>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-sm-6 col-lg-4">
                             <div class="d-flex align-items-center">
                                 <em class="icon ni ni-sign-kobo me-2"></em>
                                 <div>
                                     <span class="text-muted">Montant Total :</span>
-                                    <h6 class="text-success">{{ number_format($vente->total_ttc, 2, ',', ' ') }} FCFA</h6>
+                                    <h6 class="text-success">{{ number_format($vente->total_ttc, 0, ',', ' ') }} FCFA</h6>
                                 </div>
                             </div>
                         </div>
@@ -88,7 +98,7 @@
                                 <em class="icon ni ni-sign-kobo me-2"></em>
                                 <div>
                                     <span class="text-muted">Reste à payer :</span>
-                                    <h6 class="text-danger">{{ number_format($vente->reste_a_payer, 2, ',', ' ') }} FCFA</h6>
+                                    <h6 class="text-danger">{{ number_format($vente->reste_a_payer, 0, ',', ' ') }} FCFA</h6>
                                 </div>
                             </div>
                         </div>
@@ -119,8 +129,8 @@
                                     <tr>
                                         <td>{{ $ligne->produit->nom ?? 'N/A' }}</td>
                                         <td>{{ $ligne->quantite }}</td>
-                                        <td>{{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA</td>
-                                        <td>{{ number_format($ligne->prix_total, 2, ',', ' ') }} FCFA</td>
+                                        <td>{{ number_format($ligne->prix_unitaire, 0, ',', ' ') }} FCFA</td>
+                                        <td>{{ number_format($ligne->prix_total, 0, ',', ' ') }} FCFA</td>
                                         <td>{{ $ligne->lot_id }}</td>
                                     </tr>
                                 @empty
@@ -157,7 +167,7 @@
                             <tbody>
                                 @forelse($vente->paiements as $paiement)
                                     <tr @if($paiement->annule) class="table-secondary text-muted" @endif>
-                                        <td>{{ number_format($paiement->montant, 2, ',', ' ') }} FCFA</td>
+                                        <td>{{ number_format($paiement->montant, 0, ',', ' ') }} FCFA</td>
                                         <td>{{ ucfirst(str_replace('_', ' ', $paiement->mode_paiement)) }}</td>
                                         <td>{{ $paiement->date_paiement->format('d/m/Y H:i') }}</td>
                                         <td>{{ $paiement->user->name ?? 'N/A' }}</td>
@@ -193,8 +203,8 @@
                         @csrf
                         <div class="col-md-4">
                             <div class="form-group">
-                                <label for="montant" class="form-label">Montant (Reste: {{ number_format($vente->reste_a_payer, 2, ',', ' ') }} FCFA)</label>
-                                <input type="number" name="montant" id="montant" class="form-control" max="{{ $vente->reste_a_payer }}" min="1" step="0.01" required>
+                                <label for="montant" class="form-label">Montant (Reste: {{ number_format($vente->reste_a_payer, 0, ',', ' ') }} FCFA)</label>
+                                <input type="number" name="montant" id="montant" class="form-control" max="{{ $vente->reste_a_payer }}" min="1" step="1" required>
                             </div>
                         </div>
                         <div class="col-md-4">

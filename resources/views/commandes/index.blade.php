@@ -4,7 +4,7 @@
 <div class="container-fluid py-4">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-dark mb-0">Liste des Commandes</h1>
+        <h3 class="nk-block-title">Liste des Commandes</h3>
         <a href="{{ route('commandes.create') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
             <i class="bi bi-plus-lg me-2"></i> Nouvelle commande
         </a>
