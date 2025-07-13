@@ -1,0 +1,105 @@
+{{-- index --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Liste des catégories</h3>
+        <a href="{{ route('module.categories.create') }}" class="btn btn-primary">
+            <em class="icon ni ni-plus"></em><span>Ajouter une catégorie</span>
+        </a>
+    </div>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($categories as $categorie)
+                <tr>
+                    <td>{{ $categorie->nom }}</td>
+                    <td>
+                        <a href="{{ route('module.categories.edit', ['categorie' => $categorie->id]) }}" class="btn btn-sm btn-info">Modifier</a>
+
+
+                        <form action="{{ route('module.categories.destroy', ['categorie' => $categorie->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette catégorie ?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="2">Aucune catégorie pour ce magasin.</td>
+                </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    {{ $categories->links() }}
+@endsection
+
+{{-- index --}}
+
+
+
+
+{{-- create --}}
+@extends('pages.admin.shared.layout')
+
+
+@section('content')
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Ajouter une catégorie</h3>
+        <a href="{{ route('module.categories.index') }}" class="btn btn-outline-primary">
+            <em class="icon ni ni-list"></em><span>Liste des catégorie</span>
+        </a>
+    </div>
+
+    <form action="{{ route('module.categories.store') }}" method="POST">
+        @csrf
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom de la catégorie</label>
+            <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <a href="{{ route('module.categories.index') }}" class="btn btn-secondary">Annuler</a>
+    </form>
+@endsection
+
+{{-- create --}}
+
+
+{{-- edit --}}
+@extends('pages.admin.shared.layout')
+
+
+@section('content')
+    <h3>Modifier la catégorie</h3>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+        </div>
+    @endif
+
+    <form action="{{ route('module.categories.update', $categorie->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+        <div class="mb-3">
+            <label for="nom" class="form-label">Nom de la catégorie</label>
+            <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom', $categorie->nom) }}" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Modifier</button>
+        <a href="{{ route('module.categories.index') }}" class="btn btn-secondary">Retour</a>
+    </form>
+@endsection
+
+
+{{-- edit --}}

@@ -219,10 +219,8 @@ Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manage
 
 
 
-
-
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    Route::get('ventes/{vente}/receipt', [VenteController::class, 'receipt'])->name('ventes.receipt');
 });
 
 

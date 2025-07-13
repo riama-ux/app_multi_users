@@ -60,9 +60,8 @@
                                             <form action="{{ route('produits.destroy', $produit) }}" method="POST" class="d-inline-block">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="btn btn-trigger btn-icon delete-product" data-product-name="{{ $produit->nom }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Supprimer">
-                                                    <em class="icon ni ni-trash"></em>
-                                                </button>
+                                                <button class="btn btn-trigger btn-icon delete-client" onclick="return confirm('Supprimer ?')" data-bs-toggle="tooltip" data-bs-placement="top" title="Supprimer"><em class="icon ni ni-trash"></em></button>
+                                            
                                             </form>
                                         </li>
                                     @else

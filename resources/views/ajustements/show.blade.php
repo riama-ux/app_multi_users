@@ -2,10 +2,13 @@
 
 @section('content')
 <div class="container-fluid">
-    <h1>Détails de l'Ajustement de Stock #{{ $ajustement->id }}</h1>
-
+    
+    <div class = "d-flex justify-content-between mb-4">
+        <h3>Détails de l'Ajustement de Stock #{{ $ajustement->id }}</h3>
+        <a href="{{ route('ajustements.index') }}" class="btn btn-secondary">Retour à la liste</a>
+    </div>
     <div class="card mb-4">
-        <div class="card-header">Informations Générales</div>
+        <div class="card-header bg-white"><h6>Informations Générales</h6></div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
@@ -28,7 +31,7 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-header">Produits Ajustés</div>
+        <div class="card-header bg-white"><h6>Produits Ajustés</h6></div>
         <div class="card-body">
             @if($ajustement->lignesAjustement->isNotEmpty())
                 <div class="table-responsive">
@@ -58,8 +61,5 @@
             @endif
         </div>
     </div>
-
-    <a href="{{ route('ajustements.index') }}" class="btn btn-secondary">Retour à la liste</a>
-    <a href="{{ route('ajustements.edit', $ajustement->id) }}" class="btn btn-warning">Modifier l'Ajustement</a>
 </div>
 @endsection

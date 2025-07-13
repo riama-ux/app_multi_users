@@ -41,7 +41,7 @@ class Produit extends Model
             }
         });
 
-        // Supprimer les stocks liés lors d’un soft delete
+        /* Supprimer les stocks liés lors d’un soft delete
         static::deleting(function ($produit) {
             foreach ($produit->stocks()->get() as $stock) {
                 $stock->delete(); // soft delete du stock
@@ -53,7 +53,7 @@ class Produit extends Model
             foreach ($produit->stocks()->withTrashed()->get() as $stock) {
                 $stock->restore();
             }
-        });
+        });*/
     }
 
     public function magasin()

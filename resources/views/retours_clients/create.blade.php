@@ -1,177 +1,178 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="container-fluid">
-    <h1>Enregistrer un nouveau retour client</h1>
-
-    {{-- Affichage des erreurs de validation ou de session --}}
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-white border-bottom">
+            <h1 class="h5 mb-0">Enregistrer un nouveau retour client</h1>
         </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+        <div class="card-body">
 
-    {{-- Bouton Nouveau Client --}}
-    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClient">
-        + Nouveau client
-    </button>
-
-    <form action="{{ route('retours_clients.store') }}" method="POST" id="retourClientForm">
-        @csrf
-
-        {{-- Section liée à la vente existante (si applicable) --}}
-        @if($vente)
-            <div class="alert alert-info">
-                Ce retour est lié à la vente #{{ $vente->id }} du {{ $vente->date_vente->format('d/m/Y H:i') }} pour le client {{ $vente->client->nom ?? 'N/A' }}.
-                <input type="hidden" name="vente_id" value="{{ $vente->id }}">
-            </div>
-        @endif
-
-        {{-- Sélection du client --}}
-        <div class="mb-3">
-            <label for="client_id" class="form-label">Client *</label>
-            <select name="client_id" id="client_id" class="form-control" required>
-                <option value="">-- Choisir un client --</option>
-                @foreach($clients as $client)
-                    <option value="{{ $client->id }}" {{ old('client_id', $vente->client_id ?? '') == $client->id ? 'selected' : '' }}>{{ $client->nom }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        {{-- Date et heure du retour --}}
-        <div class="mb-3">
-            <label for="date_retour" class="form-label">Date et heure du retour *</label>
-            <input type="datetime-local" name="date_retour" id="date_retour" class="form-control" value="{{ old('date_retour', now()->format('Y-m-d\TH:i')) }}" required>
-        </div>
-
-        {{-- Motif global du retour --}}
-        <div class="mb-3">
-            <label for="motif_global" class="form-label">Motif global du retour</label>
-            <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global') }}</textarea>
-        </div>
-
-        <h4>Produits à retourner</h4>
-
-        {{-- Section pour ajouter des produits depuis la vente (si applicable) --}}
-        @if($vente && $lignesVente->isNotEmpty())
-            <div class="card mb-4">
-                <div class="card-header">Produits de la vente #{{ $vente->id }}</div>
-                <div class="card-body">
-                    <p>Sélectionnez les produits de la vente à retourner :</p>
-                    <div class="list-group">
-                        @foreach($lignesVente as $ligne)
-                            <button type="button" class="list-group-item list-group-item-action add-product-from-sale"
-                                data-product-id="{{ $ligne->produit->id }}"
-                                data-product-name="{{ $ligne->produit->nom }}"
-                                data-product-stock="{{ $ligne->produit->quantite }}"
-                                data-product-qty-sold="{{ $ligne->quantite }}"
-                                data-product-price-sold="{{ $ligne->prix_unitaire }}"
-                                data-lot-id="{{ $ligne->lot_id }}"
-                            >
-                                {{ $ligne->produit->nom }} (Qté vendue: {{ $ligne->quantite }}) - Prix unitaire vendu: {{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA
-                            </button>
+            {{-- Affichage des erreurs de validation ou de session --}}
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
                         @endforeach
-                    </div>
+                    </ul>
                 </div>
-            </div>
-        @endif
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
 
-        {{-- Composant Livewire pour la recherche de produits généraux --}}
-        <div class="mb-4">
-            @livewire('retour-client-product-search')
-        </div>
+            <form action="{{ route('retours_clients.store') }}" method="POST" id="retourClientForm">
+                @csrf
 
-        {{-- Tableau des produits à retourner --}}
-        <table class="table table-bordered" id="produitsRetourTable">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Stock Actuel</th>
-                    <th>Quantité retournée *</th>
-                    <th>Prix unitaire retour *</th>
-                    <th>Motif spécifique</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
-                {{-- **IMPORTANT:** Ajout de l'attribut 'disabled' aux champs du template --}}
-                <tr style="display: none;" class="product-retour-row-template">
-                    <td>
-                        <input type="hidden" class="product-id-input" disabled>
-                        <input type="hidden" class="lot-id-input" disabled>
-                        <span class="product-name-display"></span>
-                    </td>
-                    <td>
-                        <span class="product-current-stock-display text-info fw-bold"></span>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control quantite-retournee-input" min="1" value="1" required disabled>
-                    </td>
-                    <td>
-                        <input type="number" step="1" class="form-control prix-unitaire-retour-input" min="1" required disabled>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" disabled>
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
-                    </td>
-                </tr>
-                {{-- Lignes de produits pré-remplies par old('lignes') après une erreur de validation --}}
-                @if(old('lignes'))
-                    @foreach(old('lignes') as $index => $oldLigne)
-                        @php
-                            $product = \App\Models\Produit::find($oldLigne['produit_id']);
-                        @endphp
-                        @if($product)
-                            <tr class="product-retour-row">
+                {{-- Section liée à la vente existante (si applicable) --}}
+                @if($vente)
+                    <div class="alert alert-info">
+                        Ce retour est lié à la vente #{{ $vente->id }} du {{ $vente->date_vente->format('d/m/Y H:i') }} pour le client {{ $vente->client->nom ?? 'N/A' }}.
+                        <input type="hidden" name="vente_id" value="{{ $vente->id }}">
+                    </div>
+                @endif
+
+                {{-- Sélection du client --}}
+                <div class="mb-3">
+                    <label for="client_id" class="form-label">Client *</label>
+                    <select name="client_id" id="client_id" class="form-control" required>
+                        <option value="">-- Choisir un client --</option>
+                        @foreach($clients as $client)
+                            <option value="{{ $client->id }}" {{ old('client_id', $vente->client_id ?? '') == $client->id ? 'selected' : '' }}>{{ $client->nom }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Date et heure du retour --}}
+                <div class="mb-3">
+                    <label for="date_retour" class="form-label">Date et heure du retour *</label>
+                    <input type="datetime-local" name="date_retour" id="date_retour" class="form-control" value="{{ old('date_retour', now()->format('Y-m-d\TH:i')) }}" required>
+                </div>
+
+                {{-- Motif global du retour --}}
+                <div class="mb-3">
+                    <label for="motif_global" class="form-label">Motif global du retour</label>
+                    <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global') }}</textarea>
+                </div>
+
+                <h4>Produits à retourner</h4>
+
+                {{-- Section pour ajouter des produits depuis la vente (si applicable) --}}
+                @if($vente && $lignesVente->isNotEmpty())
+                    <div class="card mb-4">
+                        <div class="card-header">Produits de la vente #{{ $vente->id }}</div>
+                        <div class="card-body">
+                            <p>Sélectionnez les produits de la vente à retourner :</p>
+                            <div class="list-group">
+                                @foreach($lignesVente as $ligne)
+                                    <button type="button" class="list-group-item list-group-item-action add-product-from-sale"
+                                        data-product-id="{{ $ligne->produit->id }}"
+                                        data-product-name="{{ $ligne->produit->nom }}"
+                                        data-product-stock="{{ $ligne->produit->quantite }}"
+                                        data-product-qty-sold="{{ $ligne->quantite }}"
+                                        data-product-price-sold="{{ $ligne->prix_unitaire }}"
+                                        data-lot-id="{{ $ligne->lot_id }}"
+                                    >
+                                        {{ $ligne->produit->nom }} (Qté vendue: {{ $ligne->quantite }}) - Prix unitaire vendu: {{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
+                {{-- Composant Livewire pour la recherche de produits généraux --}}
+                <div class="mb-4">
+                    @livewire('retour-client-product-search')
+                </div>
+
+                {{-- Tableau des produits à retourner --}}
+                <div class="table-responsive">
+                    <table class="table table-bordered" id="produitsRetourTable">
+                        <thead>
+                            <tr>
+                                <th>Produit</th>
+                                <th>Stock Actuel</th>
+                                <th>Quantité retournée *</th>
+                                <th>Prix unitaire retour *</th>
+                                <th>Motif spécifique</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
+                            {{-- **IMPORTANT:** Ajout de l'attribut 'disabled' aux champs du template --}}
+                            <tr style="display: none;" class="product-retour-row-template">
                                 <td>
-                                    <input type="hidden" name="lignes[{{ $index }}][produit_id]" value="{{ $product->id }}" class="product-id-input">
-                                    <input type="hidden" name="lignes[{{ $index }}][lot_id]" value="{{ $oldLigne['lot_id'] ?? '' }}" class="lot-id-input">
-                                    <span class="product-name-display">{{ $product->nom }}</span>
+                                    <input type="hidden" class="product-id-input" disabled>
+                                    <input type="hidden" class="lot-id-input" disabled>
+                                    <span class="product-name-display"></span>
                                 </td>
                                 <td>
-                                    <span class="product-current-stock-display text-info fw-bold">{{ $product->quantite }}</span>
+                                    <span class="product-current-stock-display text-info fw-bold"></span>
                                 </td>
                                 <td>
-                                    <input type="number" name="lignes[{{ $index }}][quantite_retournee]" class="form-control quantite-retournee-input" min="1" value="{{ $oldLigne['quantite_retournee'] }}" required>
+                                    <input type="number" class="form-control quantite-retournee-input" min="1" value="1" required disabled>
                                 </td>
                                 <td>
-                                    <input type="number" step="1" name="lignes[{{ $index }}][prix_unitaire_retour]" class="form-control prix-unitaire-retour-input" min="1" value="{{ $oldLigne['prix_unitaire_retour'] }}" required>
+                                    <input type="number" step="1" class="form-control prix-unitaire-retour-input" min="1" required disabled>
                                 </td>
                                 <td>
-                                    <input type="text" name="lignes[{{ $index }}][motif_ligne]" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" value="{{ $oldLigne['motif_ligne'] ?? '' }}">
+                                    <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" disabled>
                                 </td>
                                 <td>
                                     <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
                                 </td>
                             </tr>
-                        @endif
-                    @endforeach
-                @endif
-            </tbody>
-        </table>
+                            {{-- Lignes de produits pré-remplies par old('lignes') après une erreur de validation --}}
+                            @if(old('lignes'))
+                                @foreach(old('lignes') as $index => $oldLigne)
+                                    @php
+                                        $product = \App\Models\Produit::find($oldLigne['produit_id']);
+                                    @endphp
+                                    @if($product)
+                                        <tr class="product-retour-row">
+                                            <td>
+                                                <input type="hidden" name="lignes[{{ $index }}][produit_id]" value="{{ $product->id }}" class="product-id-input">
+                                                <input type="hidden" name="lignes[{{ $index }}][lot_id]" value="{{ $oldLigne['lot_id'] ?? '' }}" class="lot-id-input">
+                                                <span class="product-name-display">{{ $product->nom }}</span>
+                                            </td>
+                                            <td>
+                                                <span class="product-current-stock-display text-info fw-bold">{{ $product->quantite }}</span>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="lignes[{{ $index }}][quantite_retournee]" class="form-control quantite-retournee-input" min="1" value="{{ $oldLigne['quantite_retournee'] }}" required>
+                                            </td>
+                                            <td>
+                                                <input type="number" step="1" name="lignes[{{ $index }}][prix_unitaire_retour]" class="form-control prix-unitaire-retour-input" min="1" value="{{ $oldLigne['prix_unitaire_retour'] }}" required>
+                                            </td>
+                                            <td>
+                                                <input type="text" name="lignes[{{ $index }}][motif_ligne]" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)" value="{{ $oldLigne['motif_ligne'] ?? '' }}">
+                                            </td>
+                                            <td>
+                                                <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
 
-        {{-- Montant à rembourser --}}
-        <div class="mb-3">
-            <label for="montant_rembourse" class="form-label">Montant à rembourser (FCFA)</label>
-            <input type="number" step="1" min="1" name="montant_rembourse" id="montant_rembourse" class="form-control" value="{{ old('montant_rembourse', 0) }}">
+                {{-- Montant à rembourser --}}
+                <div class="mb-3">
+                    <label for="montant_rembourse" class="form-label">Montant à rembourser (FCFA)</label>
+                    <input type="number" step="1" min="1" name="montant_rembourse" id="montant_rembourse" class="form-control" value="{{ old('montant_rembourse', 0) }}">
+                </div>
+
+                {{-- Boutons de soumission --}}
+                <button type="submit" class="btn btn-primary mt-4">Enregistrer le retour</button>
+                <a href="{{ route('retours_clients.index') }}" class="btn btn-secondary mt-4">Annuler</a>
+            </form>
         </div>
-
-        {{-- Boutons de soumission --}}
-        <button type="submit" class="btn btn-primary mt-4">Enregistrer le retour</button>
-        <a href="{{ route('retours_clients.index') }}" class="btn btn-secondary mt-4">Annuler</a>
-    </form>
-
-    
+    </div>
 </div>
 
 <script>
@@ -188,7 +189,7 @@
             // Vérifier si le produit est déjà dans la liste (sauf si c'est un lot spécifique)
             if (!lotId) { 
                 let existingRowInput = Array.from(produitsRetourTableBody.querySelectorAll('.product-id-input'))
-                                        .find(input => input.value == product.id);
+                                         .find(input => input.value == product.id);
 
                 if (existingRowInput) {
                     alert('Ce produit est déjà dans la liste de retour.');

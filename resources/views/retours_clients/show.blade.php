@@ -2,10 +2,16 @@
 
 @section('content')
 <div class="container-fluid">
-    <h1>Détails du retour client #{{ $retour->id }}</h1>
-
+    
+    <div class="d-flex justify-content-between mb-4">  
+        <h3>Détails du retour client #{{ $retour->id }}</h3>
+        <a href="{{ route('retours_clients.index') }}" class="btn btn-secondary">Retour à la liste</a>
+    </div>
     <div class="card mb-4">
-        <div class="card-header">Informations générales</div>
+        <div class="card-header bg-white">
+            <h6>Informations générales</h6>
+            
+        </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
@@ -31,7 +37,7 @@
     </div>
 
     <div class="card mb-4">
-        <div class="card-header">Produits retournés</div>
+        <div class="card-header bg-white"><h6>Produits retournés</h6></div>
         <div class="card-body">
             @if ($retour->lignesRetour->isEmpty())
                 <p>Aucun produit dans ce retour.</p>
@@ -62,9 +68,5 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-between">
-        <a href="{{ route('retours_clients.index') }}" class="btn btn-secondary">Retour à la liste</a>
-        <a href="{{ route('retours_clients.edit', $retour->id) }}" class="btn btn-warning">Modifier le retour</a>
-    </div>
 </div>
 @endsection

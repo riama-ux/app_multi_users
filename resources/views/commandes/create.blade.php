@@ -135,10 +135,10 @@
 
 {{-- Modal Nouveau Produit --}}
 <div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable bg-white">
         <form method="POST" id="form-produit-modal" action="{{ route('produits.store') }}">
             @csrf
-            <div class="modal-content border-0 shadow-lg">
+            <div class="modal-content bg-white border-0 shadow-lg">
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title" id="modalProduitLabel">Créer un nouveau produit</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
@@ -253,10 +253,10 @@
 
 {{-- Modal Nouveau Fournisseur --}}
 <div class="modal fade" id="modalFournisseur" tabindex="-1" aria-labelledby="modalFournisseurLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered ">
         <form id="form-fournisseur-modal" method="POST" action="{{ route('module.fournisseurs.store') }}">
             @csrf
-            <div class="modal-content border-0 shadow-lg">
+            <div class="modal-content bg-white border-0 shadow-lg">
                 <div class="modal-header border-bottom">
                     <h5 class="modal-title" id="modalFournisseurLabel">Ajouter un fournisseur</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>

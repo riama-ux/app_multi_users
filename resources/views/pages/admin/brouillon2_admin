@@ -201,36 +201,53 @@
 
                                 {{-- Chiffre d'affaire du mois --}}
                                 {{-- Top 5 des produits les plus vendus (remplace Chiffre d'affaires du mois) --}}
-                                <div class="card card-bordered h-100">
-                                    <div class="card-inner">
-                                        <div class="card-title-group mb-3">
-                                            <div class="card-title">
-                                                <h6 class="title">Top 5 Meilleurs ventes (Ce Mois)</h6>
+                                <div>
+                                    <div class="card custom-card-height h-100">
+                                        <div class="nk-cmwg nk-cmwg1">
+                                            <div class="card-inner pt-3">
+                                                <div class="d-flex justify-content-between">
+                                                    <div class="flex-item w-100"> {{-- w-100 pour que le tableau prenne toute la largeur --}}
+                                                        <h6 class="text-dark mb-3">Top 5 Meilleurs ventes (Ce Mois)</h6>
+                                                        <div class="nk-tb-list nk-tb-ulog">
+                                                            <div class="nk-tb-item nk-tb-head">
+                                                                <div class="nk-tb-col"><span>Produit</span></div>
+                                                                <div class="nk-tb-col tb-col-md"><span>Quantité</span></div>
+                                                                <div class="nk-tb-col tb-col-lg"><span>CA</span></div>
+                                                                <div class="nk-tb-col tb-col-md"><span>Description</span></div>
+                                                            </div><!-- .nk-tb-item -->
+                                                            @forelse($topSoldProducts as $product)
+                                                            <div class="nk-tb-item">
+                                                                <div class="nk-tb-col"><span>{{ $product->product_name }}</span></div>
+                                                                <div class="nk-tb-col tb-col-md"><span>{{ number_format($product->total_quantity_sold, 0, ',', ' ') }}</span></div>
+                                                                <div class="nk-tb-col tb-col-lg"><span>{{ number_format($product->total_revenue_from_product, 0, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</span></div>
+                                                                <div class="nk-tb-col tb-col-md"><span>{{ Str::limit($product->product_description, 50) ?? 'N/A' }}</span></div> {{-- Affiche la description, limitée à 50 caractères --}}
+                                                            </div><!-- .nk-tb-item -->
+                                                            @empty
+                                                            <div class="nk-tb-item">
+                                                                <div class="nk-tb-col text-center" colspan="4">Aucun produit vendu ce mois.</div>
+                                                            </div>
+                                                            @endforelse
+                                                        </div><!-- .nk-tb-list -->
+                                                    </div>
+                                                    <div class="card-tools me-n1">
+                                                        <div class="dropdown">
+                                                            <a href="#" class="dropdown-toggle btn btn-icon btn-sm btn-trigger" data-bs-toggle="dropdown"><em class="icon ni ni-more-v"></em></a>
+                                                            <div class="dropdown-menu dropdown-menu-sm dropdown-menu-end">
+                                                                <ul class="link-list-opt no-bdr">
+                                                                    <li><a href="#" class="active"><span>Ce mois</span></a></li>
+                                                                    <li><a href="#"><span>Mois précédent</span></a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div><!-- .card-inner -->
+                                            <div class="position-absolute bottom-0 end-0 p-2">
+                                                {{-- Icône adaptée pour les meilleurs ventes --}}
+                                                <em class="icon ni ni-star-fill text-primary fs-big-icon"></em>
                                             </div>
-                                            <div class="card-tools">
-                                                
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="nk-tb-list nk-tb-ulog">
-                                            <div class="nk-tb-item nk-tb-head">
-                                                <div class="nk-tb-col"><span>Produit</span></div>
-                                                <div class="nk-tb-col tb-col-md"><span>Quantité</span></div>
-                                                <div class="nk-tb-col tb-col-lg"><span>CA</span></div>
-                                                <div class="nk-tb-col tb-col-md"><span>Description</span></div>
-                                            </div>@forelse($topSoldProducts as $product)
-                                            <div class="nk-tb-item">
-                                                <div class="nk-tb-col"><span class="fw-bold">{{ $product->product_name }}</span></div>
-                                                <div class="nk-tb-col tb-col-md"><span>{{ number_format($product->total_quantity_sold, 0, ',', ' ') }}</span></div>
-                                                <div class="nk-tb-col tb-col-lg"><span class="text-success">{{ number_format($product->total_revenue_from_product, 0, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</span></div>
-                                                <div class="nk-tb-col tb-col-md"><span>{{ Str::limit($product->product_description, 50) ?? 'N/A' }}</span></div>
-                                            </div>@empty
-                                            <div class="nk-tb-item">
-                                                <div class="nk-tb-col text-center text-muted" colspan="4">Aucun produit vendu ce mois.</div>
-                                            </div>
-                                            @endforelse
-                                        </div>
-                                    </div>
+                                        </div><!-- .nk-cmwg -->
+                                    </div><!-- .card -->
                                 </div>
                             </div>
                         </div>

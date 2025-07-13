@@ -98,6 +98,7 @@
                                                     'vente' => route('ventes.show', $mouvement->source_id),
                                                     'transfert' => route('transferts.show', $mouvement->source_id),
                                                     'ajustement' => route('ajustements.show', $mouvement->source_id),
+                                                    'retour_client' => route('retours_clients.show', $mouvement->source_id),
                                                     default => null
                                                 };
                                                 $sourceType = ucfirst($mouvement->source_type);
@@ -115,7 +116,7 @@
                                         @endif
                                     </td>
                                     <td class="nk-tb-col tb-col-lg">
-                                        @if ($mouvement->type === 'entree')
+                                        @if ($mouvement->type === 'entree' && $mouvement->source_type === 'commande')
                                             @if ($mouvement->is_commande_late)
                                                 <span class="badge badge-dim bg-danger">Retard ({{ $mouvement->days_commande_late }}j)</span>
                                             @else

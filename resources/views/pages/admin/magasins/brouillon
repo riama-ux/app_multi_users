@@ -1,0 +1,98 @@
+{{-- index --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+    <h3>Liste des magasins</h3>
+
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    <a href="{{ route('admin.magasins.create') }}" class="btn btn-primary mb-3">Ajouter un magasin</a>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Adresse</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse ($magasins as $magasin)
+                <tr>
+                    <td>{{ $magasin->nom }}</td>
+                    <td>{{ $magasin->adresse ?? '—' }}</td>
+                    <td>
+                        <a href="{{ route('admin.magasins.edit', $magasin->id) }}" class="btn btn-sm btn-warning">Modifier</a>
+
+                        <form action="{{ route('admin.magasins.destroy', $magasin->id) }}" method="POST" style="display:inline-block"
+                            onsubmit="return confirm('Confirmer la suppression de ce magasin ?')">
+                            @csrf
+                            @method('DELETE')
+                            <button class="btn btn-sm btn-danger">Supprimer</button>
+                        </form>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="3" class="text-center">Aucun magasin trouvé.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+@endsection
+{{-- index --}}
+
+
+
+
+{{-- create --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+    <h3>Ajouter un magasin</h3>
+
+    <form action="{{ route('admin.magasins.store') }}" method="POST">
+        @csrf
+
+        <div class="mb-3">
+            <label for="nom">Nom du magasin *</label>
+            <input type="text" name="nom" class="form-control" required value="{{ old('nom') }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="adresse">Adresse</label>
+            <input type="text" name="adresse" class="form-control" value="{{ old('adresse') }}">
+        </div>
+
+        <button type="submit" class="btn btn-success">Enregistrer</button>
+        <a href="{{ route('admin.magasins.index') }}" class="btn btn-secondary">Annuler</a>
+    </form>
+@endsection
+{{-- create --}}
+
+
+{{-- edit --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+    <h3>Modifier le magasin</h3>
+
+    <form action="{{ route('admin.magasins.update', $magasin->id) }}" method="POST">
+        @csrf
+        @method('PUT')
+
+        <div class="mb-3">
+            <label for="nom">Nom du magasin *</label>
+            <input type="text" name="nom" class="form-control" required value="{{ old('nom', $magasin->nom) }}">
+        </div>
+
+        <div class="mb-3">
+            <label for="adresse">Adresse</label>
+            <input type="text" name="adresse" class="form-control" value="{{ old('adresse', $magasin->adresse) }}">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Mettre à jour</button>
+        <a href="{{ route('admin.magasins.index') }}" class="btn btn-secondary">Annuler</a>
+    </form>
+@endsection
+{{-- edit --}}

@@ -1,297 +1,205 @@
 @extends('pages.admin.shared.layout')
 
 @section('content')
-<div class="container-fluid">
-    <h1>Modifier le retour client #{{ $retour->id }}</h1>
-
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
-
-    {{-- Bouton Nouveau Client --}}
-    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalClient">
-        + Nouveau client
-    </button>
-
-    <form action="{{ route('retours_clients.update', $retour->id) }}" method="POST" id="retourClientEditForm">
-        @csrf
-        @method('PUT')
-
-        @if($retour->vente)
-            <div class="alert alert-info">
-                Ce retour est lié à la vente #{{ $retour->vente->id }} du {{ $retour->vente->date_vente->format('d/m/Y H:i') }} pour le client {{ $retour->vente->client->nom ?? 'N/A' }}.
-                <input type="hidden" name="vente_id" value="{{ $retour->vente->id }}">
-            </div>
-        @else
-            <input type="hidden" name="vente_id" value="{{ old('vente_id', $retour->vente_id) }}">
-        @endif
-
-        <div class="mb-3">
-            <label for="client_id" class="form-label">Client *</label>
-            <select name="client_id" id="client_id" class="form-control" required>
-                <option value="">-- Choisir un client --</option>
-                @foreach($clients as $client)
-                    <option value="{{ $client->id }}" {{ old('client_id', $retour->client_id) == $client->id ? 'selected' : '' }}>{{ $client->nom }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="mb-3">
-            <label for="date_retour" class="form-label">Date et heure du retour *</label>
-            <input type="datetime-local" name="date_retour" id="date_retour" class="form-control" value="{{ old('date_retour', $retour->date_retour->format('Y-m-d\TH:i')) }}" required>
-        </div>
-
-        <div class="mb-3">
-            <label for="motif_global" class="form-label">Motif global du retour</label>
-            <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global', $retour->motif_global) }}</textarea>
-        </div>
-
-        <h4>Produits à retourner</h4>
-
-        {{-- Section pour ajouter des produits depuis la vente --}}
-        @if($retour->vente && $lignesVente->isNotEmpty())
-            <div class="card mb-4">
-                <div class="card-header">Produits de la vente #{{ $retour->vente->id }}</div>
-                <div class="card-body">
-                    <p>Sélectionnez les produits de la vente à retourner :</p>
-                    <div class="list-group">
-                        @foreach($lignesVente as $ligne)
-                            <button type="button" class="list-group-item list-group-item-action add-product-from-sale"
-                                data-product-id="{{ $ligne->produit->id }}"
-                                data-product-name="{{ $ligne->produit->nom }}"
-                                data-product-stock="{{ $ligne->produit->quantite }}"
-                                data-product-qty-sold="{{ $ligne->quantite }}"
-                                data-product-price-sold="{{ $ligne->prix_unitaire }}"
-                                data-lot-id="{{ $ligne->lot_id }}"
-                            >
-                                {{ $ligne->produit->nom }} (Qté vendue: {{ $ligne->quantite }}) - Prix unitaire vendu: {{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        @endif
-
-        {{-- Composant Livewire pour la recherche de produits généraux --}}
-        <div class="mb-4">
-            @livewire('retour-client-product-search')
-        </div>
-
-        <table class="table table-bordered" id="produitsRetourTable">
-            <thead>
-                <tr>
-                    <th>Produit</th>
-                    <th>Stock Actuel</th>
-                    <th>Quantité retournée *</th>
-                    <th>Prix unitaire retour *</th>
-                    <th>Motif spécifique</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{-- Ligne de modèle cachée pour le clonage par JavaScript --}}
-                <tr style="display: none;" class="product-retour-row-template">
-                    <td>
-                        <input type="hidden" class="product-id-input">
-                        <input type="hidden" class="ligne-retour-id-input"> {{-- Pour les lignes existantes --}}
-                        <input type="hidden" class="lot-id-input"> {{-- Pour le lot d'origine --}}
-                        <span class="product-name-display"></span>
-                    </td>
-                    <td>
-                        <span class="product-current-stock-display text-info fw-bold"></span>
-                    </td>
-                    <td>
-                        <input type="number" class="form-control quantite-retournee-input" min="0.01" value="1" required>
-                    </td>
-                    <td>
-                        <input type="number" step="0.01" class="form-control prix-unitaire-retour-input" min="0" required>
-                    </td>
-                    <td>
-                        <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)">
-                    </td>
-                    <td>
-                        <button type="button" class="btn btn-danger btn-sm removeRow">Supprimer</button>
-                    </td>
-                </tr>
-                {{-- Les lignes de produits existantes seront pré-remplies ici par JavaScript --}}
-            </tbody>
-        </table>
-
-        <div class="mb-3">
-            <label for="montant_rembourse" class="form-label">Montant à rembourser (FCFA)</label>
-            <input type="number" step="0.01" min="0" name="montant_rembourse" id="montant_rembourse" class="form-control" value="{{ old('montant_rembourse', $retour->montant_rembourse) }}">
-        </div>
-
-        <button type="submit" class="btn btn-primary mt-4">Mettre à jour le retour</button>
-        <a href="{{ route('retours_clients.index') }}" class="btn btn-secondary mt-4">Annuler</a>
-    </form>
-
-    {{-- Modals existants (Produit, Catégorie, Client) --}}
-    <div class="modal fade" id="modalProduit" tabindex="-1" aria-labelledby="modalProduitLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <form method="POST" id="form-produit-modal" action="{{ route('produits.store') }}">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalProduitLabel">Créer un nouveau produit</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                    </div>
-                    <div class="modal-body row g-3">
-                        <div class="col-md-2">
-                            <label for="nom" class="form-label">Nom *</label>
-                            <input type="text" name="nom" id="nom" class="form-control" value="{{ old('nom') }}" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="reference" class="form-label">Référence</label>
-                            <input type="text" name="reference" id="reference" class="form-control" value="{{ old('reference') }}">
-                        </div>
-                        <div class="col-md-2">
-                            <label for="code">Code </label>
-                            <input type="text" name="code" class="form-control" value="{{ old('code') }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label for="marque">Marque *</label>
-                            <input type="text" name="marque" class="form-control" value="{{ old('marque', $produit->marque ?? '') }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="unite">Unité*</label>
-                            <select name="unite" class="form-control" required>
-                                <option value="">-- Sélectionner --</option>
-                                @foreach(['pièce', 'kg', 'litre', 'mètre', 'paquet'] as $unit)
-                                    <option value="{{ $unit }}" {{ old('unite', $produit->unite ?? '') == $unit ? 'selected' : '' }}>
-                                        {{ ucfirst($unit) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-6 d-flex align-items-end">
-                            <label class="w-100">Catégorie *</label>
-                            <div class="input-group">
-                                <select name="categorie_id" id="selectCategorie" class="form-select" required>
-                                    <option value="" >-- Choisir --</option>
-                                    @foreach($categories as $categorie)
-                                        <option value="{{ $categorie->id }}" {{ old('categorie_id') == $categorie->id ? 'selected' : '' }}>{{ $categorie->nom }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalCategorie">
-                                    +
-                                </button>
+<div class="nk-content ">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        <div class="nk-block-head-content">
+                            <h3 class="nk-block-title page-title">Modifier le retour client #{{ $retour->id }}</h3>
+                            <div class="nk-block-desc">
+                                <p>Mettez à jour les détails du retour client.</p>
                             </div>
-                        </div>
-                        <div class="col-md-12">
-                            <label for="description">Description *</label>
-                            <textarea name="description" class="form-control" required>{{ old('description', $produit->description ?? '') }}</textarea>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="cout_achat" class="form-label">Coût d'achat par défaut *</label>
-                            <input type="number" step="0.01" name="cout_achat" id="cout_achat" class="form-control" value="{{ old('cout_achat') }}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="prix_vente" class="form-label">Prix de vente par défaut *</label>
-                            <input type="number" step="0.01" name="prix_vente" id="prix_vente" class="form-control" value="{{ old('prix_vente') }}" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label for="marge" class="form-label">Marge (%) *</label>
-                            <input type="number" step="0.01" name="marge" id="marge" class="form-control" value="{{ old('marge') }}" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="seuil_alerte" class="form-label">Seuil d'alerte (quantité) *</label>
-                            <input type="number" name="seuil_alerte" id="seuil_alerte" class="form-control" value="{{ old('seuil_alerte') }}">
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Créer</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+                        </div><div class="nk-block-head-content">
+                            <a href="{{ route('retours_clients.index') }}" class="btn btn-outline-light bg-white d-none d-sm-inline-flex">
+                                <em class="icon ni ni-arrow-left"></em><span>Retour à la liste</span>
+                            </a>
+                        </div></div></div><div class="nk-block">
+                    <div class="card card-bordered card-preview">
+                        <div class="card-inner">
+                            <form action="{{ route('retours_clients.update', $retour->id) }}" method="POST" id="retourClientEditForm">
+                                @csrf
+                                @method('PUT')
 
-    <div class="modal fade" id="modalCategorie" tabindex="-1" aria-labelledby="modalCategorieLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form method="POST" action="{{ route('module.categories.store') }}">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalCategorieLabel">Nouvelle catégorie</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                    </div>
-                    <div class="modal-body">
-                        <label>Nom de la catégorie *</label>
-                        <input type="text" name="nom" class="form-control" required>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary">Créer</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <h4>Informations du retour</h4>
+                                        <hr class="preview-hr mt-0 mb-3">
+                                    </div>
 
-    <div class="modal fade" id="modalClient" tabindex="-1" aria-labelledby="modalClientLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <form id="form-client-modal" method="POST" action="{{ route('module.clients.store') }}">
-                @csrf
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalClientLabel">Ajouter un client</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="client-nom" class="form-label">Nom *</label>
-                            <input type="text" name="nom" id="client-nom" class="form-control" required>
+                                    @if($retour->vente)
+                                        <div class="col-12">
+                                            <div class="alert alert-info alert-icon">
+                                                <em class="icon ni ni-info-fill"></em>
+                                                Ce retour est lié à la vente #{{ $retour->vente->id }} du {{ $retour->vente->date_vente->format('d/m/Y H:i') }} pour le client {{ $retour->vente->client->nom ?? 'N/A' }}.
+                                                <input type="hidden" name="vente_id" value="{{ $retour->vente->id }}">
+                                            </div>
+                                        </div>
+                                    @else
+                                        <input type="hidden" name="vente_id" value="{{ old('vente_id', $retour->vente_id) }}">
+                                    @endif
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="client_id">Client *</label>
+                                            <div class="form-control-wrap">
+                                                <div class="input-group">
+                                                    <select name="client_id" id="client_id" class="form-control form-select" data-search="on" required>
+                                                        <option value="">-- Choisir un client --</option>
+                                                        @foreach($clients as $client)
+                                                            <option value="{{ $client->id }}" {{ old('client_id', $retour->client_id) == $client->id ? 'selected' : '' }}>{{ $client->nom }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalClient">
+                                                        <em class="icon ni ni-plus"></em>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="date_retour">Date et heure du retour *</label>
+                                            <div class="form-control-wrap">
+                                                <input type="datetime-local" name="date_retour" id="date_retour" class="form-control" value="{{ old('date_retour', $retour->date_retour->format('Y-m-d\TH:i')) }}" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="form-label" for="motif_global">Motif global du retour</label>
+                                            <div class="form-control-wrap">
+                                                <textarea name="motif_global" id="motif_global" class="form-control" rows="3">{{ old('motif_global', $retour->motif_global) }}</textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-4">
+                                    <div class="col-12">
+                                        <h4>Produits à retourner</h4>
+                                        <hr class="preview-hr mt-0 mb-3">
+                                    </div>
+
+                                    @if($retour->vente && $lignesVente->isNotEmpty())
+                                        <div class="col-12">
+                                            <div class="card bg-light">
+                                                <div class="card-inner">
+                                                    <h5>Produits de la vente #{{ $retour->vente->id }}</h5>
+                                                    <p>Sélectionnez les produits de la vente à retourner :</p>
+                                                    <div class="list-group list-group-flush border-bottom">
+                                                        @foreach($lignesVente as $ligne)
+                                                            <button type="button" class="list-group-item list-group-item-action add-product-from-sale py-2"
+                                                                data-product-id="{{ $ligne->produit->id }}"
+                                                                data-product-name="{{ $ligne->produit->nom }}"
+                                                                data-product-stock="{{ $ligne->produit->quantite }}"
+                                                                data-product-qty-sold="{{ $ligne->quantite }}"
+                                                                data-product-price-sold="{{ $ligne->prix_unitaire }}"
+                                                                data-lot-id="{{ $ligne->lot_id }}"
+                                                            >
+                                                                <em class="icon ni ni-plus-circle me-2"></em>
+                                                                {{ $ligne->produit->nom }} (Qté vendue: {{ $ligne->quantite }}) - Prix unitaire vendu: {{ number_format($ligne->prix_unitaire, 2, ',', ' ') }} FCFA
+                                                            </button>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endif
+
+                                    <div class="col-12 mt-4">
+                                        <div class="mb-4">
+                                            @livewire('retour-client-product-search')
+                                        </div>
+
+                                        <div class="table-responsive">
+                                            <table class="table table-striped" id="produitsRetourTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Produit</th>
+                                                        <th>Stock Actuel</th>
+                                                        <th>Quantité retournée *</th>
+                                                        <th>Prix unitaire retour *</th>
+                                                        <th>Motif spécifique</th>
+                                                        <th style="width: 100px;">Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr style="display: none;" class="product-retour-row-template">
+                                                        <td>
+                                                            <input type="hidden" class="product-id-input">
+                                                            <input type="hidden" class="ligne-retour-id-input"> {{-- Pour les lignes existantes --}}
+                                                            <input type="hidden" class="lot-id-input"> {{-- Pour le lot d'origine --}}
+                                                            <span class="product-name-display"></span>
+                                                        </td>
+                                                        <td>
+                                                            <span class="product-current-stock-display text-info fw-bold"></span>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" name="lignes[0][quantite_retournee]" class="form-control quantite-retournee-input" min="0.01" value="1" required dislable>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01"  name="lignes[0][prix_unitaire_retour]"  class="form-control prix-unitaire-retour-input" min="0" required dislable>
+                                                        </td>
+                                                        <td>
+                                                            <input type="text" class="form-control motif-ligne-input" placeholder="Motif spécifique (optionnel)">
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-icon btn-danger removeRow"><em class="icon ni ni-trash-fill"></em></button>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row g-3 mt-4">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="montant_rembourse">Montant à rembourser (FCFA)</label>
+                                            <div class="form-control-wrap">
+                                                <input type="number" step="0.01" min="0" name="montant_rembourse" id="montant_rembourse" class="form-control" value="{{ old('montant_rembourse', $retour->montant_rembourse) }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12 mt-4">
+                                        <ul class="d-flex justify-content-end gx-3">
+                                            <li><button type="submit" class="btn btn-primary">Mettre à jour le retour</button></li>
+                                            <li><a href="{{ route('retours_clients.index') }}" class="btn btn-light">Annuler</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label for="client-telephone" class="form-label">Téléphone</label>
-                            <input type="text" name="telephone" id="client-telephone" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="client-email" class="form-label">Email</label>
-                            <input type="email" name="email" id="client-email" class="form-control">
-                        </div>
-                        <div class="mb-3">
-                            <label for="client-adresse" class="form-label">Adresse</label>
-                            <input type="text" name="adresse" id="client-adresse" class="form-control">
-                        </div>
-                        <div id="client-error" class="alert alert-danger d-none"></div>
-                        <div id="client-success" class="alert alert-success d-none"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-success">Enregistrer</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    </div>
-                </div>
-            </form>
+                    </div></div></div>
         </div>
     </div>
 </div>
+
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const produitsRetourTableBody = document.querySelector('#produitsRetourTable tbody');
         const productRetourRowTemplate = document.querySelector('.product-retour-row-template');
-        const retourClientEditForm = document.getElementById('retourClientEditForm'); // Formulaire d'édition
+        const retourClientEditForm = document.getElementById('retourClientEditForm'); 
 
         let currentLigneIndex = {{ old('lignes') ? count(old('lignes')) : ($retour->lignesRetour->count() ?? 0) }};
 
-        // Fonction pour ajouter une ligne de produit au tableau de retour
+        // Function to add a product return row
         function addProductRetourRow(product, quantiteRetournee = 1, prixUnitaireRetour = '', motifLigne = '', lotId = null, ligneId = null) {
-            // Vérifier si le produit existe déjà par son ID pour éviter les doublons lors de l'ajout via Livewire
-            if (ligneId === null) { // Seulement si ce n'est pas une ligne existante qu'on pré-remplit
-                let existingRowInput = Array.from(produitsRetourTableBody.querySelectorAll('.product-id-input'))
-                                            .find(input => input.value == product.id);
+            
+            // Check for duplicates only if it's a new line being added (not pre-filling existing lines)
+            if (ligneId === null) { 
+                let existingRowInput = Array.from(produitsRetourTableBody.querySelectorAll('.product-retour-row .product-id-input'))
+                                             .find(input => input.value == product.id);
 
                 if (existingRowInput) {
                     alert('Ce produit est déjà dans la liste de retour.');
@@ -302,31 +210,35 @@
             const newRow = productRetourRowTemplate.cloneNode(true);
             newRow.style.display = '';
             newRow.classList.remove('product-retour-row-template');
-            newRow.classList.add('product-retour-row'); // Ajouter une classe pour les lignes réelles
+            newRow.classList.add('product-retour-row'); 
 
             newRow.querySelector('.product-id-input').value = product.id;
             newRow.querySelector('.product-name-display').textContent = product.nom;
-            newRow.querySelector('.product-current-stock-display').textContent = product.quantite; // Afficher le stock actuel
+            newRow.querySelector('.product-current-stock-display').textContent = product.quantite;
 
             if (lotId) {
                 newRow.querySelector('.lot-id-input').value = lotId;
             }
             if (ligneId) {
-                const ligneRetourIdInput = document.createElement('input');
-                ligneRetourIdInput.type = 'hidden';
-                ligneRetourIdInput.classList.add('ligne-retour-id-input');
-                ligneRetourIdInput.value = ligneId;
-                newRow.querySelector('td').prepend(ligneRetourIdInput);
+                // Ensure existing lines retain their ID for update purposes
+                const ligneRetourIdInput = newRow.querySelector('.ligne-retour-id-input');
+                if (ligneRetourIdInput) {
+                    ligneRetourIdInput.value = ligneId;
+                } else {
+                    // Fallback in case template structure is missing the hidden input
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.classList.add('ligne-retour-id-input');
+                    input.value = ligneId;
+                    newRow.querySelector('td').prepend(input);
+                }
             }
-
 
             const quantiteRetourneeInput = newRow.querySelector('.quantite-retournee-input');
             quantiteRetourneeInput.value = quantiteRetournee;
-            quantiteRetourneeInput.setAttribute('required', 'required');
 
             const prixUnitaireRetourInput = newRow.querySelector('.prix-unitaire-retour-input');
             prixUnitaireRetourInput.value = prixUnitaireRetour;
-            prixUnitaireRetourInput.setAttribute('required', 'required');
 
             const motifLigneInput = newRow.querySelector('.motif-ligne-input');
             motifLigneInput.value = motifLigne;
@@ -340,22 +252,22 @@
             updateRowIndexes();
         }
 
-        // Pré-remplir les lignes de retour existantes
+        // Pre-fill existing return lines
         const existingLignesRetour = @json($retour->lignesRetour ?? []);
         existingLignesRetour.forEach(ligne => {
             if (ligne.produit) {
                 const productData = {
                     id: ligne.produit.id,
                     nom: ligne.produit.nom,
-                    quantite: ligne.produit.quantite // Stock actuel du produit
+                    quantite: ligne.produit.quantite // Current stock
                 };
                 addProductRetourRow(productData, ligne.quantite_retournee, ligne.prix_unitaire_retour, ligne.motif_ligne, ligne.lot_id, ligne.id);
             } else {
-                console.warn('Produit est null ou indéfini pour la ligne de retour :', ligne);
+                console.warn('Produit is null or undefined for return line:', ligne);
             }
         });
 
-        // Écouteur pour les boutons "Ajouter produit de la vente"
+        // Event listener for "Add product from sale" buttons
         document.querySelectorAll('.add-product-from-sale').forEach(button => {
             button.addEventListener('click', function() {
                 const productId = this.dataset.productId;
@@ -368,61 +280,72 @@
                 const productData = {
                     id: productId,
                     nom: productName,
-                    quantite: productStock // Stock actuel
+                    quantite: productStock 
                 };
                 addProductRetourRow(productData, qtySold, priceSold, 'Retour de vente', lotId);
             });
         });
 
-        // Fonction pour réindexer les noms des inputs après suppression ou ajout
+        // Function to reindex input names
         function updateRowIndexes() {
-            let index = 0; // Réinitialiser l'index
+            let index = 0; 
             produitsRetourTableBody.querySelectorAll('tr.product-retour-row').forEach((row) => {
                 row.querySelector('.product-id-input').setAttribute('name', `lignes[${index}][produit_id]`);
+                
                 const ligneRetourIdInput = row.querySelector('.ligne-retour-id-input');
                 if (ligneRetourIdInput) {
                     ligneRetourIdInput.setAttribute('name', `lignes[${index}][id]`);
                 }
+                
                 const lotIdInput = row.querySelector('.lot-id-input');
                 if (lotIdInput) {
                     lotIdInput.setAttribute('name', `lignes[${index}][lot_id]`);
                 }
+                
                 row.querySelector('.quantite-retournee-input').setAttribute('name', `lignes[${index}][quantite_retournee]`);
                 row.querySelector('.prix-unitaire-retour-input').setAttribute('name', `lignes[${index}][prix_unitaire_retour]`);
                 row.querySelector('.motif-ligne-input').setAttribute('name', `lignes[${index}][motif_ligne]`);
                 index++;
             });
-            currentLigneIndex = index; // Mettre à jour l'index global pour les futures additions
+            currentLigneIndex = index;
         }
 
-        // Écouteur d'événement Livewire pour ajouter un produit à la table
+        // Livewire event listener to add a product from the search component
         window.addEventListener('productSelectedForRetourClient', event => {
             const product = event.detail.product;
-            addProductRetourRow(product, 1, product.prix_vente); // Par défaut 1 quantité, prix de vente comme prix de retour
+            addProductRetourRow(product, 1, product.prix_vente);
         });
 
-        // =====================================================================
-        // CORRECTION ICI : Gestion de la soumission du formulaire
-        // =====================================================================
+        // Ensure inputs are correctly indexed before form submission
         retourClientEditForm.addEventListener('submit', function(e) {
-            // S'assurer que tous les inputs ont les bons noms avant la soumission
             updateRowIndexes();
-            console.log('Formulaire de modification de retour client soumis.'); // Pour le débogage
         });
 
+        // =====================================================================
+        // Modal Product, Category, and Client management
+        // =====================================================================
 
-        // Scripts pour le modal de création de produit (inchangés)
+        // Modal Produit (Product Modal)
         const formProduit = document.getElementById('form-produit-modal');
         const modalProduit = new bootstrap.Modal(document.getElementById('modalProduit'));
+        const productErrorAlert = document.getElementById('product-error-alert');
 
         document.getElementById('modalProduit').addEventListener('show.bs.modal', function (event) {
             formProduit.reset();
-            formProduit.querySelectorAll('.alert').forEach(alert => alert.classList.add('d-none'));
-            formProduit.querySelectorAll('.text-danger').forEach(error => error.remove());
+            productErrorAlert.classList.add('d-none');
+            // Remove validation errors
+            formProduit.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            formProduit.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
         });
 
         formProduit.addEventListener('submit', function(e) {
             e.preventDefault();
+            productErrorAlert.classList.add('d-none');
+            productErrorAlert.innerHTML = '';
+            
+            // Clear previous validation styles
+            formProduit.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            formProduit.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
 
             const formData = new FormData(formProduit);
 
@@ -443,40 +366,42 @@
             .then(data => {
                 if (data.success && data.produit) {
                     modalProduit.hide();
+                    // Dispatch event to Livewire to add the new product to the list
                     Livewire.dispatch('productSelectedForRetourClient', { product: data.produit });
                     formProduit.reset();
                 } else {
-                    let errorMessage = 'Une erreur est survenue.';
+                    let errorMessage = data.message || 'An unknown error occurred.';
                     if (data.errors) {
                         errorMessage = Object.values(data.errors).map(arr => arr.join('<br>')).join('<br>');
-                        for (const field in data.errors) {
-                            const input = formProduit.querySelector(`[name="${field}"]`);
-                            if (input) {
-                                input.classList.add('is-invalid');
-                                const errorDiv = document.createElement('div');
-                                errorDiv.classList.add('invalid-feedback');
-                                errorDiv.innerHTML = data.errors[field].join('<br>');
-                                input.parentNode.appendChild(errorDiv);
-                            }
-                        }
-                    } else if (data.message) {
-                        errorMessage = data.message;
                     }
-                    alert(errorMessage);
+                    productErrorAlert.innerHTML = errorMessage;
+                    productErrorAlert.classList.remove('d-none');
                 }
             })
             .catch(err => {
-                let errorMessage = 'Une erreur est survenue.';
+                let errorMessage = 'Une erreur est survenue lors de la création du produit.';
                 if (err.errors) {
+                    // Handle validation errors from Laravel
+                    for (const field in err.errors) {
+                        const input = formProduit.querySelector(`[name="${field}"]`);
+                        if (input) {
+                            input.classList.add('is-invalid');
+                            const errorDiv = document.createElement('div');
+                            errorDiv.classList.add('invalid-feedback');
+                            errorDiv.innerHTML = err.errors[field].join('<br>');
+                            input.parentNode.appendChild(errorDiv);
+                        }
+                    }
                     errorMessage = Object.values(err.errors).map(arr => arr.join('<br>')).join('<br>');
                 } else if (err.message) {
                     errorMessage = err.message;
                 }
-                alert(errorMessage);
+                productErrorAlert.innerHTML = errorMessage;
+                productErrorAlert.classList.remove('d-none');
             });
         });
 
-        // Script pour le modal de création de catégorie (inchangé)
+        // Modal Catégorie (Category Modal)
         const formCategorie = document.querySelector('#modalCategorie form');
         const modalCategorie = new bootstrap.Modal(document.getElementById('modalCategorie'));
         const selectCategorie = document.getElementById('selectCategorie');
@@ -513,10 +438,10 @@
             });
         });
 
-        // Script pour le modal de création de client (inchangé)
+        // Modal Client (Client Modal)
         const formClient = document.getElementById('form-client-modal');
         const modalClient = new bootstrap.Modal(document.getElementById('modalClient'));
-        const selectClient = document.getElementById('client_id'); // Le sélecteur de client principal
+        const selectClient = document.getElementById('client_id');
         const clientErrorDiv = document.getElementById('client-error');
         const clientSuccessDiv = document.getElementById('client-success');
 
@@ -547,7 +472,7 @@
                     modalClient.hide();
                     const option = new Option(data.client.nom, data.client.id);
                     selectClient.appendChild(option);
-                    selectClient.value = data.client.id; // Sélectionne le nouveau client
+                    selectClient.value = data.client.id; // Select the new client
                     clientSuccessDiv.innerHTML = 'Client ajouté avec succès!';
                     clientSuccessDiv.classList.remove('d-none');
                     formClient.reset();

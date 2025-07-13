@@ -149,7 +149,8 @@ class VenteController extends Controller
 
             DB::commit();
 
-            return redirect()->route('ventes.index')->with('success', 'Vente enregistrée avec succès.');
+            return redirect()->route('ventes.receipt', $vente->id)
+                             ->with('success', 'Vente enregistrée avec succès. Voici le reçu.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Erreur : ' . $e->getMessage()])->withInput();
@@ -187,10 +188,7 @@ class VenteController extends Controller
     {
         $request->validate([
             'client_id' => 'required|exists:clients,id',
-            'produits' => 'required|array|min:1',
-            'produits.*.produit_id' => 'required|exists:produits,id',
-            'produits.*.quantite' => 'required|numeric|min:1',
-            'produits.*.prix_unitaire' => 'required|numeric|min:0',
+            // Validation des produits et quantités retirée car ces champs ne sont plus modifiables via cette méthode
             'mode_paiement' => 'required|string',
             'montant_paye' => 'required|numeric|min:0',
             'remise' => 'nullable|numeric|min:0',
@@ -202,82 +200,35 @@ class VenteController extends Controller
         try {
             $vente = Vente::with('ligneVentes')->where('magasin_id', $magasinId)->findOrFail($id);
 
-            // RESTAURATION STOCK des anciens lots (ajouter les quantités précédentes)
-            foreach ($vente->ligneVentes as $ligne) {
-                StockService::reintegrerStockLot(
-                    $ligne->lot_id,
-                    $ligne->quantite,
-                    $magasinId,
-                    Auth::id(),
-                    "Annulation vente #{$vente->id} (modification)"
-                );
-            }
+            // --- IMPORTANT : LOGIQUE DE STOCK RETIRÉE ---
+            // La modification des produits et quantités n'est plus gérée par cette méthode.
+            // Si des modifications de stock sont nécessaires, elles devraient passer par
+            // un processus de "retour client" ou un "ajustement de stock".
 
-            // Supprimer anciennes lignes
-            $vente->ligneVentes()->delete();
-
-            $totalLignes = 0;
-
-            // Sortie FIFO avec nouvelles lignes
-            foreach ($request->produits as $ligne) {
-                $produitId = $ligne['produit_id'];
-                $quantite = $ligne['quantite'];
-                $prixUnitaire = $ligne['prix_unitaire'];
-
-                // CHANGEMENT ICI : Séparation des messages d'erreur pour plus de clarté et robustesse
-                $produit = Produit::where('id', $produitId)->where('magasin_id', $magasinId)->first();
-                if (!$produit) {
-                    throw new \Exception("Produit avec l'ID {$produitId} introuvable ou non disponible dans ce magasin.");
-                }
-
-                if ($produit->quantite < $quantite) {
-                    throw new \Exception("Stock insuffisant pour le produit {$produit->nom}. Quantité disponible: {$produit->quantite}. Quantité demandée: {$quantite}.");
-                }
-
-                $lotsUtilises = StockService::sortirFifo(
-                    $produitId,
-                    $quantite,
-                    'vente',
-                    $vente->id,
-                    $magasinId,
-                    Auth::id(),
-                    'Mise à jour vente'
-                );
-
-                foreach ($lotsUtilises as $lotId => $qte) {
-                    $prixTotalLigne = $qte * $prixUnitaire;
-                    LigneVente::create([
-                        'vente_id' => $vente->id,
-                        'produit_id' => $produitId,
-                        'quantite' => $qte,
-                        'prix_unitaire' => $prixUnitaire,
-                        'prix_total' => $prixTotalLigne,
-                        'lot_id' => $lotId,
-                    ]);
-                    $totalLignes += $prixTotalLigne;
-                }
-            }
+            // Recalculer le total des lignes de vente en se basant sur les lignes existantes
+            // (puisque les produits et quantités ne sont pas modifiés ici)
+            $totalLignes = $vente->ligneVentes->sum(function($ligne) {
+                return $ligne->quantite * $ligne->prix_unitaire;
+            });
 
             $remise = $request->remise ?? 0;
             $totalTTC = max($totalLignes - $remise, 0);
             $reste = max($totalTTC - $request->montant_paye, 0);
 
-            // Mise à jour des infos vente
+            // Mise à jour des informations de la vente
             $vente->update([
                 'client_id' => $request->client_id,
                 'remise' => $remise,
                 'mode_paiement' => $request->mode_paiement,
                 'montant_paye' => $request->montant_paye,
-                'total_ttc' => $totalTTC,
+                'total_ttc' => $totalTTC, // Recalculé avec la nouvelle remise
                 'reste_a_payer' => $reste,
                 'statut' => $reste <= 0 ? 'payee' : ($request->montant_paye > 0 ? 'partielle' : 'credit'),
             ]);
 
-            // TODO: gérer mise à jour des paiements (ici on peut complexifier selon besoin)
-            // Pour l'instant, on suppose que le montant_paye est le total des paiements pour cette vente.
-            // Si vous avez plusieurs paiements enregistrés, il faudra ajuster cette logique.
-            // Par exemple, supprimer les anciens paiements liés à cette vente et en créer un nouveau
-            // Ou mettre à jour le paiement existant si un seul est attendu.
+            // Mise à jour des paiements :
+            // Cette logique supprime les anciens paiements liés à cette vente et en crée un nouveau.
+            // Pour une gestion plus fine de l'historique des paiements, il faudrait adapter.
             $vente->paiements()->delete(); // Supprime les anciens paiements
             if ($request->montant_paye > 0) {
                 Paiement::create([
@@ -289,14 +240,29 @@ class VenteController extends Controller
                 ]);
             }
 
-
             DB::commit();
 
             return redirect()->route('ventes.index')->with('success', 'Vente modifiée avec succès.');
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->errors())->withInput(); // Retourne les erreurs de validation
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Erreur : ' . $e->getMessage()])->withInput();
+            return back()->withErrors(['error' => 'Erreur lors de la modification de la vente : ' . $e->getMessage()])->withInput();
         }
+    }
+
+    public function receipt(Vente $vente)
+    {
+        $magasinId = session('magasin_actif_id');
+
+        // Assurez-vous que la vente appartient au magasin actif
+        if ($vente->magasin_id != $magasinId) {
+            abort(403, 'Accès non autorisé à ce reçu.');
+        }
+
+        $vente->load('client', 'user', 'ligneVentes.produit');
+        return view('ventes.receipt', compact('vente'));
     }
 
     // Suppression (soft delete)

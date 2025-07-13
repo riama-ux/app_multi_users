@@ -50,6 +50,10 @@ body{
     
 }
 
+.custom-card{
+  background-color: #D0E1E9;
+}
+
 .custom-card-height {
     min-height: 200px; /* Ajuste ici selon le rendu souhaité */
     /*background-color: #ffffff;*/
@@ -59,7 +63,7 @@ body{
 .custom-card-full-height {
     height: 100%;
     /*background-color: #ffffff;*/
-    border: 2px solid #D0E1E9;
+    /*border: 2px solid #D0E1E9;*/
     background-color: #D0E1E9;
 }
 @media (max-width: 991.98px) {

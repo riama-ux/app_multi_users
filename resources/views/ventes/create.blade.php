@@ -4,19 +4,17 @@
 <div class="container-fluid">
 
     {{-- Page Heading and Alerts --}}
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Nouvelle vente</h1>
+
+    <div class="nk-block-head-content d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Nouvelle vente</h3>
+        <a href="{{ route('ventes.index') }}" class="btn btn-outline-primary">
+            <em class="icon ni ni-list"></em><span>Liste des ventes</span>
+        </a>
     </div>
 
     {{-- Main Form Card --}}
     <div class="card shadow mb-4">
-        <div class="card-header bg-white mt-3 py-3">
-            <div class="d-sm-flex align-items-center justify-content-end mb-4">
-                <a href="{{ route('ventes.index') }}" class="btn btn-outline-primary">
-                    <i class="fas fa-list me-2"></i> Liste des ventes
-                </a>
-            </div>
-        </div>
+        
         <div class="card-body">
             <form action="{{ route('ventes.store') }}" method="POST" id="venteForm">
                 @csrf
@@ -31,7 +29,7 @@
                                     <option value="{{ $client->id }}" {{ old('client_id') == $client->id ? 'selected' : '' }}>{{ $client->nom }}</option>
                                 @endforeach
                             </select>
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalClient" title="Ajouter un nouveau client">
+                            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalClient" title="Ajouter un nouveau client">
                                 <i class="fas fa-plus"></i>
                             </button>
                         </div>
@@ -234,41 +232,68 @@
 {{-- Modal Nouveau Client --}}
 <div class="modal fade" id="modalClient" tabindex="-1" aria-labelledby="modalClientLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <form id="form-client-modal" method="POST" action="{{ route('module.clients.store') }}">
-            @csrf
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="modalClientLabel">Ajouter un client</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label for="client-nom" class="form-label">Nom <span class="text-danger">*</span></label>
-                        <input type="text" name="nom" id="client-nom" class="form-control" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="client-telephone" class="form-label">Téléphone</label>
-                        <input type="text" name="telephone" id="client-telephone" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label for="client-email" class="form-label">Email</label>
-                        <input type="email" name="email" id="client-email" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label for="client-adresse" class="form-label">Adresse</label>
-                        <input type="text" name="adresse" id="client-adresse" class="form-control">
-                    </div>
-                    <div id="client-error" class="alert alert-danger d-none"></div>
-                    <div id="client-success" class="alert alert-success d-none"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Enregistrer</button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                </div>
+        <div class="modal-content bg-white"> {{-- Ajout de bg-white pour le fond si nécessaire --}}
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalClientLabel">Ajouter un client</h5>
+                <a href="#" class="close" data-bs-dismiss="modal" aria-label="Fermer">
+                    <em class="icon ni ni-cross"></em>
+                </a>
             </div>
-        </form>
-    </div>
-</div>
+
+            <form id="form-client-modal" method="POST" action="{{ route('module.clients.store') }}" class="form-validate">
+                @csrf
+                <div class="modal-body">
+                    {{-- Alertes pour les messages d'erreur/succès --}}
+                    <div class="alert alert-danger d-none" id="client-error"></div>
+                    <div class="alert alert-success d-none" id="client-success"></div>
+
+                    <div class="row g-4"> {{-- Utilisation de la grille Dashlite --}}
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label" for="client-nom">Nom <span class="text-danger">*</span></label>
+                                <div class="form-control-wrap">
+                                    <input type="text" class="form-control" id="client-nom" name="nom" required value="{{ old('nom') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label" for="client-telephone">Téléphone</label>
+                                <div class="form-control-wrap">
+                                    <input type="text" class="form-control" id="client-telephone" name="telephone" value="{{ old('telephone') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label" for="client-email">Email</label>
+                                <div class="form-control-wrap">
+                                    <input type="email" class="form-control" id="client-email" name="email" value="{{ old('email') }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="form-label" for="client-adresse">Adresse</label>
+                                <div class="form-control-wrap">
+                                    <textarea class="form-control" id="client-adresse" name="adresse">{{ old('adresse') }}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div> {{-- .row --}}
+                </div> {{-- .modal-body --}}
+
+                <div class="modal-footer bg-white"> {{-- Ajout de bg-white pour le fond si nécessaire --}}
+                    <button type="submit" class="btn btn-lg btn-primary">Enregistrer le client</button>
+                    <button type="button" class="btn btn-lg btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                </div>
+            </form>
+        </div> {{-- .modal-content --}}
+    </div> {{-- .modal-dialog --}}
+</div> 
 
 {{-- Scripts JavaScript --}}
 <script>

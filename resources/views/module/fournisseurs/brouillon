@@ -1,0 +1,130 @@
+{{-- index --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Liste des fournisseurs</h3>
+        <a href="{{ route('module.fournisseurs.create') }}" class="btn btn-primary shadow-sm d-flex align-items-center">
+            <em class="icon ni ni-plus me-2"></em> Nouveau fournisseur
+        </a>
+</div>
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Téléphone</th>
+            <th>Email</th>
+            <th>Adresse</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @forelse ($fournisseurs as $fournisseur)
+            <tr>
+                <td>{{ $fournisseur->nom }}</td>
+                <td>{{ $fournisseur->telephone }}</td>
+                <td>{{ $fournisseur->email }}</td>
+                <td>{{ $fournisseur->adresse }}</td>
+                <td>
+                    <a href="{{ route('module.fournisseurs.edit', ['fournisseur' => $fournisseur->id]) }}" class="btn btn-sm btn-warning">Modifier</a>
+                    <a href="{{ route('module.fournisseurs.show', ['fournisseur' => $fournisseur->id]) }}" class="btn btn-sm btn-info">Voir</a>
+
+                    <form action="{{ route('module.fournisseurs.destroy', ['fournisseur' => $fournisseur->id]) }}" method="POST" style="display:inline-block"
+                        onsubmit="return confirm('Supprimer ce fournisseur ?')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                    </form>
+                </td>
+            </tr>
+        @empty
+            <tr><td colspan="5" class="text-center">Aucun fournisseur trouvé.</td></tr>
+        @endforelse
+    </tbody>
+</table>
+@endsection
+
+{{-- index --}}
+
+
+
+{{-- create --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="nk-block-title">Ajouter un fournisseur</h3>
+        <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-outline-primary shadow-sm d-flex align-items-center">
+            <em class="icon ni ni-list me-2"></em>Liste des fournisseurs
+        </a>
+</div>
+
+<form action="{{ route('module.fournisseurs.store') }}" method="POST">
+    @csrf
+
+    <div class="mb-3">
+        <label for="nom">Nom *</label>
+        <input type="text" name="nom" class="form-control" required value="{{ old('nom') }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="telephone">Téléphone</label>
+        <input type="text" name="telephone" class="form-control" value="{{ old('telephone') }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ old('email') }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="adresse">Adresse</label>
+        <input type="text" name="adresse" class="form-control" value="{{ old('adresse') }}">
+    </div>
+
+    <button type="submit" class="btn btn-success">Enregistrer</button>
+    <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-secondary">Annuler</a>
+</form>
+@endsection
+
+{{-- create --}}
+
+
+{{-- edit --}}
+@extends('pages.admin.shared.layout')
+
+@section('content')
+<h3>Modifier le fournisseur</h3>
+
+<form action="{{ route('module.fournisseurs.update', ['fournisseur' => $fournisseur->id]) }}" method="POST">
+    @csrf
+    @method('PUT')
+
+    <div class="mb-3">
+        <label for="nom">Nom *</label>
+        <input type="text" name="nom" class="form-control" required value="{{ old('nom', $fournisseur->nom) }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="telephone">Téléphone</label>
+        <input type="text" name="telephone" class="form-control" value="{{ old('telephone', $fournisseur->telephone) }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="email">Email</label>
+        <input type="email" name="email" class="form-control" value="{{ old('email', $fournisseur->email) }}">
+    </div>
+
+    <div class="mb-3">
+        <label for="adresse">Adresse</label>
+        <input type="text" name="adresse" class="form-control" value="{{ old('adresse', $fournisseur->adresse) }}">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Mettre à jour</button>
+    <a href="{{ route('module.fournisseurs.index') }}" class="btn btn-secondary">Annuler</a>
+</form>
+@endsection
+
+{{-- edit --}}

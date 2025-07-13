@@ -9,7 +9,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
     <!-- Fav Icon  -->
-    <link rel="shortcut icon" href="{{ URL::to('./images/favicon.png') }}">
+    <link rel="shortcut icon" href="#">
     <!-- Page Title  -->
     <title>Dashboard - Campaign | DashLite Admin Template</title>
     <!-- StyleSheets  -->
@@ -59,16 +59,16 @@
                                 </li><!-- .nk-menu-heading -->
 
                                 <!-- Nouvelle Vente -->
-                                <li class="nk-menu-item {{ request()->routeIs('ventes.create') ? 'active' : '' }}">
-                                    <a href="{{ route('ventes.create') }}" class="nk-menu-link">
-                                        <span class="nk-menu-icon"><em class="icon ni ni-plus-circle"></em></span> {{-- Icône ajoutée --}}
-                                        <span class="nk-menu-text">Nouvelle Vente</span>
+                                <li class="nk-menu-item {{ request()->routeIs('ventes.index') ? 'active' : '' }}">
+                                    <a href="{{ route('ventes.index') }}" class="nk-menu-link">
+                                        <span class="nk-menu-icon"><em class="icon ni ni-cart"></em></span> {{-- Icône ajoutée --}}
+                                        <span class="nk-menu-text">Ventes</span>
                                     </a>
                                 </li><!-- .nk-menu-item -->
 
                                 <!-- Ajouter Client -->
-                                <li class="nk-menu-item {{ request()->routeIs('module.clients.create') ? 'active' : '' }}">
-                                    <a href="{{ route('module.clients.create') }}" class="nk-menu-link">
+                                <li class="nk-menu-item {{ request()->routeIs('module.clients.index') ? 'active' : '' }}">
+                                    <a href="{{ route('module.clients.index') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-user-list"></em></span> {{-- Icône ajoutée --}}
                                         <span class="nk-menu-text">Client</span>
                                     </a>
