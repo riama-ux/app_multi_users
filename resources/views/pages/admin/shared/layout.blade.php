@@ -29,7 +29,7 @@
             <div class="nk-sidebar is-light nk-sidebar-fixed is-light " data-content="sidebarMenu">
                 <div class="nk-sidebar-element nk-sidebar-head">
                     <div class="nk-sidebar-brand">
-                        <a href="{{ route('admin.home') }}" class="logo-link nk-sidebar-logo text-logo">
+                        <a href="{{ route('administrateur.home') }}" class="logo-link nk-sidebar-logo text-logo">
                             <span class="logo-text">
                                 <span class="logo-ika">ika</span><span class="logo-stock">Stock</span>
                             </span>

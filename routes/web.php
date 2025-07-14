@@ -107,6 +107,7 @@ Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
 
         Route::get('user/edit/{user}', [App\Http\Controllers\Supervisor\UserController::class, 'edit'])->name('user.edit');
         Route::post('user/update/{user}', [App\Http\Controllers\Supervisor\UserController::class, 'update'])->name('user.update');
+        Route::resource('produits', ProduitController::class);
     });
 });
 
@@ -215,8 +216,6 @@ Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manage
 
     // ... vos autres routes (commandes, ventes, etc.)
 });
-
-
 
 
 Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {

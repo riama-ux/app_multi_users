@@ -1,269 +1,378 @@
 @extends('pages.supervisor.shared.layout')
+
+@section('header')
+    
+<div class="toggle-expand-content" data-content="pageMenu">
+    <ul class="nk-block-tools g-3">
+        <li>
+            @php
+                $user = auth()->user();
+                $magasins = $user->role === 'Admin' ? \App\Models\Magasin::all() : $user->magasins;
+                $magasinActifId = session('magasin_actif_id') ?? ($magasins->first()->id ?? null);
+            @endphp
+
+            @if($magasins->count())
+                <form action="{{ route('switch.magasin') }}" method="POST" class="d-inline-block">
+                    @csrf
+                    <select name="magasin_id" onchange="this.form.submit()" class="form-select form-select-sm">
+                        @foreach($magasins as $magasin)
+                            <option value="{{ $magasin->id }}" {{ $magasin->id == $magasinActifId ? 'selected' : '' }}>
+                                {{ $magasin->nom }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+        </li>
+
+        <li class="nk-block-tools-opt">
+            <a href="#" class="btn btn-primary">
+                <em class="icon ni ni-reports"></em><span>Rapport</span>
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+@endsection
+
 @section('content')
-
-<h1 class="h3 mb-3"><strong>Analytics</strong> Dashboard</h1>
-
-<div class="row">
-    <div class="col-xl-6 col-xxl-5 d-flex">
-        <div class="w-100">
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col mt-0">
-                                    <h5 class="card-title">Sales</h5>
+<div class="nk-content ">
+    <div class="container-fluid">
+        <div class="nk-content-inner">
+            <div class="nk-content-body">
+                <div class="nk-block-head nk-block-head-sm">
+                    <div class="nk-block-between">
+                        
+                        <div class="nk-block-head-content">
+                            <div class="toggle-wrap nk-block-tools-toggle">
+                                <a href="#" class="btn btn-icon btn-trigger toggle-expand me-n1" data-target="pageMenu"><em class="icon ni ni-more-v"></em></a>
+                                <div class="toggle-expand-content" data-content="pageMenu">
+                                    <ul class="nk-block-tools g-3">
+                                        {{-- Ajoutez ici des boutons d'action rapide si nécessaire --}}
+                                    </ul>
                                 </div>
+                            </div>
+                        </div><!-- .nk-block-head-content -->
+                    </div><!-- .nk-block-between -->
+                </div><!-- .nk-block-head -->
 
-                                <div class="col-auto">
-                                    <div class="stat text-primary">
-                                        <i class="align-middle" data-feather="truck"></i>
+                <div class="nk-block">
+                    <div class="row g-gs">
+                        {{-- Carte des Meilleures Ventes (Total des ventes) --}}
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="card custom-card-height2 h-100 bg-primary">
+                                <div class="nk-cmwg nk-cmwg1">
+                                    <div class="card-inner pt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="flex-item">
+                                                <div class="text-white d-flex flex-wrap">
+                                                    <span class="fs-2 me-1">{{ number_format($lowMarginProductsCount ?? 0, 0, ',', ' ') }}</span>
+                                                    <span class="align-self-end fs-14px pb-1"><em class="icon ni ni-arrow-long-down"></em> (Produits)</span> {{-- Ajustez l'icône et le texte --}}
+                                                </div>
+                                                <h6 class="text-white">Alerte Marge</h6> {{-- Nouveau titre --}}
+                                            </div>
+                                            {{-- ... reste du code de la carte ... --}}
+                                        </div>
+                                    </div>
+                                    <div class="position-absolute bottom-0 end-0 p-2">
+                                        <em class="icon ni ni-alert-fill couleur_icone3 fs-big-icon"></em> {{-- Nouvelle icône suggérée --}}
                                     </div>
                                 </div>
                             </div>
-                            <h1 class="mt-1 mb-3">2.382</h1>
-                            <div class="mb-0">
-                                <span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -3.65% </span>
-                                <span class="text-muted">Since last week</span>
-                            </div>
                         </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col mt-0">
-                                    <h5 class="card-title">Visitors</h5>
+
+                        {{-- Carte du Produit le plus rentable (Valeur du Stock) --}}
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="card custom-card-height2 h-100 bg-info">
+                                <div class="nk-cmwg nk-cmwg1">
+                                    <div class="card-inner pt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="flex-item">
+                                                <div class="text-white d-flex flex-wrap">
+                                                    {{-- Utilise totalStockValue du contrôleur --}}
+                                                    <span class="fs-2 me-1">{{ number_format($totalStockValue ?? 0, 0, ',', ' ') }}</span>
+                                                    {{-- Pourcentage statique, à rendre dynamique si besoin --}}
+                                                    <span class="align-self-end fs-14px pb-1"><em class="icon ni ni-arrow-long-up"></em>FCFA</span>
+                                                </div>
+                                                <h6 class="text-white">Valeur du Stock</h6> {{-- Renommé pour correspondre à la variable --}}
+                                            </div>
+                                            <div class="card-tools me-n1">
+                                               
+                                            </div>
+                                        </div>
+                                    </div><!-- .card-inner -->
+                                    <div class="position-absolute bottom-0 end-0 p-2">
+                                        <em class="icon ni ni-bar-chart couleur_icone2 fs-big-icon"></em>
+                                    </div>
+                                </div><!-- .nk-cmwg -->
+                            </div><!-- .card -->
+                        </div><!-- .col -->
+
+                        {{-- Carte des Pertes (à adapter si vous avez une variable pour les pertes réelles) --}}
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="card custom-card-height2 position-relative h-100 bg-warning">
+                                <div class="nk-cmwg nk-cmwg1">
+                                    <div class="card-inner pt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="flex-item">
+                                                <div class="text-white d-flex flex-wrap">
+                                                    {{-- Utilise totalLosses du contrôleur --}}
+                                                    <span class="fs-2 me-1">{{ number_format($totalLosses ?? 0, 0, ',', ' ') }}</span>
+                                                    {{-- Pourcentage statique, à rendre dynamique si besoin --}}
+                                                    <span class="align-self-end fs-14px pb-1"><em class="icon ni ni-arrow-long-down"></em>(Produits)</span>
+                                                </div>
+                                                <h6 class="text-white">Pertes</h6>
+                                            </div>
+                                            <div class="card-tools me-n1">
+                                                
+                                            </div>
+                                        </div>
+                                    </div><!-- .card-inner -->
+                                    <div class="position-absolute bottom-0 end-0 p-2">
+                                        <em class="icon ni ni-coins couleur_icone fs-big-icon"></em>
+                                    </div>
+                                </div><!-- .nk-cmwg -->
+                            </div><!-- .card -->
+                        </div><!-- .col -->
+
+                        {{-- Carte Alerte Stock --}}
+                        <div class="col-lg-3 col-sm-6">
+                            <div class="card custom-card-height2 position-relative h-100 bg-danger">
+                                <div class="nk-cmwg nk-cmwg1">
+                                    <div class="card-inner pt-3">
+                                        <div class="d-flex justify-content-between">
+                                            <div class="flex-item">
+                                                <div class="text-white d-flex flex-wrap">
+                                                    {{-- Utilise totalAlerts du contrôleur --}}
+                                                    <span class="fs-2 me-1">{{ number_format($totalAlerts ?? 0, 0, ',', ' ') }}</span>
+                                                    {{-- Pourcentage statique, à rendre dynamique si besoin --}}
+                                                    <span class="align-self-end fs-14px pb-1"><em class="icon ni ni-arrow-long-down"></em>(Produits)</span>
+                                                </div>
+                                                <h6 class="text-white">Alerte Stock</h6>
+                                            </div>
+                                            <div class="card-tools me-n1">
+                                                
+                                            </div>
+                                        </div>
+                                    </div><!-- .card-inner -->
+                                    <div class="position-absolute bottom-0 end-0 p-2">
+                                        <em class="icon ni ni-alert-circle-fill text-pink fs-big-icon"></em>
+                                    </div>
+                                </div><!-- .nk-cmwg -->
+                            </div><!-- .card -->
+                        </div><!-- .col -->
+
+                        {{-- Nouvelle section pour les cartes de bénéfices, dettes, chiffre d'affaires et commandes --}}
+                        <div class="col-lg-9">
+                            <div class="d-flex flex-column h-100">
+                                <div class="row mb-3">
+                                    {{-- Bénéfices du mois --}}
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <div class="card position-relative custom-card-height h-100">
+                                            <div class="card-inner h-100 w-100 d-flex flex-column">
+                                                <h5 class="text-dark text-start">Bénéfices du mois</h5>
+                                                <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                                                    {{-- Utilise monthlyProfit du contrôleur --}}
+                                                    <p class="text-dark responsive-text text-center m-0">{{ number_format($monthlyProfit ?? 0, 0, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="position-absolute bottom-0 end-0 p-2">
+                                                <em class="icon ni ni-coins card-couleur fs-big-icon"></em>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {{-- Dettes --}}
+                                    <div class="col-md-6">
+                                        <div class="card position-relative custom-card-height h-100">
+                                            <div class="card-inner h-100 w-100 d-flex flex-column">
+                                                <h5 class="text-dark text-start">Dettes</h5>
+                                                <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                                                    {{-- Utilise totalDebts du contrôleur --}}
+                                                    <p class="text-dark responsive-text text-center m-0">{{ number_format($totalDebts ?? 0, 0, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</p>
+                                                </div>
+                                            </div>
+                                            <div class="position-absolute bottom-0 end-0 p-2">
+                                                <em class="icon ni ni-file-docs card-couleur fs-big-icon"></em>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="col-auto">
-                                    <div class="stat text-primary">
-                                        <i class="align-middle" data-feather="users"></i>
+                                {{-- Chiffre d'affaire du mois --}}
+                                {{-- Top 5 des produits les plus vendus (remplace Chiffre d'affaires du mois) --}}
+                                <div class="card card-bordered h-100">
+                                    <div class="card-inner">
+                                        <div class="card-title-group mb-3">
+                                            <div class="card-title">
+                                                <h6 class="title">Top 5 Meilleurs ventes (Ce Mois)</h6>
+                                            </div>
+                                            <div class="card-tools">
+                                                
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="nk-tb-list nk-tb-ulog">
+                                            <div class="nk-tb-item nk-tb-head">
+                                                <div class="nk-tb-col"><span>Produit</span></div>
+                                                <div class="nk-tb-col tb-col-md"><span>Quantité</span></div>
+                                                <div class="nk-tb-col tb-col-lg"><span>CA</span></div>
+                                                <div class="nk-tb-col tb-col-md"><span>Description</span></div>
+                                            </div>@forelse($topSoldProducts as $product)
+                                            <div class="nk-tb-item">
+                                                <div class="nk-tb-col"><span class="fw-bold">{{ $product->product_name }}</span></div>
+                                                <div class="nk-tb-col tb-col-md"><span>{{ number_format($product->total_quantity_sold, 0, ',', ' ') }}</span></div>
+                                                <div class="nk-tb-col tb-col-lg"><span class="text-success">{{ number_format($product->total_revenue_from_product, 0, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</span></div>
+                                                <div class="nk-tb-col tb-col-md"><span>{{ Str::limit($product->product_description, 50) ?? 'N/A' }}</span></div>
+                                            </div>@empty
+                                            <div class="nk-tb-item">
+                                                <div class="nk-tb-col text-center text-muted" colspan="4">Aucun produit vendu ce mois.</div>
+                                            </div>
+                                            @endforelse
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <h1 class="mt-1 mb-3">14.212</h1>
-                            <div class="mb-0">
-                                <span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 5.25% </span>
-                                <span class="text-muted">Since last week</span>
-                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-sm-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col mt-0">
-                                    <h5 class="card-title">Earnings</h5>
-                                </div>
-
-                                <div class="col-auto">
-                                    <div class="stat text-primary">
-                                        <i class="align-middle" data-feather="dollar-sign"></i>
+                        {{-- Commandes en cours --}}
+                        <div class="col-lg-3">
+                            <div class="card position-relative custom-card-full-height h-100">
+                                <div class="card-inner d-flex flex-column w-100 h-100">
+                                    <h5 class="text-dark text-start">Commandes en cours</h5>
+                                    <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                                        {{-- Utilise pendingOrdersCount du contrôleur --}}
+                                        <p class="text-dark responsive-text3 text-center m-0">{{ number_format($pendingOrdersCount ?? 0, 0, ',', ' ') }}</p>
                                     </div>
                                 </div>
-                            </div>
-                            <h1 class="mt-1 mb-3">$21.300</h1>
-                            <div class="mb-0">
-                                <span class="text-success"> <i class="mdi mdi-arrow-bottom-right"></i> 6.65% </span>
-                                <span class="text-muted">Since last week</span>
+                                <div class="position-absolute bottom-0 end-0 p-2">
+                                    <em class="icon ni ni-reload card-couleur fs-big-icon"></em>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="card">
-                        <div class="card-body">
-                            <div class="row">
-                                <div class="col mt-0">
-                                    <h5 class="card-title">Orders</h5>
-                                </div>
+                    </div><!-- .row -->
+                </div><!-- .nk-block -->
 
-                                <div class="col-auto">
-                                    <div class="stat text-primary">
-                                        <i class="align-middle" data-feather="shopping-cart"></i>
+                {{-- Anciennes sections (Ventes Récentes, Retours Récents, Ajustements Récents) --}}
+                <div class="nk-block nk-block-lg">
+                    <div class="row g-gs">
+                        {{-- Section des Ventes Récentes --}}
+                        <div class="col-lg-6">
+                            <div class="card card-bordered h-100">
+                                <div class="card-inner">
+                                    <div class="card-title-group align-items-start mb-3">
+                                        <div class="card-title">
+                                            <h6 class="title"><em class="icon ni ni-cart"></em> Ventes Récentes</h6>
+                                        </div>
+                                        <div class="card-tools">
+                                            <a href="{{ route('ventes.index') }}" class="link link-light">Voir tout <em class="icon ni ni-arrow-right"></em></a>
+                                        </div>
                                     </div>
+                                    <div class="nk-tb-list nk-tb-ulog">
+                                        <div class="nk-tb-item nk-tb-head">
+                                            <div class="nk-tb-col"><span>ID Vente</span></div>
+                                            <div class="nk-tb-col tb-col-sm"><span>Client</span></div>
+                                            <div class="nk-tb-col tb-col-md"><span>Montant</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>Date</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @forelse($recentSales as $sale)
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col"><span>#{{ $sale->id }}</span></div>
+                                            <div class="nk-tb-col tb-col-sm"><span>{{ $sale->client->nom ?? 'N/A' }}</span></div>
+                                            <div class="nk-tb-col tb-col-md"><span class="text-success">{{ number_format($sale->total_ttc, 2, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>{{ $sale->date_vente->format('d/m/Y H:i') }}</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @empty
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col text-center" colspan="4">Aucune vente récente.</div>
+                                        </div>
+                                        @endforelse
+                                    </div><!-- .nk-tb-list -->
                                 </div>
-                            </div>
-                            <h1 class="mt-1 mb-3">64</h1>
-                            <div class="mb-0">
-                                <span class="text-danger"> <i class="mdi mdi-arrow-bottom-right"></i> -2.25% </span>
-                                <span class="text-muted">Since last week</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                            </div><!-- .card -->
+                        </div><!-- .col -->
 
-    <div class="col-xl-6 col-xxl-7">
-        <div class="card flex-fill w-100">
-            <div class="card-header">
+                        {{-- Section des Retours Récents --}}
+                        <div class="col-lg-6">
+                            <div class="card card-bordered h-100">
+                                <div class="card-inner">
+                                    <div class="card-title-group align-items-start mb-3">
+                                        <div class="card-title">
+                                            <h6 class="title"><em class="icon ni ni-undo"></em> Retours Récents</h6>
+                                        </div>
+                                        <div class="card-tools">
+                                            <a href="{{ route('retours_clients.index') }}" class="link link-light">Voir tout <em class="icon ni ni-arrow-right"></em></a>
+                                        </div>
+                                    </div>
+                                    <div class="nk-tb-list nk-tb-ulog">
+                                        <div class="nk-tb-item nk-tb-head">
+                                            <div class="nk-tb-col"><span>ID Retour</span></div>
+                                            <div class="nk-tb-col tb-col-sm"><span>Client</span></div>
+                                            <div class="nk-tb-col tb-col-md"><span>Remboursé</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>Date</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @forelse($recentReturns as $retour)
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col"><span>#{{ $retour->id }}</span></div>
+                                            <div class="nk-tb-col tb-col-sm"><span>{{ $retour->client->nom ?? 'N/A' }}</span></div>
+                                            <div class="nk-tb-col tb-col-md"><span class="text-info">{{ number_format($retour->montant_rembourse, 2, ',', ' ') }} {{ config('app.currency', 'FCFA') }}</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>{{ $retour->date_retour->format('d/m/Y H:i') }}</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @empty
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col text-center" colspan="4">Aucun retour récent.</div>
+                                        </div>
+                                        @endforelse
+                                    </div><!-- .nk-tb-list -->
+                                </div>
+                            </div><!-- .card -->
+                        </div><!-- .col -->
 
-                <h5 class="card-title mb-0">Recent Movement</h5>
-            </div>
-            <div class="card-body py-3">
-                <div class="chart chart-sm">
-                    <canvas id="chartjs-dashboard-line"></canvas>
-                </div>
+                        {{-- Section des Ajustements Récents --}}
+                        <div class="col-lg-12">
+                            <div class="card card-bordered h-100">
+                                <div class="card-inner">
+                                    <div class="card-title-group align-items-start mb-3">
+                                        <div class="card-title">
+                                            <h6 class="title"><em class="icon ni ni-setting"></em> Ajustements Récents</h6>
+                                        </div>
+                                        <div class="card-tools">
+                                            <a href="{{ route('ajustements.index') }}" class="link link-light">Voir tout <em class="icon ni ni-arrow-right"></em></a>
+                                        </div>
+                                    </div>
+                                    <div class="nk-tb-list nk-tb-ulog">
+                                        <div class="nk-tb-item nk-tb-head">
+                                            <div class="nk-tb-col"><span>ID Ajustement</span></div>
+                                            <div class="nk-tb-col tb-col-sm"><span>Type</span></div>
+                                            <div class="nk-tb-col tb-col-md"><span>Motif Global</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>Date</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>Par</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @forelse($recentAjustements as $ajustement)
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col"><span>#{{ $ajustement->id }}</span></div>
+                                            <div class="nk-tb-col tb-col-sm">
+                                                <span class="badge {{ $ajustement->type == 'entree' ? 'bg-success' : 'bg-danger' }}">
+                                                    {{ ucfirst($ajustement->type) }}
+                                                </span>
+                                            </div>
+                                            <div class="nk-tb-col tb-col-md"><span>{{ $ajustement->motif_global ?? 'N/A' }}</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>{{ $ajustement->date_ajustement->format('d/m/Y H:i') }}</span></div>
+                                            <div class="nk-tb-col tb-col-lg"><span>{{ $ajustement->user->name ?? 'N/A' }}</span></div>
+                                        </div><!-- .nk-tb-item -->
+                                        @empty
+                                        <div class="nk-tb-item">
+                                            <div class="nk-tb-col text-center" colspan="5">Aucun ajustement récent.</div>
+                                        </div>
+                                        @endforelse
+                                    </div><!-- .nk-tb-list -->
+                                </div>
+                            </div><!-- .card -->
+                        </div><!-- .col -->
+                    </div><!-- .row -->
+                </div><!-- .nk-block -->
+
             </div>
         </div>
     </div>
 </div>
-
-<div class="row">
-    <div class="col-12 col-md-6 col-xxl-3 d-flex order-2 order-xxl-3">
-        <div class="card flex-fill w-100">
-            <div class="card-header">
-
-                <h5 class="card-title mb-0">Browser Usage</h5>
-            </div>
-            <div class="card-body d-flex">
-                <div class="align-self-center w-100">
-                    <div class="py-3">
-                        <div class="chart chart-xs">
-                            <canvas id="chartjs-dashboard-pie"></canvas>
-                        </div>
-                    </div>
-
-                    <table class="table mb-0">
-                        <tbody>
-                            <tr>
-                                <td>Chrome</td>
-                                <td class="text-end">4306</td>
-                            </tr>
-                            <tr>
-                                <td>Firefox</td>
-                                <td class="text-end">3801</td>
-                            </tr>
-                            <tr>
-                                <td>IE</td>
-                                <td class="text-end">1689</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-12 col-xxl-6 d-flex order-3 order-xxl-2">
-        <div class="card flex-fill w-100">
-            <div class="card-header">
-
-                <h5 class="card-title mb-0">Real-Time</h5>
-            </div>
-            <div class="card-body px-4">
-                <div id="world_map" style="height:350px;"></div>
-            </div>
-        </div>
-    </div>
-    <div class="col-12 col-md-6 col-xxl-3 d-flex order-1 order-xxl-1">
-        <div class="card flex-fill">
-            <div class="card-header">
-
-                <h5 class="card-title mb-0">Calendar</h5>
-            </div>
-            <div class="card-body d-flex">
-                <div class="align-self-center w-100">
-                    <div class="chart">
-                        <div id="datetimepicker-dashboard"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12 col-lg-8 col-xxl-9 d-flex">
-        <div class="card flex-fill">
-            <div class="card-header">
-
-                <h5 class="card-title mb-0">Latest Projects</h5>
-            </div>
-            <table class="table table-hover my-0">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th class="d-none d-xl-table-cell">Start Date</th>
-                        <th class="d-none d-xl-table-cell">End Date</th>
-                        <th>Status</th>
-                        <th class="d-none d-md-table-cell">Assignee</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Project Apollo</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-success">Done</span></td>
-                        <td class="d-none d-md-table-cell">Vanessa Tucker</td>
-                    </tr>
-                    <tr>
-                        <td>Project Fireball</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-danger">Cancelled</span></td>
-                        <td class="d-none d-md-table-cell">William Harris</td>
-                    </tr>
-                    <tr>
-                        <td>Project Hades</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-success">Done</span></td>
-                        <td class="d-none d-md-table-cell">Sharon Lessman</td>
-                    </tr>
-                    <tr>
-                        <td>Project Nitro</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-warning">In progress</span></td>
-                        <td class="d-none d-md-table-cell">Vanessa Tucker</td>
-                    </tr>
-                    <tr>
-                        <td>Project Phoenix</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-success">Done</span></td>
-                        <td class="d-none d-md-table-cell">William Harris</td>
-                    </tr>
-                    <tr>
-                        <td>Project X</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-success">Done</span></td>
-                        <td class="d-none d-md-table-cell">Sharon Lessman</td>
-                    </tr>
-                    <tr>
-                        <td>Project Romeo</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-success">Done</span></td>
-                        <td class="d-none d-md-table-cell">Christina Mason</td>
-                    </tr>
-                    <tr>
-                        <td>Project Wombat</td>
-                        <td class="d-none d-xl-table-cell">01/01/2021</td>
-                        <td class="d-none d-xl-table-cell">31/06/2021</td>
-                        <td><span class="badge bg-warning">In progress</span></td>
-                        <td class="d-none d-md-table-cell">William Harris</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    <div class="col-12 col-lg-4 col-xxl-3 d-flex">
-        <div class="card flex-fill w-100">
-            <div class="card-header">
-
-                <h5 class="card-title mb-0">Monthly Sales</h5>
-            </div>
-            <div class="card-body d-flex w-100">
-                <div class="align-self-center chart chart-lg">
-                    <canvas id="chartjs-dashboard-bar"></canvas>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
