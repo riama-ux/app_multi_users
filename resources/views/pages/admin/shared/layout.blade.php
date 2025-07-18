@@ -8,10 +8,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}"> 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
-    <!-- Fav Icon  -->
-    <link rel="shortcut icon" href="#">
+
     <!-- Page Title  -->
-    <title>Dashboard - Campaign | DashLite Admin Template</title>
+    <title>Gestion de stock</title>
     <!-- StyleSheets  -->
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-..." crossorigin="anonymous"></script> 

@@ -36,23 +36,18 @@ class UserSeeder extends Seeder
                 'role' => 'Admin',
             ],
             [
+                'name' => 'VENDEUR',
+                'email' => 'vendeur@app.local',
+                'password' => Hash::make('1234'),
+                'role' => 'Vendeur',
+            ],
+            [
                 'name' => 'GESTIONNAIRE',
-                'email' => 'manager@app.local',
+                'email' => 'gestionnaire@app.local',
                 'password' => Hash::make('1234'),
-                'role' => 'Manager',
+                'role' => 'Gestionnaire',
             ],
-            [
-                'name' => 'SUPERVISEUR',
-                'email' => 'supervisor@app.local',
-                'password' => Hash::make('1234'),
-                'role' => 'Supervisor',
-            ],
-            [
-                'name' => 'JOHN DOE',
-                'email' => 'johndoe@app.local',
-                'password' => Hash::make('1234'),
-                'role' => 'User',
-            ],
+            
         ];
 
         foreach ($users as $data) {

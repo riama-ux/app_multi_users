@@ -139,7 +139,7 @@
 
     <div class="modal fade" id="receptionModal" tabindex="-1" aria-labelledby="receptionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form action="{{ route('commandes.reception', $commande) }}" method="POST" class="modal-content">
+            <form action="{{ route('commandes.reception', $commande) }}" method="POST" class="modal-content bg-white">
                 @csrf
                 <div class="modal-header">
                     <h5 class="modal-title" id="receptionModalLabel">Réception commande #{{ $commande->id }}</h5>

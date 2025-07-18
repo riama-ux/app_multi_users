@@ -128,7 +128,7 @@
 <body>
     <div class="receipt-container">
         <div class="header">
-            <h2>{{ config('app.name', 'ikaStock') }}</h2>
+            <h2>ikaStock</h2>
             <p>Reçu de Vente #{{ $vente->id }}</p>
             <p>Date: {{ $vente->date_vente->format('d/m/Y H:i') }}</p>
         </div>

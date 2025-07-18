@@ -42,6 +42,6 @@ class UserController extends Controller
             ]);
         }
 
-        return to_route('supervisor.user.edit', encrypt($user->id))->with('success', "La modification a été effectuée !");
+        return to_route('gestionnaire.user.edit', encrypt($user->id))->with('success', "La modification a été effectuée !");
     }
 }

@@ -195,7 +195,7 @@ class StockService
             // Si le lot est trouvé, ou si un nouveau lot doit être créé
             if ($lot) {
                 // Si le lot existant est trouvé, ajouter la quantité retournée
-                $lot->quantite_restante += $quantiteAReintegrer;
+                $lot->quantite += $quantiteAReintegrer;
                 $lot->save();
             } else {
                 // Si aucun lotId n'est fourni, ou si le lotId fourni n'existe pas,

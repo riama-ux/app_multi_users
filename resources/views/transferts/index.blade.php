@@ -87,7 +87,7 @@
                                                                 <li>
                                                                     <form action="{{ route('transferts.valider', $transfert) }}" method="POST" class="d-inline-block validate-form">
                                                                         @csrf
-                                                                        <button type="button" class="btn btn-sm text-success px-0 w-100 text-start validate-transfert" data-transfert-id="{{ $transfert->id }}">
+                                                                        <button type="button" class="btn btn-sm text-success px-3 w-100 text-start validate-transfert" data-transfert-id="{{ $transfert->id }}">
                                                                             <em class="icon ni ni-check-circle"></em><span>Valider</span>
                                                                         </button>
                                                                     </form>

@@ -35,7 +35,7 @@ class CategorieController extends Controller
             'magasin_id' => session('magasin_actif_id'),
         ]);
 
-        return redirect()->route('commandes.create')->with('success', 'Catégorie ajoutée.');
+        return redirect()->route('module.categories.index')->with('success', 'Catégorie ajoutée.');
     }
 
     public function edit(Categorie $categorie)

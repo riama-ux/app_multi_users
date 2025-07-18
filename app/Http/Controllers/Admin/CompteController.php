@@ -17,14 +17,13 @@ class CompteController extends Controller
         'users' => User::with('magasins') // ✅ charge la relation magasins
                     ->whereNotIn('email', [
                         'admin@app.local',
-                        'manager@app.local',
-                        'supervisor@app.local',
-                        'johndoe@app.local'
+                        'vendeur@app.local',
+                        'gestionnaire@app.local',
                     ])
                     ->orderByDesc('id')
                     ->paginate(20),
         'rows' => User::count() - 4,
-        'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
+        'roles' => ['Admin', 'Gestionnaire', 'Vendeur', 'Non Actif'],
         ]);
     }
 
@@ -46,13 +45,13 @@ class CompteController extends Controller
             $user = User::Where('name', 'LIKE', '%' . $name . '%')
                 ->Where('role', 'LIKE', '%' . $role . '%')
                 ->Where('email', 'LIKE', '%' . $email . '%')
-                ->WhereNotIn('email', ['admin@app.local', 'manager@app.local', 'supervisor@app.local', 'johndoe@app.local'])
+                ->WhereNotIn('email', ['admin@app.local', 'vendeur@app.local', 'gestionnaire@app.local'])
                 ->get();
 
             return view('pages/admin/users/index', [
                 'users' => $user,
                 'rows' => $user->count(),
-                'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'], 
+                'roles' => ['Admin', 'Gestionnaire', 'Vendeur', 'Non Actif'], 
                 'request' => $request
             ]);
         }
@@ -69,7 +68,7 @@ class CompteController extends Controller
         ]);
         return view('pages/admin/users/form', [
             'user' => $user,
-            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'],
+            'roles' => ['Admin', 'Gestionnaire', 'Vendeur', 'Non Actif'],
             'magasins' => Magasin::all(), // ✅ Liste des magasins pour le formulaire
         ]);
     }
@@ -114,7 +113,7 @@ class CompteController extends Controller
     {
         return view('pages/admin/users/form', [
             'user' => User::find(decrypt($id)),
-            'roles' => ['Admin', 'Supervisor', 'Manager', 'User', 'Non Actif'], ['Admin', 'Supervisor', 'Manager', 'User'],
+            'roles' => ['Admin', 'Gestionnaire', 'Vendeur', 'Non Actif'], ['Admin', 'Gestionnaire', 'Vendeur'],
             'magasins' => Magasin::all(), // ✅ Liste des magasins pour le formulaire
         ]);
     }
@@ -127,7 +126,7 @@ class CompteController extends Controller
             'name' => 'required|string',
             'email' => 'required|email',
             'magasins' => 'required|array|min:1',
-            'role' => 'required|in:Admin,Manager,Supervisor,User,Non Actif',
+            'role' => 'required|in:Admin,Vendeur,Gestionnaire,Non Actif',
             'password' => 'nullable|min:4', // ✅ le mot de passe est facultatif
         ], [
             'name.required' => 'Champ obligatoire !',
@@ -154,7 +153,7 @@ class CompteController extends Controller
         // ✅ Mise à jour des magasins liés
         $user->magasins()->sync($request->magasins);
 
-        return to_route('admin.compte.edit', encrypt($user->id))->with('success', "La modification a été effectuée !");
+        return to_route('admin.compte.index', encrypt($user->id))->with('success', "La modification a été effectuée !");
     }
 
 

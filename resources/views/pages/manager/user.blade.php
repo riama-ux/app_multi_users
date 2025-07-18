@@ -16,7 +16,7 @@
         <div class="card">
             @include('flash-message')
             <div class="card-body">
-                <form action="{{ route('manager.user.update', $user->id) }}" method="POST" enctype="multipart/form-data">
+                <form action="{{ route('vendeur.user.update', $user->id) }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="mb-3 row">

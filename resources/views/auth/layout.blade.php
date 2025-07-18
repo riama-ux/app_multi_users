@@ -37,7 +37,7 @@
                                     <div class="slider-item">
                                         <div class="nk-feature nk-feature-center">
                                             <div class="nk-feature-img">
-                                                <!-- <img  src="./images/slides/charrio.png" width="700" height="auto" alt=""> -->
+                                                <img src="{{ URL::to('./images/im12.png')}}" width="700" height="auto" alt="Description de votre image" style="display: block; margin: 0 auto;">
                                             </div>
                                         </div>
                                     </div><!-- .slider-item -->

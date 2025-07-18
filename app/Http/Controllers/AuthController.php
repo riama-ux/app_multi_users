@@ -41,13 +41,11 @@ class AuthController extends Controller
 
         if (auth()->attempt(array('email' => $input['email'], 'password' => $input['password']))) {
             if (auth()->user()->role == 'Admin') {
-                return redirect()->route('admin.home');
-            } else if (auth()->user()->role == 'Manager') {
-                return redirect()->route('manager.home');
-            } else if (auth()->user()->role == 'Supervisor') {
-                return redirect()->route('supervisor.home');
-            } else if (auth()->user()->role == 'User') {
-                return redirect()->route('user.home');
+                return redirect()->route('administrateur.home');
+            } else if (auth()->user()->role == 'Vendeur') {
+                return redirect()->route('vendeur.home');
+            } else if (auth()->user()->role == 'Gestionnaire') {
+                return redirect()->route('gestionnaire.home');
             } else {
                 return redirect()->route('auth.login')
                     ->with('error', 'Ce compte n\'existe pas ou n\'est pas activé ! Veuillez contacter votre Administrateur !');

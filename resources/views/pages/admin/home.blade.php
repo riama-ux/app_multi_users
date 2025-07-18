@@ -27,7 +27,7 @@
 
         <li class="nk-block-tools-opt">
             <a href="#" class="btn btn-primary">
-                <em class="icon ni ni-reports"></em><span>Rapport</span>
+                <em class="icon ni ni-reports"></em>
             </a>
         </li>
     </ul>

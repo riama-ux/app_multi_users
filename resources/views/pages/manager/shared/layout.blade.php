@@ -8,10 +8,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}"> 
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="description" content="A powerful and conceptual apps base dashboard template that especially build for developers and programmers.">
-    <!-- Fav Icon  -->
-    <link rel="shortcut icon" href="#">
+    
     <!-- Page Title  -->
-    <title>Dashboard - Campaign | DashLite Admin Template</title>
+    <title>Gestion de stock</title>
     <!-- StyleSheets  -->
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
      <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js" integrity="sha512-..." crossorigin="anonymous"></script> 
@@ -29,7 +28,7 @@
             <div class="nk-sidebar is-light nk-sidebar-fixed is-light " data-content="sidebarMenu">
                 <div class="nk-sidebar-element nk-sidebar-head">
                     <div class="nk-sidebar-brand">
-                        <a href="{{ route('manager.home') }}" class="logo-link nk-sidebar-logo text-logo">
+                        <a href="{{ route('vendeur.home') }}" class="logo-link nk-sidebar-logo text-logo">
                             <span class="logo-text">
                                 <span class="logo-ika">ika</span><span class="logo-stock">Stock</span>
                             </span>
@@ -47,8 +46,8 @@
                                 <li class="nk-menu-heading">
                                     <h6 class="overline-title text-primary-alt">Dashboard</h6>
                                 </li><!-- .nk-menu-heading -->
-                                <li class="nk-menu-item {{ request()->routeIs('manager.home') ? 'active' : '' }}">
-                                    <a href="{{ route('manager.home') }}" class="nk-menu-link">
+                                <li class="nk-menu-item {{ request()->routeIs('vendeur.home') ? 'active' : '' }}">
+                                    <a href="{{ route('vendeur.home') }}" class="nk-menu-link">
                                         <span class="nk-menu-icon"><em class="icon ni ni-presentation"></em></span>
                                         <span class="nk-menu-text">Tableau de bord</span>
                                     </a>
@@ -90,7 +89,7 @@
                                 <a href="#" class="nk-nav-toggle nk-quick-nav-icon" data-target="sidebarMenu"><em class="icon ni ni-menu"></em></a>
                             </div>
                             <div class="nk-header-brand d-xl-none">
-                                <a href="{{ route('admin.home') }}" class="logo-link nk-sidebar-logo text-logo">
+                                <a href="{{ route('vendeur.home') }}" class="logo-link nk-sidebar-logo text-logo">
                                     <span class="logo-text">
                                         <span class="logo-ika">ika</span><span class="logo-stock">Stock</span>
                                     </span>

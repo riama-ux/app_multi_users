@@ -24,7 +24,7 @@ return new class extends Migration
         });
 
         // Add the CHECK constraint
-        DB::statement("ALTER TABLE users ADD CONSTRAINT chk_user_roles CHECK (role IN ('Admin', 'Manager', 'Supervisor', 'User', 'Non Actif'));");
+        DB::statement("ALTER TABLE users ADD CONSTRAINT chk_user_roles CHECK (role IN ('Admin', 'Vendeur', 'Gestionnaire', 'Non Actif'));");
     }
 
     /**

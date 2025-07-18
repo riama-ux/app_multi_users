@@ -59,6 +59,7 @@ Route::middleware(['auth', 'user-access:Admin'])->group(function () {
     Route::get('administrateur', [App\Http\Controllers\HomeController::class, 'adminHome'])->name('administrateur.home');
 });
 
+
 Route::middleware(['auth', 'user-access:Admin'])->group(function () {
     Route::get('admin', [App\Http\Controllers\HomeController::class, 'adminHome'])->name('admin.home');
     Route::prefix('admin')->name('admin.')->group(function () {
@@ -75,9 +76,9 @@ Route::middleware(['auth', 'user-access:Admin'])->group(function () {
 | Manager Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Manager'])->group(function () {
-    Route::get('manager', [App\Http\Controllers\HomeController::class, 'managerHome'])->name('manager.home');
-    Route::prefix('manager')->name('manager.')->group(function () {
+Route::middleware(['auth', 'user-access:Vendeur'])->group(function () {
+    Route::get('vendeur', [App\Http\Controllers\HomeController::class, 'managerHome'])->name('vendeur.home');
+    Route::prefix('vendeur')->name('vendeur.')->group(function () {
 
         Route::get('user/edit/{user}', [App\Http\Controllers\Manager\UserController::class, 'edit'])->name('user.edit');
         Route::post('user/update/{user}', [App\Http\Controllers\Manager\UserController::class, 'update'])->name('user.update');
@@ -101,9 +102,9 @@ Route::middleware(['auth', 'user-access:User'])->group(function () {
 | Supervisor Routes
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
-    Route::get('supervisor', [App\Http\Controllers\HomeController::class, 'supervisorHome'])->name('supervisor.home');
-    Route::prefix('supervisor')->name('supervisor.')->group(function () {
+Route::middleware(['auth', 'user-access:Gestionnaire'])->group(function () {
+    Route::get('gestionnaire', [App\Http\Controllers\HomeController::class, 'supervisorHome'])->name('gestionnaire.home');
+    Route::prefix('gestionnaire')->name('gestionnaire.')->group(function () {
 
         Route::get('user/edit/{user}', [App\Http\Controllers\Supervisor\UserController::class, 'edit'])->name('user.edit');
         Route::post('user/update/{user}', [App\Http\Controllers\Supervisor\UserController::class, 'update'])->name('user.update');
@@ -115,7 +116,14 @@ Route::middleware(['auth', 'user-access:Supervisor'])->group(function () {
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+/*
+|--------------------------------------------------------------------------
+| Routes des Modules (Admin & Supervisor)
+|--------------------------------------------------------------------------
+| Ces routes utilisent le nouveau groupe de middleware 'admin_supervisor_access'
+| défini dans Kernel.php pour une meilleure lisibilité et moins d'erreurs.
+*/
+Route::middleware(['auth', 'check-magasin' , 'user-access:Admin,Gestionnaire'])->group(function() {
     Route::resource('produits', ProduitController::class);
 
     // routes/web.php ou api.php selon préférence
@@ -127,7 +135,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->gro
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->group(function () {
     Route::resource('commandes', CommandeController::class);
 
     Route::post('/commandes/{commande}/reception', [CommandeController::class, 'reception'])
@@ -148,7 +156,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->gro
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->group(function () {
     Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
     Route::get('produits/{produit}/lots', [StockLotController::class, 'index'])->name('stock_lots.index');
     Route::get('mouvements-stock', [MouvementStockController::class, 'index'])->name('mouvements_stock.index');
@@ -156,7 +164,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->gro
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->group(function() {
     Route::resource('ventes', VenteController::class)->except(['destroy']);
     
     // Optionnel: route pour suppression via ajustement (retour client)
@@ -164,32 +172,32 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->gro
 });
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->prefix('module')->name('module.')->group(function () {
     Route::resource('fournisseurs', App\Http\Controllers\Module\FournisseurController::class)->parameters(['fournisseurs' => 'fournisseur']);
 });
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->prefix('module')->name('module.')->group(function () {
     Route::resource('categories', App\Http\Controllers\Module\CategorieController::class) ->parameters(['categories' => 'categorie']);
     Route::post('/categories/store-ajax', [CategorieController::class, 'storeAjax'])->name('categories.store.ajax');
 });
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire,Vendeur'])->prefix('module')->name('module.')->group(function () {
     Route::resource('clients', App\Http\Controllers\Module\ClientController::class);
 });
 
 
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->group(function() {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire,Vendeur'])->group(function() {
     Route::post('/ventes/{vente}/paiements', [PaiementController::class, 'store'])->name('paiements.store');
     Route::post('/paiements/{paiement}/annuler', [PaiementController::class, 'annulerPaiement'])->name('paiements.annuler');
 
 });
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('transferts')->name('transferts.')->group(function() {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire,Vendeur'])->prefix('transferts')->name('transferts.')->group(function() {
     Route::get('/', [TransfertController::class, 'index'])->name('index');
     Route::get('/create', [TransfertController::class, 'create'])->name('create');
     Route::post('/', [TransfertController::class, 'store'])->name('store');
@@ -204,7 +212,7 @@ Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager
 });
 
 
-Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manager'])->group(function () {
+Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Gestionnaire,Vendeur'])->group(function () {
     // Routes pour les Retours Clients
     Route::resource('retours_clients', RetourClientController::class);
 
@@ -218,7 +226,7 @@ Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manage
 });
 
 
-Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Gestionnaire'])->group(function() {
     Route::get('ventes/{vente}/receipt', [VenteController::class, 'receipt'])->name('ventes.receipt');
 });
 

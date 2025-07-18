@@ -1,0 +1,106 @@
+Route::middleware(['auth', 'check-magasin' , 'user-access:Admin,Supervisor'])->group(function() {
+    Route::resource('produits', ProduitController::class);
+
+    // routes/web.php ou api.php selon préférence
+    Route::get('/produit/info', [App\Http\Controllers\Gestion\ProduitController::class, 'getProduitInfo'])->name('produit.info');
+    // Routes pour restauration et suppression définitive
+    Route::post('produits/{id}/restore', [ProduitController::class, 'restore'])->name('produits.restore');
+    Route::delete('produits/{id}/force-delete', [ProduitController::class, 'forceDelete'])->name('produits.forceDelete');
+});
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function () {
+    Route::resource('commandes', CommandeController::class);
+
+    Route::post('/commandes/{commande}/reception', [CommandeController::class, 'reception'])
+    ->name('commandes.reception');
+
+    
+
+    Route::prefix('ajustements')->name('ajustements.')->group(function () {
+        Route::get('/', [AjustementController::class, 'index'])->name('index');
+        Route::get('/create', [AjustementController::class, 'create'])->name('create');
+        Route::post('/', [AjustementController::class, 'store'])->name('store');
+        Route::get('/{ajustement}', [AjustementController::class, 'show'])->name('show');
+        Route::get('/{ajustement}/edit', [AjustementController::class, 'edit'])->name('edit');
+        Route::put('/{ajustement}', [AjustementController::class, 'update'])->name('update');
+        Route::delete('/{ajustement}', [AjustementController::class, 'destroy'])->name('destroy');
+    });
+});
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function () {
+    Route::get('stocks', [StockController::class, 'index'])->name('stocks.index');
+    Route::get('produits/{produit}/lots', [StockLotController::class, 'index'])->name('stock_lots.index');
+    Route::get('mouvements-stock', [MouvementStockController::class, 'index'])->name('mouvements_stock.index');
+});
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+    Route::resource('ventes', VenteController::class)->except(['destroy']);
+    
+    // Optionnel: route pour suppression via ajustement (retour client)
+    /*Route::post('ventes/{vente}/retour-client', [VenteController::class, 'retourClient'])->name('ventes.retour-client');*/
+});
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+    Route::resource('fournisseurs', App\Http\Controllers\Module\FournisseurController::class)->parameters(['fournisseurs' => 'fournisseur']);
+});
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->prefix('module')->name('module.')->group(function () {
+    Route::resource('categories', App\Http\Controllers\Module\CategorieController::class) ->parameters(['categories' => 'categorie']);
+    Route::post('/categories/store-ajax', [CategorieController::class, 'storeAjax'])->name('categories.store.ajax');
+});
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('module')->name('module.')->group(function () {
+    Route::resource('clients', App\Http\Controllers\Module\ClientController::class);
+});
+
+
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->group(function() {
+    Route::post('/ventes/{vente}/paiements', [PaiementController::class, 'store'])->name('paiements.store');
+    Route::post('/paiements/{paiement}/annuler', [PaiementController::class, 'annulerPaiement'])->name('paiements.annuler');
+
+});
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor,Manager'])->prefix('transferts')->name('transferts.')->group(function() {
+    Route::get('/', [TransfertController::class, 'index'])->name('index');
+    Route::get('/create', [TransfertController::class, 'create'])->name('create');
+    Route::post('/', [TransfertController::class, 'store'])->name('store');
+    Route::get('/{transfert}', [TransfertController::class, 'show'])->name('show');
+    Route::get('/{transfert}/edit', [TransfertController::class, 'edit'])->name('edit');
+    Route::put('/{transfert}', [TransfertController::class, 'update'])->name('update');
+    Route::delete('/{transfert}', [TransfertController::class, 'destroy'])->name('destroy');
+     Route::get('/api/produits/recherche', [TransfertController::class, 'searchProducts'])->name('api.produits.recherche');
+
+    // Validation
+    Route::post('/{transfert}/valider', [TransfertController::class, 'valider'])->name('valider');
+});
+
+
+Route::middleware(['auth', 'check-magasin', 'user-access:Admin,Supervisor,Manager'])->group(function () {
+    // Routes pour les Retours Clients
+    Route::resource('retours_clients', RetourClientController::class);
+
+    // Ajout d'une route pour initier un retour depuis une vente spécifique
+    Route::get('ventes/{vente}/retour', [RetourClientController::class, 'create'])->name('ventes.retour.create');
+
+    // Routes pour les Ajustements de Stock
+    Route::resource('ajustements', AjustementController::class);
+
+    // ... vos autres routes (commandes, ventes, etc.)
+});
+
+
+Route::middleware(['auth', 'check-magasin','user-access:Admin,Supervisor'])->group(function() {
+    Route::get('ventes/{vente}/receipt', [VenteController::class, 'receipt'])->name('ventes.receipt');
+});
